@@ -158,3 +158,24 @@ This checkpoint supersedes older nested-directory notes above. The active GitHub
 **Final visual correction:** During live browser QA, moving the signing table above the stair opening caused its top edge to cover the lower TV ticker. Its independent sprite bounds are now [297,57,76,30] on the right-hand deck. Fan path remains center-stairs then [285,55] at the left side of the signing table. Stage LCD and stair clearance no longer share the table's area.
 
 **Loading color:** Until the six modular WebPs complete loading, both entry points use a deep indigo (#211a40) interim canvas rather than the discarded bright office-white flash. Once ready, the shared full venue renderer takes over atomically.
+
+
+## v0.8.8c corrective release (2026-11-16)
+
+Owner-approved focus: restore the vibrant evening indigo/magenta convention language and the v0.8.7 compact entrance proportions while correcting v0.8.8b spatial assembly. Do not return to neutral office style. Do not add interchangeable stage furniture.
+
+- Branch: `release/v0.8.8`; Vercel automatically builds after a GitHub branch update. `/irl-sandbox?level=0` remains the direct room test.
+- New modular WebPs: `assets/irl-checkin-v088c.webp` (v0.8.7-inspired original compact booth with planters), `assets/irl-gate-atlas-v088c.webp` (closed/open compact scanner posts), `assets/irl-entrance-planters-v088c.webp` (two independent entrance planters), `assets/irl-stage-shell-v088c.webp` (thin, grounded riser and fixed TV). The vivid room plate and merch/food/photo/vending atlas remain from v0.8.8b.
+- `src/venue-geometry-v088b.js`: single source for active prop drawing bounds, collision and LCD projection; vending at left perimeter; booth at entrance center; left and right scanner art coincide with authorized crossing zones; stage-queue rope collision guides. Native canvas 384x216. Historic filenames stay for compatibility until future version consolidation.
+- `src/venue-rig-v088b.js`: stage furniture is permanently 1-on-1 debate desks, no signing/debate mode art swap. Render contact shadows and queue ropes, integrated entrance plants and bounded, perspective-mapped TV. Live photo TV now draws Destiny AND guest using `streams.poses[guestKind]` with signature overlay. One permanent table supports both debate and signing interactions.
+- `src/venue-effects-v086.js`: stage speech bubbles use short-tail speaker-locked placement at x>=183 rather than ambient bubble collision solver sending them to screen edges. Measured text wrapping retained.
+- `src/irl-v07.js`: debates last 3.8 seconds (fans 3.1). Active crowd favors merch, snacks, vending, photos, with visit dwell, receipts, flashes and per-booth transaction counters. `src/venue-nav.js` adds vending station matching the moved prop. `src/ui.js` and `src/irl-sandbox-v085.js`: stage guest sprite normalized to 29x37, bottom anchored relative to Destiny 31x39, and pass all pose atlases to live photo TV.
+- Regression tests: `tests/venue_modular_v088b.test.mjs` updated for 7 independent art assets and permanent furnishings; canvas renderer dry-run passed with simulated closed gates, photo event, and depth-neutral save/restore.
+
+### Final visual QA on deployed preview
+
+1. Confirm all 7 modular WebPs load with no 404 or white flash; compare entrance footprint against v0.8.7. Gate authorization must remain state-coupled and unauthorized roaming must not cross the fence.
+2. Confirm stage shallow front fascia touches floor, fixed two microphones visible, and speaker bubbles point above the actual host/guest. In a 3.8s debate, opponent sprite should be comparable to Destiny.
+3. Confirm two-person PHOTO OP TV with Destiny's signing overlay for fan encounters; debate win/loss TV remains legible.
+4. Observe merch, food, relocated wall-side vending, photo booth: crowd must visit, pause, pose and trigger effects, without blocking stage queue or gate lane.
+5. Mobile Safari/desktop test for clipping, scenery scale, dialogue, speed controls <=2x and no regression to the primary game loop. If artwork placement needs adjustment, change only the single geometry map before regenerating art.

@@ -71,7 +71,7 @@ document.addEventListener('keydown',e=>{
 function draw(t){
  const canvas=q('#h-canvas'),ctx=setupGraphicsCanvas(canvas,graphics);
  if(!ctx)return;
- const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,cast:assets.cast,extra});
+ const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,poses,cast:assets.cast,extra});
  if(!modern){if(assets.hall.complete&&assets.hall.naturalWidth)ctx.drawImage(assets.hall,0,0,384,216);else{ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);}
   drawStageAtmosphere(ctx,t,event.phase);drawVenueRush(ctx,event,t);drawVenueScreens(ctx,event,t,{host:assets.pose0,cast:assets.cast,extra});drawVenueGates(ctx,assets.hall,event);}
  drawStageQueueGuides(ctx,event);
@@ -88,7 +88,8 @@ function draw(t){
   if(role==='visitor'&&g.id===event.focus){ctx.fillStyle='#fff0aa8b';ctx.beginPath();ctx.ellipse(g.x+w/2,g.y+h,20,7,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ffdd7a';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(g.x+w/2,g.y+h,17,6,0,0,Math.PI*2);ctx.stroke();}
   const kind=role==='guard'?3:role==='staff'?7:g.kind;
   const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?'talk':g.type==='security'?'argue':g.type==='check'?'point':'idle'):g.walking?'walk':'idle';
-  sprite(kind,g.x,g.y,w,h,state,g);
+  const stageSpeaker=role==='depart'&&g.stageVisit==='exchange';
+  sprite(kind,g.x+(stageSpeaker?2.5:0),g.y+(stageSpeaker?5:0),stageSpeaker?29:w,stageSpeaker?37:h,state,g);
   if(role==='crowd'&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout);ambient++;}
   else if(role==='crowd'&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0&&!drawDggEmote(ctx,assets.emotes,g.emote,g.x+6,g.y-17,19)){ctx.fillStyle='#fff1d2';ctx.fillRect(g.x+7,g.y-9,15,9);ctx.fillStyle='#4e416e';ctx.font='bold 8px monospace';ctx.fillText(g.emote,g.x+10,g.y-2);}
   if(role==='visitor'&&g.pending){ctx.fillStyle='#77ffe2';ctx.fillRect(g.x+9,g.y-4,16,7);}

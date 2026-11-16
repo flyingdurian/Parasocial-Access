@@ -6,13 +6,13 @@ import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue}
 import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable} from '../src/venue-nav.js';
 const asset=name=>new URL('../assets/'+name,import.meta.url);
 
-test('all six modular vibrant-stylized art assets are valid WebP, not painted legacy art',()=>{
+test('seven modular assets mix stable hall/booths with corrected entrance and stage',()=>{
  const names=Object.values(MODULAR_VENUE_FILES);
- assert.equal(names.length,6);
+ assert.equal(names.length,7);
  for(const file of names){
   const url=asset(file);assert(existsSync(url),file);
   assert.equal(readFileSync(url).toString('ascii',8,12),'WEBP',file);
-  assert(file.includes('vibrant-v088b'));
+  assert(file.includes('vibrant-v088b')||file.includes('v088c'));
  }
 });
 
@@ -41,14 +41,14 @@ test('LCD content and stage furnishings sit inside the modular stage shell',()=>
  const m=MODULAR_TV_PROJECTION;
  assert(m.e>=tv.x&&m.f>=tv.y);
  assert(m.e+100*m.a>=tv.x&&m.e+100*m.a<=tv.x+tv.w+2);
- for(const name of ['debateFurniture','signingFurniture']){
+ for(const name of ['fixedFurniture']){
   const p=MODULAR_PROPS[name];
   assert(p.x>=s.x&&p.y>=s.y&&p.x+p.w<=s.x+s.w&&p.y+p.h<=s.y+s.h);
-  assert(p.y+p.h<=80||p.x>=290,'stage furniture must leave central stairs visually accessible');
+  assert(p.y+p.h<=84,'permanent debate desks must leave central stairs visually accessible');
  }
- assert.equal(modularStageMode({departures:[]}), 'signing');
- assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:true}]}),'debate');
- assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:false},{stageVisit:'queued',debater:true}]}),'signing');
+ assert.equal(modularStageMode({departures:[]}), 'fixed');
+ assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:true}]}),'fixed');
+ assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:false}]}),'fixed');
 });
 function mockCtx(){
  const calls=[];let depth=0;
@@ -57,11 +57,11 @@ function mockCtx(){
   save(){depth++;},restore(){depth--;assert(depth>=0);},
   drawImage(...args){calls.push({type:'image',args});},
   createLinearGradient(){return {addColorStop(){}};},
-  beginPath(){},rect(){},clip(){},fillRect(){},fillText(){},translate(){},transform(){}
+  beginPath(){},rect(){},clip(){},fillRect(){},fillText(){},translate(){},transform(){},moveTo(){},lineTo(){},stroke(){},ellipse(){},fill(){},rotate(){}{}
  };
  return ctx;
 }
-test('closed gates, accepted badge entry and debate/signing switch render as distinct atlas frames',()=>{
+test('closed/open badge gates render distinctly while stage furniture remains fixed',()=>{
  const image={complete:true,naturalWidth:1700,naturalHeight:941};
  const images=Object.fromEntries(Object.keys(MODULAR_VENUE_FILES).map(k=>[k,image]));
  assert(modularVenueReady(images));
@@ -70,11 +70,12 @@ test('closed gates, accepted badge entry and debate/signing switch render as dis
  assert(drawModularVenue(ctx,images,idle,0));
  assert.equal(ctx.depth,0);
  assert(ctx.calls.some(c=>c.args[1]===MODULAR_ATLAS.gate.closed.x&&c.args[3]===MODULAR_ATLAS.gate.closed.w));
- assert(ctx.calls.some(c=>c.args[1]===MODULAR_ATLAS.signing.x&&c.args[3]===MODULAR_ATLAS.signing.w));
+ assert(ctx.calls.some(c=>c.args[1]===MODULAR_ATLAS.debate.x&&c.args[3]===MODULAR_ATLAS.debate.w));
  const admitted={...idle,elapsed:3,gateControllers:{left:{openedAt:2.5,openUntil:5},right:idle.gateControllers.right},
   departures:[{stageVisit:'exchange',debater:true}]};
  const open=mockCtx();drawModularVenue(open,images,admitted,0);
  assert.equal(open.depth,0);
  assert(open.calls.some(c=>c.args[1]===MODULAR_ATLAS.gate.open.x&&c.args[3]===MODULAR_ATLAS.gate.open.w));
  assert(open.calls.some(c=>c.args[1]===MODULAR_ATLAS.debate.x&&c.args[3]===MODULAR_ATLAS.debate.w));
+ assert.equal(ctx.calls.length,open.calls.length,'no stage furniture swap or duplicate on debate');
 });

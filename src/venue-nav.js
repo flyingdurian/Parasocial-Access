@@ -6,7 +6,7 @@ export const VENUE_W=384;
 export const VENUE_H=216;
 export const VENUE_CELL=8;
 export const VENUE_STATIONS=Object.freeze({
- entrance:[237,142],merch:[58,103],snacks:[145,100],photo:[297,132],
+ entrance:[237,142],merch:[58,103],snacks:[145,100],vending:[40,111],photo:[297,132],
  signing:[271,126],line:[239,131],mic:[302,114],help:[111,128],
  quiet:[109,135],exit:[36,139]
 });

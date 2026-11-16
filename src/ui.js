@@ -159,7 +159,7 @@ function irlPage(){const r=irl?.result||null;return `<div class="page irl-page">
  <div class="irl-disclaimer">Fan-made fictional depiction · no affiliation with, endorsement by, or actual participation by Destiny · all attendees and threats invented</div>
  </main>${footer()}</div>`.replace('Guide twenty guests through the convention.',irl.session==='endless'?'Survive endless waves of guests and protect the venue.':'Guide '+irl.config.guests+' guests through '+irl.config.title+'.').replace('One guest at a time, even when the venue is busy.','The highlighted guest stays prominent; Chaos Mode can show incoming prompts simultaneously.').replace('the four actions below','the five actions below').replace('Welcome</b> fans and peaceful critics.','Welcome</b> fans. <b>Invite to Debate</b> peaceful critics.').replace('1 · FAN / CRITIC','1 · FAN');}
 function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-canvas');if(!canvas)return;const ctx=setupGraphicsCanvas(canvas,graphics);if(!ctx)return;
- const modern=drawModularVenue(ctx,modularVenue,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});
+ const modern=drawModularVenue(ctx,modularVenue,irl,t,{host:irlPoseImages[0],poses:irlPoseImages,cast:irlImages.cast,extra:irlAdditionalSets});
  if(!modern){if(irlImages.hall.complete&&irlImages.hall.naturalWidth)ctx.drawImage(irlImages.hall,0,0,384,216);else{ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);}
   drawStageAtmosphere(ctx,t,irl.phase);drawVenueRush(ctx,irl,t);drawVenueScreens(ctx,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});drawVenueGates(ctx,irlImages.hall,irl);}
  drawStageQueueGuides(ctx,irl);
@@ -199,7 +199,8 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
   }
   const action=role==='crowd'?(g.walking?'walk':g.animation):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='departure'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='guard'?(g.task?.phase==='escort'?'point':g.walking?'walk':'idle'):role==='staff'?(g.walking?'walk':'idle'):g.pending?'talk':g.type==='redirect'?'heckle':g.type==='security'?'argue':g.type==='check'?'point':'idle';
   const toss=role==='departure'&&g.tossTime>0?-Math.sin((.65-g.tossTime)/.65*Math.PI)*12:0;
-  sprite(g.kind??(role==='guard'?3:7),g.x,g.y+toss,w,h,action,g);
+  const stageSpeaker=role==='departure'&&g.stageVisit==='exchange';
+  sprite(g.kind??(role==='guard'?3:7),g.x+(stageSpeaker?2.5:0),g.y+toss+(stageSpeaker?5:0),stageSpeaker?29:w,stageSpeaker?37:h,action,g);
   if(role==='crowd'){
    if(g.speechTime>0&&ambientBubbles===0){
     const visible=g.speech.slice(0,Math.max(0,Math.floor(g.speechProgress||0)));

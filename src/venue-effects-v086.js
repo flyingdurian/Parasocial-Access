@@ -116,14 +116,19 @@ export function drawStageConversation(ctx,event,layout=null){
  const guest=event.departures?.find(g=>g.stageVisit==='exchange');
  const dialogue=stageDialogueBeat(guest);if(!dialogue)return null;
  const person=dialogue.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
- const anchorX=person.x+16,anchorY=person.y+1,w=98;
+ // Stage speech is a dedicated overlay, always within a short pointer distance
+ // of its owner. The generic avoidance solver previously sent it to x=3.
+ const anchorX=person.x+16,anchorY=person.y+(dialogue.speaker==='destiny'?1:5),w=78;
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.font='bold 5.3px sans-serif';
- const lines=wrapMeasuredText(ctx,dialogue.text,w-8,3);
+ const lines=wrapMeasuredText(ctx,dialogue.text,w-9,3);
  const h=13+Math.max(1,lines.length)*7;
- const placed=layout?layout.place(anchorX,anchorY,w,h):{
-  x:clamp(anchorX-w/2,3,384-w-3),y:clamp(anchorY-h-6,2,216-h-3),w,h
+ const placed={
+  x:clamp(anchorX-w+8,183,384-w-3),
+  y:clamp(anchorY-h-7,2,216-h-3),w,h
  };
+ // Reserve only for later speech, never let TV/ambient overlays displace a speaker.
+ layout?.reserve(placed);
  if(!placed){ctx.restore();return null;}
  const {x,y}=placed,background=dialogue.speaker==='destiny'?'#d8f8ff':'#fff4da';
  ctx.globalAlpha=.96;ctx.fillStyle='#141a34';ctx.fillRect(x+2,y+2,w,h);
