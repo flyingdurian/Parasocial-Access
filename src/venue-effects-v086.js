@@ -125,7 +125,9 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  const lines=wrapMeasuredText(ctx,dialogue.text,w-9,3);
  const h=13+Math.max(1,lines.length)*7;
  const placed={
-  x:clamp(anchorX-w+8,183,384-w-3),
+  // Use the left-of-TV speech lane. It stays above the speaker but avoids
+  // both the live LCD and the heads of stage guests.
+  x:clamp(anchorX-w+8,142,194),
   y:clamp(anchorY-h-7,2,216-h-3),w,h
  };
  // Reserve only for later speech, never let TV/ambient overlays displace a speaker.

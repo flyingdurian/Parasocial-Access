@@ -3,9 +3,9 @@
 import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_ATLAS} from './venue-geometry-v088b.js';
 
 const FILES=Object.freeze({
- hall:'irl-hall-v088e.webp',
- stage:'irl-stage-shell-v088e.webp',
- entrance:'irl-entrance-v088e.webp',
+ hall:'irl-hall-v088f.webp',
+ stage:'irl-stage-shell-v088f.webp',
+ entrance:'irl-entrance-v088f.webp',
  ropes:'irl-stage-queue-ropes-v088c.webp',
  booths:'irl-booth-atlas-vibrant-v088b.webp'
 });
@@ -53,7 +53,7 @@ function drawStageShell(ctx,image,bounds){
  ctx.drawImage(clean,bounds.x,bounds.y,bounds.w,bounds.h);
 }
 // The stage is intentionally fixed; gameplay changes actor poses, not furniture.
-export const MODULAR_CAMERA_SCALE=.965;
+export const MODULAR_CAMERA_SCALE=.93;
 export const venueCameraPoint=(x,y)=>({x:192+(x-192)*MODULAR_CAMERA_SCALE,y:108+(y-108)*MODULAR_CAMERA_SCALE});
 export const venueCameraUnproject=(x,y)=>({x:192+(x-192)/MODULAR_CAMERA_SCALE,y:108+(y-108)/MODULAR_CAMERA_SCALE});
 export function applyModularVenueCamera(ctx){ctx.translate(192,108);ctx.scale(MODULAR_CAMERA_SCALE,MODULAR_CAMERA_SCALE);ctx.translate(-192,-108);}
@@ -71,20 +71,20 @@ function drawGate(ctx,event,side){
  const open=openness(event,side);
  // The scanner pillars, planters and check-in are one static entrance bitmap.
  // Controller state changes ONLY these anchored retractable translucent flaps.
- const center=side==='left'?112:275;
- const y=178,flapWidth=Math.max(0,8.5*(1-open));
+ const center=side==='left'?108:273;
+ const y=188,halfLane=20,flapWidth=Math.max(0,halfLane*(1-open));
  ctx.save();
  if(flapWidth>.1){
   ctx.fillStyle='rgba(187,228,242,.75)';
-  ctx.fillRect(center-8.5,y,flapWidth,11);
-  ctx.fillRect(center+8.5-flapWidth,y,flapWidth,11);
+  ctx.fillRect(center-halfLane,y,flapWidth,12);
+  ctx.fillRect(center+halfLane-flapWidth,y,flapWidth,12);
   ctx.fillStyle='rgba(245,254,255,.86)';
-  ctx.fillRect(center-8.5+flapWidth-.7,y,.7,11);
-  ctx.fillRect(center+8.5-flapWidth,y,.7,11);
+  ctx.fillRect(center-halfLane+flapWidth-.7,y,.7,12);
+  ctx.fillRect(center+halfLane-flapWidth,y,.7,12);
  }
  ctx.fillStyle=open>.35?'#7ef0ac':'#f4d58a';
- ctx.fillRect(center-16,y-7,1.8,2);
- ctx.fillRect(center+14,y-7,1.8,2);
+ ctx.fillRect(center-30,y+1,1.8,2);
+ ctx.fillRect(center+28,y+1,1.8,2);
  ctx.restore();
 }
 function livePortrait(ctx,asset,x,y,height=31,col=0,row=0,cols=4,rows=2){
@@ -109,7 +109,7 @@ function liveFanPortrait(ctx,streams,kind,x,y){
 }
 function drawBoothActivity(ctx,event){
  // Tiny contextual receipts that read as rewards; no unlabeled circles or notes.
- const anchors={merch:[81,104],snacks:[155,104],vending:[23,107],photo:[346,139]};
+ const anchors={merch:[59,88],snacks:[144,91],vending:[20,113],photo:[358,131]};
  const labels={merch:'+1 MERCH',snacks:'+1 SNACK',vending:'+1 DRINK',photo:'+1 PHOTO'};
  for(const fx of event?.effects||[]){
   if(fx.kind!=='booth')continue;
@@ -167,17 +167,22 @@ export function drawModularTV(ctx,event,t,streams={}){
   ctx.fillText(feed.won?'WIN':'LOSS',50,40,94);
   ctx.fillStyle='#ecf1f2';ctx.font='7px system-ui';ctx.fillText(String(feed.topicTitle||'LIVE DISCUSSION').slice(0,23),50,50,89);
  }else{
-  ctx.fillStyle='#e8eff0';ctx.font='bold 13px system-ui';ctx.fillText('DGG LIVE',50,24,94);
-  ctx.fillStyle='#dfc4ff';ctx.font='bold 8px system-ui';ctx.fillText('MEET & GREET',50,37,89);
-  ctx.fillStyle='#e8eff0';ctx.font='6px system-ui';ctx.fillText('CONVENTION CAM',50,46,89);
+  // The physical Destiny sprite crosses the LCD's left edge. Keep the idle
+  // broadcast slate entirely within the TV's right-hand text-safe region.
+  ctx.fillStyle='#e8eff0';ctx.font='bold 10px system-ui';ctx.fillText('DGG LIVE',77,19,41);
+  ctx.fillStyle='#dfc4ff';ctx.font='bold 6px system-ui';ctx.fillText('MEET & GREET',77,29,40);
+  ctx.fillStyle='#e8eff0';ctx.font='4.9px system-ui';ctx.fillText('CONVENTION CAM',77,37,42);
  }
  ctx.restore();
 }
 export function drawModularVenue(ctx,assets,event,t,streams={}){
  if(!modularVenueReady(assets))return false;
  ctx.save();
- draw(ctx,assets.hall,{x:-7,y:-4,w:398,h:224});
- drawContactShadow(ctx,MODULAR_PROPS.stage,.43);
+ // Overscan plate compensates for the deliberately pulled-back 0.93x camera,
+ // preserving edge-to-edge wall and floor imagery without black letterboxing.
+ draw(ctx,assets.hall,{x:-14,y:-8,w:412,h:232});
+ // The new stage includes its own floor-touching riser and contact shadow;
+ // a detached ellipse below the platform would recreate the shelf illusion.
  drawStageShell(ctx,assets.stage,MODULAR_PROPS.stage);
  // Back-wall fixtures share a common floor plane and render back-to-front.
  for(const name of ['vending','merch','food','photo']){

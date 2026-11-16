@@ -1,6 +1,20 @@
 # FeedFall: Rush Hour — v0.8.8 Lead Developer Recovery Handoff
 
-## Current checkpoint: v0.8.8e — November 16, 2026
+## Current checkpoint: v0.8.8f — November 16, 2026
+
+This checkpoint supersedes v0.8.8e's spatial art and navigation while preserving gameplay and the existing compact v0.8.7 decision-card CSS.
+
+- **Floor-first art rebuild:** `assets/irl-hall-v088f.webp` is a new pulled-back elevated 3/4 view with dramatically reduced ceiling, fictional comet-mark banners, and an expansive indigo floor plane. No painted stage, props, or Twitch/rainbow marks.
+- **Grounded stage:** `assets/irl-stage-shell-v088f.webp` is a new dggL-banner, empty-furniture stage with enclosed indigo risers and floor-touching center steps. Placed at world (200,9) size 184×90; removed the false detached stage shadow. Physical TV LCD corners are re-mapped to x~273–336, y~29–54.
+- **Compact front entry:** `assets/irl-entrance-v088f.webp` is drawn at (0,148), 384×68, replacing the giant foreground check-in. Its central desk is 84px wide, with two 42px physical scanner lanes, four immobile posts and integrated low side planters/fences. Only 2×20px glass leaves retract; actual posts never translate.
+- **Collision truth:** navigation now treats the new fixed desk, scanners, planters, and rear booth counters as solids. An admitted NPC's **feet center** must clear a scanner lane by a 7px sprite radius; unbadged NPCs cannot cross the front perimeter. Gate spawn/check/inside points and booth stations match the new sprite locations.
+- **More breathing room:** compact merch/food stalls hug the upper-left perimeter; vending and photo booth sit against the side edges. Stage queue ropes face the center stairs. Camera scale is 0.93 with image overscan to avoid blank borders.
+- **Readability:** the live LCD's idle title occupies only its right-hand safe region, away from Destiny's physical sprite. Stage dialogue stays in the left-of-TV bubble lane; the focused decision target gets a reserved no-overlap region.
+- **Verification:** added gate lane/path/solid/scale assertions in `tests/venue_modular_v088b.test.mjs`. The stage and entrance art still require live 16:9 and iPhone screenshot validation before declaring visual acceptance. Vercel builds from GitHub release branch—no shell build or push.
+
+---
+
+### Prior checkpoint: v0.8.8e — November 16, 2026
 
 Release branch is release/v0.8.8 (GitHub repository root; Vercel auto-deployment). This checkpoint supersedes historical visual references below.
 
@@ -15,7 +29,7 @@ Release branch is release/v0.8.8 (GitHub repository root; Vercel auto-deployment
 
 ---
 
-**Status:** v0.8.8e release and visual QA in progress; consult current checkpoint above.
+**Status:** v0.8.8f visual/spatial release and QA in progress; consult current checkpoint above.
 **GitHub:** https://github.com/flyingdurian/Parasocial-Access/tree/release/v0.8.8 (active).
 **Vercel project:** `feedfall-rush-hour`, project ID `prj_r9lPbfPzX5ycBnSQTVRHXSKc3V8J`.  
 **Prior verified preview:** `https://feedfall-rush-hour-4y1ot526m-michaelquach604-8018.vercel.app/irl-sandbox` and the same hostname's `/` route.  

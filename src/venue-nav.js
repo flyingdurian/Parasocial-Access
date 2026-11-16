@@ -6,9 +6,9 @@ export const VENUE_W=384;
 export const VENUE_H=216;
 export const VENUE_CELL=8;
 export const VENUE_STATIONS=Object.freeze({
- entrance:[237,142],merch:[58,103],snacks:[145,100],vending:[40,111],photo:[297,132],
- signing:[271,126],line:[239,131],mic:[302,114],help:[111,128],
- quiet:[109,135],exit:[36,139]
+ entrance:[205,138],merch:[55,83],snacks:[142,87],vending:[38,98],photo:[303,119],
+ signing:[271,108],line:[239,117],mic:[311,105],help:[112,117],
+ quiet:[102,141],exit:[36,140]
 });
 // Central opening directly between the railings, below Destiny's stage steps.
 // Sprite coordinates are TOP-LEFT; the visible floor contact is ~33px lower.
@@ -23,10 +23,10 @@ export function isVenueWalkable(x,y,gateAccess=false){
  // Path anchors are sprite top-left, but obstruction contact happens at feet.
  // Testing top-left alone let characters appear to walk through the desk.
  const feetX=x+13,feetY=y+33;
- // The front perimeter is a SOLID fence. Its two narrow gates are privileged
- // paths for checked-in arrivals and security ejections, never roam targets.
- if(feetY>=179){
-  const inGate=(feetX>=105&&feetX<=123)||(feetX>=266&&feetX<=285);
+ // A compact, immovable perimeter with two broad 42px scanner lanes and sprite-radius clearance.
+ // Feet, not sprite top-lefts, must remain inside a clear authorized lane.
+ if(feetY>=184){
+  const inGate=(feetX>=95&&feetX<=123)||(feetX>=260&&feetX<=291);
   if(!gateAccess||!inGate)return false;
  }
  // The velvet-rope aisle widens toward the camera; collide with its visible
@@ -36,11 +36,8 @@ export function isVenueWalkable(x,y,gateAccess=false){
   const left=256-18*approach,right=291+18*approach;
   if(Math.abs(feetX-left)<3.1||Math.abs(feetX-right)<3.1)return false;
  }
- // Guards/guests cannot step on the fixed scanner pedestals or rail posts.
- if(feetY>178&&feetY<212&&(
-   (feetX>=87&&feetX<=103)||(feetX>=124&&feetX<=134)||
-   (feetX>=249&&feetX<=265)||(feetX>=286&&feetX<=299)
- ))return false;
+ // Explicit post/planter solids in MODULAR_BLOCKERS cover the entire prop
+ // footprint, including the image's top. No collision-only sliding gates.
  return !VENUE_OBSTACLES.some(o=>feetX>=o.x&&feetX<o.x+o.w&&feetY>=o.y&&feetY<o.y+o.h);
 }
 const center=([c,r])=>[c*VENUE_CELL+VENUE_CELL/2,r*VENUE_CELL+VENUE_CELL/2];

@@ -188,6 +188,10 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  actors.sort((a,b)=>(a.person.y+a.h)-(b.person.y+b.h));
  const bubbleLayout=createBubbleLayout([modularVenueReady(modularVenue)?MODULAR_TV_BOUNDS:VENUE_LED_SCREEN]);
  reserveCanvasOverlay(bubbleLayout,canvas,$('#irl-world-speech'));
+ // Keep the selected decision target and its identification halo readable.
+ // Other bubbles compete for free space; the focus guest must never be covered.
+ const selected=irl.visitors.find(person=>person.id===irl.focus);
+ if(selected)bubbleLayout.reserve({x:selected.x-5,y:selected.y-18,w:47,h:61});
  let ambientBubbles=0;
  // An active typewriter line owns the reaction layer for the whole room;
  // other actors' emotes must wait rather than sit on top of the bubble.

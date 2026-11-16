@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {existsSync,readFileSync} from 'node:fs';
 import {MODULAR_GATES,MODULAR_PROPS,MODULAR_BLOCKERS,MODULAR_TV_BOUNDS,MODULAR_TV_PROJECTION,MODULAR_ATLAS} from '../src/venue-geometry-v088b.js';
 import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV} from '../src/venue-rig-v088b.js';
-import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable} from '../src/venue-nav.js';
+import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,VENUE_STATIONS} from '../src/venue-nav.js';
 const asset=name=>new URL('../assets/'+name,import.meta.url);
 
 test('five live modular assets include the clean plate, stage and unified entrance',()=>{
@@ -12,7 +12,7 @@ test('five live modular assets include the clean plate, stage and unified entran
  for(const file of names){
   const url=asset(file);assert(existsSync(url),file);
   assert.equal(readFileSync(url).toString('ascii',8,12),'WEBP',file);
-  assert(file.includes('vibrant-v088b')||file.includes('v088c')||file.includes('v088e'));
+  assert(file.includes('vibrant-v088b')||file.includes('v088c')||file.includes('v088f'));
  }
 });
 
@@ -32,10 +32,31 @@ test('every independent booth shares hitbox coordinates with the navigation map'
   assert(isVenueWalkable(...gate.inside,true),side+' reached inside');
  }
  assert(!isVenueWalkable(232,117),'stage-queue rope blocks its visible lower-left stanchion');
- assert(!isVenueWalkable(167,115),'roaming guests cannot stand on the check-in counter roof');
+ assert(!isVenueWalkable(169,162,true),'even badge holders cannot stand on the compact check-in counter');
  assert(isVenueWalkable(260,115),'center guest aisle remains walkable');
  assert(VENUE_STAGE.debate[0]<VENUE_STAGE.stairs[0]&&VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);
  assert.equal(VENUE_STAGE.exchange[1],55,'fan waits in front of the signing table after the stairs');
+});
+
+test('v0.8.8f elevated hall preserves room and aligns slim rear stage / counter',()=>{
+ assert(MODULAR_PROPS.entrance.h<=70,'entrance now occupies less than a third of the old visual height');
+ assert(MODULAR_PROPS.stage.y+MODULAR_PROPS.stage.h<=101,'stage front stays near rear floor, not the foreground');
+ assert(MODULAR_PROPS.merch.y+MODULAR_PROPS.merch.h<=105,'merch against rear left wall');
+ assert(MODULAR_PROPS.food.y+MODULAR_PROPS.food.h<=105,'food against rear left wall');
+ assert(MODULAR_PROPS.checkin.w<90,'front welcome desk is human-scale');
+ for(const side of ['left','right']){
+  const gate=MODULAR_GATES[side];
+  const authorized=venueRoute(...gate.spawn,...gate.inside,true);
+  assert(authorized.length>0,side+' authorized gate route exists');
+  assert(Math.hypot(authorized.at(-1)[0]-gate.inside[0],authorized.at(-1)[1]-gate.inside[1])<9,side+' ends inside the hall');
+  assert(!isVenueWalkable(...gate.check,false),side+' no unbadged crossing');
+ }
+ for(const side of ['first','second','third','fourth']){
+  const post=MODULAR_BLOCKERS.find(o=>o.name==='entrance '+side+' scanner');
+  assert(post,side+' has a fixed post collider');
+  assert(!isVenueWalkable(post.x+post.w/2-13,post.y+3-33,true),side+' cannot cut across pillar');
+ }
+ assert(isVenueWalkable(...VENUE_STATIONS.photo),'interactive photo booth is accessible');
 });
 
 test('LCD projection fits inside the re-anchored empty stage shell',()=>{

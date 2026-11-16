@@ -3,34 +3,40 @@
 export const MODULAR_VENUE_W=384;
 export const MODULAR_VENUE_H=216;
 export const MODULAR_STAGE=Object.freeze({
- staging:[260,72],stairs:[260,61],exchange:[285,55],debate:[219,40],floor:[260,112]
+ staging:[260,72],stairs:[260,61],exchange:[285,55],debate:[219,40],floor:[260,103]
 });
 export const MODULAR_GATES=Object.freeze({
- left:Object.freeze({id:'left',spawn:[100,225],check:[100,183],inside:[100,144],crossing:[100,191],panel:[112,184],art:{x:85,y:156,w:42,h:60}}),
- right:Object.freeze({id:'right',spawn:[263,225],check:[263,183],inside:[263,144],crossing:[263,191],panel:[275,184],art:{x:247,y:156,w:56,h:60}})
+ left:Object.freeze({id:'left',spawn:[95,225],check:[95,162],inside:[95,137],crossing:[95,174],panel:[108,194],art:{x:74,y:184,w:69,h:32}}),
+ right:Object.freeze({id:'right',spawn:[260,225],check:[260,162],inside:[260,137],crossing:[260,174],panel:[273,194],art:{x:240,y:184,w:70,h:32}})
 });
-export const MODULAR_TV_BOUNDS=Object.freeze({x:248,y:38,w:88,h:34});
+export const MODULAR_TV_BOUNDS=Object.freeze({x:272,y:28,w:66,h:28});
 // These projected corners align the moving feed to the four corners of the
-// physical LCD in irl-stage-shell-v088c.webp, drawn at stage.bounds.
-export const MODULAR_TV_PROJECTION=Object.freeze({a:.84,b:.004,c:-.01,d:.60,e:249,f:39});
+// physical LCD in irl-stage-shell-v088f.webp, drawn at stage.bounds.
+export const MODULAR_TV_PROJECTION=Object.freeze({a:.63,b:.015,c:-.008,d:.43,e:273,f:29});
 export const MODULAR_PROPS=Object.freeze({
- stage:Object.freeze({x:200,y:9,w:184,h:96}),
- merch:Object.freeze({x:37,y:48,w:80,h:69,solid:{x:39,y:93,w:78,h:24}}),
- food:Object.freeze({x:119,y:48,w:79,h:70,solid:{x:120,y:94,w:78,h:24}}),
- vending:Object.freeze({x:2,y:76,w:33,h:47,solid:{x:3,y:98,w:32,h:25}}),
- photo:Object.freeze({x:321,y:109,w:61,h:62,solid:{x:331,y:132,w:52,h:39}}),
- checkin:Object.freeze({x:134,y:138,w:115,h:78,solid:{x:134,y:138,w:115,h:78}}),
- entrance:Object.freeze({x:0,y:120,w:384,h:96}),
- queueRopes:Object.freeze({x:226,y:112,w:94,h:55})
+ stage:Object.freeze({x:200,y:9,w:184,h:90}),
+ merch:Object.freeze({x:13,y:43,w:79,h:58,solid:{x:16,y:81,w:76,h:20}}),
+ food:Object.freeze({x:100,y:45,w:79,h:58,solid:{x:101,y:84,w:77,h:19}}),
+ vending:Object.freeze({x:2,y:89,w:25,h:36,solid:{x:3,y:100,w:24,h:25}}),
+ photo:Object.freeze({x:335,y:94,w:48,h:49,solid:{x:343,y:114,w:40,h:29}}),
+ checkin:Object.freeze({x:150,y:184,w:84,h:32,solid:{x:150,y:186,w:84,h:30}}),
+ entrance:Object.freeze({x:0,y:148,w:384,h:68}),
+ queueRopes:Object.freeze({x:226,y:97,w:94,h:57})
 });
 export const MODULAR_BLOCKERS=Object.freeze([
- {name:'north wall',x:0,y:0,w:196,h:76},
- {name:'stage and screen structure',x:200,y:0,w:184,h:98},
- {name:'stage front stairs',x:252,y:98,w:49,h:21},
- {name:'stage crowd rail',x:325,y:98,w:25,h:35},
+ {name:'north wall',x:0,y:0,w:196,h:53},
+ {name:'stage and screen structure',x:200,y:0,w:184,h:83},
+ {name:'stage front riser',x:200,y:83,w:184,h:8},
+ {name:'stage front stairs',x:250,y:88,w:55,h:15},
  ...['merch','food','vending','photo','checkin'].map(name=>({name,...MODULAR_PROPS[name].solid})),
- {name:'entrance left structural edge',x:0,y:185,w:21,h:31},
- {name:'entrance right structural edge',x:363,y:185,w:21,h:31}
+ // A continuous low-height barrier; explicit post colliders are aligned to the
+ // fixed four scanner pillars in irl-entrance-v088f.webp.
+ {name:'entrance left planter and fence',x:0,y:186,w:74,h:30},
+ {name:'entrance first scanner',x:74,y:184,w:14,h:32},
+ {name:'entrance second scanner',x:130,y:184,w:14,h:32},
+ {name:'entrance third scanner',x:240,y:184,w:13,h:32},
+ {name:'entrance fourth scanner',x:298,y:184,w:13,h:32},
+ {name:'entrance right planter and fence',x:311,y:186,w:73,h:30}
 ]);
 export const MODULAR_ATLAS=Object.freeze({
  gate:{closed:{x:0,y:0,w:896,h:512},open:{x:896,y:0,w:896,h:512}},
