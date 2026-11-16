@@ -34,7 +34,7 @@ export function modularStageMode(event){
 function drawFloorRails(ctx){
  // Continuous physical perimeter, but gaps match both authorized gate lanes.
  ctx.save();
- for(const [a,b] of [[0,72],[122,229],[279,384]]){
+ for(const [a,b] of [[0,72],[122,137],[279,384]]){
   ctx.fillStyle='#2b2950';ctx.fillRect(a,184,b-a,2);
   ctx.fillStyle='#dfbb85';ctx.fillRect(a,183,b-a,1);
   ctx.fillStyle='#352954';ctx.fillRect(a,193,b-a,1.3);

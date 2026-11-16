@@ -32,6 +32,7 @@ test('every independent booth shares hitbox coordinates with the navigation map'
   assert(isVenueWalkable(...gate.inside,true),side+' reached inside');
  }
  assert(VENUE_STAGE.debate[0]<VENUE_STAGE.stairs[0]&&VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);
+ assert.equal(VENUE_STAGE.exchange[1],55,'fan waits in front of the signing table after the stairs');
 });
 
 test('LCD content and stage furnishings sit inside the modular stage shell',()=>{
@@ -43,6 +44,7 @@ test('LCD content and stage furnishings sit inside the modular stage shell',()=>
  for(const name of ['debateFurniture','signingFurniture']){
   const p=MODULAR_PROPS[name];
   assert(p.x>=s.x&&p.y>=s.y&&p.x+p.w<=s.x+s.w&&p.y+p.h<=s.y+s.h);
+  assert(p.y+p.h<=80,'stage furniture must leave central stairs visually accessible');
  }
  assert.equal(modularStageMode({departures:[]}), 'signing');
  assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:true}]}),'debate');

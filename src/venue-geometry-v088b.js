@@ -3,7 +3,7 @@
 export const MODULAR_VENUE_W=384;
 export const MODULAR_VENUE_H=216;
 export const MODULAR_STAGE=Object.freeze({
- staging:[260,72],stairs:[260,61],exchange:[285,40],debate:[219,40],floor:[260,112]
+ staging:[260,72],stairs:[260,61],exchange:[285,55],debate:[219,40],floor:[260,112]
 });
 export const MODULAR_GATES=Object.freeze({
  left:Object.freeze({id:'left',spawn:[85,225],check:[85,183],inside:[85,144],crossing:[85,191],panel:[86,188],art:{x:72,y:158,w:50,h:56}}),
@@ -20,8 +20,8 @@ export const MODULAR_PROPS=Object.freeze({
  vending:Object.freeze({x:21,y:115,w:41,h:52,solid:{x:23,y:144,w:37,h:22}}),
  photo:Object.freeze({x:321,y:109,w:61,h:62,solid:{x:331,y:132,w:52,h:39}}),
  checkin:Object.freeze({x:137,y:160,w:91,h:53,solid:{x:142,y:160,w:85,h:56}}),
- debateFurniture:Object.freeze({x:205,y:58,w:90,h:36}),
- signingFurniture:Object.freeze({x:230,y:62,w:98,h:32})
+ debateFurniture:Object.freeze({x:205,y:48,w:90,h:31}),
+ signingFurniture:Object.freeze({x:234,y:48,w:88,h:27})
 });
 export const MODULAR_BLOCKERS=Object.freeze([
  {name:'north wall',x:0,y:0,w:196,h:76},
