@@ -1,6 +1,6 @@
 # FeedFall: Rush Hour — v0.8.8 Lead Developer Recovery Handoff
 
-**Status:** Recovery checkpoint, 2026-11-16; authoritative code lives in `rush-v08/`.  
+**Status:** v0.8.8 implementation and Node QA complete locally, 2026-11-16; GitHub text source synced, binary art and Vercel release pending (see latest checkpoint below). Authoritative working source lives in `rush-v08/`.  
 **GitHub:** `https://github.com/flyingdurian/Parasocial-Access` (`main` is the source-of-truth branch).  
 **Vercel project:** `feedfall-rush-hour`, project ID `prj_r9lPbfPzX5ycBnSQTVRHXSKc3V8J`.  
 **Prior verified preview:** `https://feedfall-rush-hour-4y1ot526m-michaelquach604-8018.vercel.app/irl-sandbox` and the same hostname's `/` route.  
@@ -83,3 +83,36 @@ From repository root, work in `rush-v08/`. Local static server example: `python3
 ## 8. Immediate next steps for successor
 
 Open `CHANGELOG_V087.md`, `tests/venue_v087.test.mjs`, `src/venue-nav.js`, `src/irl-v07.js`, `src/venue-effects-v086.js`, both frontends. Implement and validate Section 5, update `CHANGELOG_V088.md` and this handoff, commit/push, deploy preview and walk through the exact owner playtest protocol. **Do not restart v0.8.8 from zero.**
+
+## Latest checkpoint — 2026-11-16: implemented and validated v0.8.8
+
+**This latest section supersedes earlier statements in this file about unimplemented work.** The prior incomplete session itself was not recovered, but its missing features were independently rebuilt from the v0.8.7 modular baseline in this session. Nothing below should be confused with a successfully published v0.8.8 deployment.
+
+### Implementation and tests
+
+- Modular recovery baseline committed locally as `7fda969`; v0.8.8 implementation locally as `4d179e5`. GitHub's remote `main` accepted the handoff at `1b44e64` and **79 text-source/config/test files** at commit `6551067bc03bd775f834c19b7f96d4923af347d3`. The GitHub connector's text-file import and local Git commits have distinct histories; do not assume the local `main` branch HEAD is identical to remote `main`.
+- `rush-v08/src/irl-debates-v088.js`: eight Destiny-specific fictional debate prompts, alternating guest/Destiny dialogue beats, and a nonrandom game-state-based verdict; debate/fan encounter separation maintained.
+- `rush-v08/src/irl-v07.js`: adds six additional cast slots, distinct photo/autograph/debate stage flows, brief TV result TTL, camera flash trigger, and `debateHistory`.
+- `rush-v08/src/venue-effects-v086.js`: aligns screen graphics to the actual painted LED position (`x=241, y=16, w=84, h=30`); adds fan snapshot/autograph, arcade DEBATE WON/LOST screens, physical queue markers, gate overlays and speech-beat rendering. Both full-game (`src/ui.js`) and isolated sandbox (`src/irl-sandbox-v085.js`) load the new hall and cast art and share the stage effects.
+- Fifth **INVITE TO DEBATE** action has distinctive blood-sports arcade treatment in main and sandbox CSS. Event 1×–2× speed option persists. The existing navigation mesh, check-in/open-gate state, center-stairs queue and chaos-mode decision hierarchy are preserved and exercised by tests. An actual on-device visual/interaction playtest remains necessary; no test can certify painted-art collision perfection without that pass.
+- Full Node suite `node --test tests/*.test.mjs` **PASS**, output captured in `/tmp/feedfall-v088-all-tests2.log`; v0.8.8 venue regression `tests/venue_v088.test.mjs` included. Local static HTTP routes and five new asset endpoints **PASS**. Legacy Chromium browser smoke blocked by `socket() failed: Operation not permitted (1)` on this executor, a sandbox restriction rather than a detected JavaScript assertion failure.
+
+### Binary artwork and publishing blocker — do not silently skip
+
+The following regenerated WebP assets exist in the **local modular source archive** but could NOT be uploaded through the currently authenticated GitHub/Vercel connectors, which accept binary content only in a base64 text payload. The owner's strict hygiene instruction prohibits generating/reading/printing such payloads. `git push origin main` from the shell also failed with `CONNECT tunnel failed, response 403`, while the text-only GitHub connector succeeded. Therefore **remote GitHub `main` currently lacks these five new files and the recovered v0.8.7 `assets/*.webp` binary inventory**. Remote `main` is a readable source checkpoint, not yet a standalone runnable repo checkout.
+
+| Missing versioned file | SHA-256 in local archive |
+| --- | --- |
+| `assets/irl-hall-open-v088.webp` | `ca5a72d1170b713c4586c5b96cf77295b3d63cceda49de58fca2b4a12f19117f` |
+| `assets/irl-cast-set-c.webp` | `4e6b3353923895e94cac222215cdecd6c7511c3634dcb4d927b38845e91cf81e` |
+| `assets/irl-cast-set-c-walk4.webp` | `4f30cabbd6c0cd4665f93c70fdc7bc2b2f7a44a8fb25f1744282d78fc4a72847` |
+| `assets/irl-cast-set-c-back4.webp` | `14c0c68f37c3ce54260939e39825bd2408960096464a68c759287367318493b0` |
+| `assets/irl-cast-set-c-react4.webp` | `a98f96a065abd3a396879828ae12ba62177688eeef4609718c275a92dd17f98b` |
+
+To prevent another source loss, the **complete modular source archive including all original and regenerated binary artwork** was durably saved as `FeedFall-v0.8.8-Modular-Source.zip` in the owner's Library, ID `libfile_d8d36c9b67508191b8d39be9bf64a0c4` (~22 MB; no dist, previews or single-file bundles). If this local executor disappears, materialize that archive to recover the actual v0.8.8 working tree, NOT the text-only GitHub checkout. Preserve all 5 image SHA checks when uploading by a future permitted binary transport.
+
+### Vercel and next exact handoff
+
+- The supplied previous preview `https://feedfall-rush-hour-4y1ot526m-michaelquach604-8018.vercel.app/` and `/irl-sandbox` were both reachable and still present **v0.8.7** on 2026-11-16. The v0.8.8 hall URL `/assets/irl-hall-open-v088.webp` on that preview remains missing (404). Do not claim this is a v0.8.8 preview or promote an incomplete assets deployment.
+- Project: `feedfall-rush-hour`, ID `prj_r9lPbfPzX5ycBnSQTVRHXSKc3V8J`, team `team_BYqArAIsgLmCDtZatWWg7CFY`. An unrelated recent Vercel READY deployment was found with `/irl-sandbox` = 404; READY alone is insufficient.
+- **Next:** secure an owner-permitted non-base64 binary Git push/deployment path (authenticated shell Git/CLI or direct file UI) or get an explicit hygiene exception for opaque transport encoding; put **all** `assets/*.webp` into GitHub without adding compiled HTML. Then wire/reuse the correct Vercel project, deploy a fresh preview, verify `/`, `/irl-sandbox`, all 5 new art URLs and stage playtest paths, and hand the owner the new exact URLs and steps. Document observed queue/stairs/gate collision discrepancies from hands-on playtest before declaring v0.8.8 released.

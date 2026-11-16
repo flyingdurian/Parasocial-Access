@@ -14,7 +14,7 @@
 ## Validation and current limitations
 
 - Targeted v0.8.7 and v0.8.8 venue tests pass, including distinct fan/photo/autograph/debate progression, backdrops/cast assets and performance-conditioned debate outcomes. Local HTTP module/asset route checks pass.
-- The full cross-world Node suite is rerunning after older tests were updated to expect the new six-person group (31 rather than 25 phase-three crowd characters). Do not claim full QA green until completion.
+- The full cross-world Node suite **passes** after older tests were updated to expect the new six-person group (31 rather than 25 phase-three crowd characters). Test output was kept in `/tmp/feedfall-v088-all-tests2.log`, not printed to the terminal.
 - Local Playwright Chromium launch is blocked by the environment's `socket() failed: Operation not permitted`; do not mistake that restriction for an application assertion failure. A visually reviewed Vercel preview remains necessary for final acceptance.
 - The new hall is a revised static stage/booth composition with **modular moving gates, scanner lights and screens**, **not** a fully destructured furniture/lighting asset pipeline. Extraction of every booth/mic/fixture into its own moveable sprite and high-density visual collision QA remain future polish if the owner wants all props physically rearrangeable.
 - A fresh v0.8.8 Vercel preview has **not** been attested at the time of authoring this changelog. A GitHub file handoff was committed first; binary art upload/deployment must follow only through an authorized transport method that respects the no-base64-string hygiene rule.
