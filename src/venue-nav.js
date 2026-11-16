@@ -26,20 +26,20 @@ export function isVenueWalkable(x,y,gateAccess=false){
  // The front perimeter is a SOLID fence. Its two narrow gates are privileged
  // paths for checked-in arrivals and security ejections, never roam targets.
  if(feetY>=179){
-  const inGate=(feetX>=91&&feetX<=109)||(feetX>=245&&feetX<=269);
+  const inGate=(feetX>=105&&feetX<=123)||(feetX>=266&&feetX<=285);
   if(!gateAccess||!inGate)return false;
  }
  // The velvet-rope aisle widens toward the camera; collide with its visible
  // sloping edges, leaving the center free for authorized stage guests.
- if(feetY>=112&&feetY<=167){
-  const approach=(feetY-112)/55;
-  const left=247-35*approach,right=298+34*approach;
-  if(Math.abs(feetX-left)<3.4||Math.abs(feetX-right)<3.4)return false;
+ if(feetY>=117&&feetY<=169){
+  const approach=(feetY-117)/52;
+  const left=256-18*approach,right=291+18*approach;
+  if(Math.abs(feetX-left)<3.1||Math.abs(feetX-right)<3.1)return false;
  }
  // Guards/guests cannot step on the fixed scanner pedestals or rail posts.
  if(feetY>178&&feetY<212&&(
-   (feetX>=77&&feetX<=89)||(feetX>=110&&feetX<=122)||
-   (feetX>=233&&feetX<=244)||(feetX>=270&&feetX<=281)
+   (feetX>=87&&feetX<=103)||(feetX>=124&&feetX<=134)||
+   (feetX>=249&&feetX<=265)||(feetX>=286&&feetX<=299)
  ))return false;
  return !VENUE_OBSTACLES.some(o=>feetX>=o.x&&feetX<o.x+o.w&&feetY>=o.y&&feetY<o.y+o.h);
 }

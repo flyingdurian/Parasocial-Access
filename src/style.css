@@ -498,3 +498,21 @@
  .irl-world-speech p{font-size:10px;line-height:1.23}
  .irl-world-speech small{font-size:9px;line-height:1.2}
 }
+
+
+/* v0.8.8e: restore the compact v0.8.7 guest card benchmark. */
+.irl-world-speech{
+ width:min(63%,260px);max-width:calc(100% - 12px);min-width:0;
+ max-height:none;overflow:visible;overflow-y:visible;pointer-events:none;
+ padding:7px 9px 8px;font:700 12px/1.25 ui-monospace,monospace;
+}
+.irl-world-speech strong{font-size:15px;line-height:1.1;white-space:normal;overflow-wrap:break-word}
+.irl-world-speech p{font:800 12px/1.2 ui-monospace,monospace;overflow-wrap:break-word}
+.irl-world-speech small{font-size:10px;line-height:1.25}
+.irl-inline-emote{display:inline-block;width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.23em;margin:0 .05em}
+@media(max-width:660px){
+ .irl-world-speech{width:min(58%,235px);max-height:none;overflow:visible;overflow-y:visible;padding:6px 7px;font-size:10px}
+ .irl-world-speech strong{font-size:12px}
+ .irl-world-speech p{font-size:10px;line-height:1.2}
+ .irl-world-speech small{font-size:9px}
+}

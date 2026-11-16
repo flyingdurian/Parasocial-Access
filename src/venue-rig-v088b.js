@@ -3,13 +3,11 @@
 import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_ATLAS} from './venue-geometry-v088b.js';
 
 const FILES=Object.freeze({
- hall:'irl-hall-vibrant-v088b.webp',
- stage:'irl-stage-shell-v088c.webp',
- gate:'irl-gate-atlas-v088c.webp',
- planters:'irl-entrance-planters-v088c.webp',
+ hall:'irl-hall-v088e.webp',
+ stage:'irl-stage-shell-v088e.webp',
+ entrance:'irl-entrance-v088e.webp',
  ropes:'irl-stage-queue-ropes-v088c.webp',
- booths:'irl-booth-atlas-vibrant-v088b.webp',
- checkin:'irl-checkin-v088c.webp'
+ booths:'irl-booth-atlas-vibrant-v088b.webp'
 });
 export function loadModularVenueAssets(){
  const assets={};
@@ -69,64 +67,62 @@ function openness(event,side){
  if(!gate)return 0;
  return Math.max(0,Math.min(1,4*(event.elapsed-gate.openedAt),3*(gate.openUntil-event.elapsed)));
 }
-function drawGate(ctx,atlas,event,side){
- const frame=MODULAR_GATES[side].art,open=openness(event,side);
- // Fixed scanner posts: state changes may retract glass, not translate hardware.
- draw(ctx,atlas,frame,MODULAR_ATLAS.gate.open);
+function drawGate(ctx,event,side){
+ const open=openness(event,side);
+ // The scanner pillars, planters and check-in are one static entrance bitmap.
+ // Controller state changes ONLY these anchored retractable translucent flaps.
+ const center=side==='left'?112:275;
+ const y=178,flapWidth=Math.max(0,8.5*(1-open));
  ctx.save();
- const flapWidth=Math.max(0,9*(1-open));
- ctx.fillStyle='rgba(177,218,242,.74)';
- if(flapWidth>.15){
-  ctx.fillRect(frame.x+16,frame.y+12,flapWidth,10);
-  ctx.fillRect(frame.x+34-flapWidth,frame.y+12,flapWidth,10);
-  ctx.fillStyle='rgba(238,250,255,.83)';
-  ctx.fillRect(frame.x+16+flapWidth-.7,frame.y+12,.7,10);
-  ctx.fillRect(frame.x+34-flapWidth,frame.y+12,.7,10);
+ if(flapWidth>.1){
+  ctx.fillStyle='rgba(187,228,242,.75)';
+  ctx.fillRect(center-8.5,y,flapWidth,11);
+  ctx.fillRect(center+8.5-flapWidth,y,flapWidth,11);
+  ctx.fillStyle='rgba(245,254,255,.86)';
+  ctx.fillRect(center-8.5+flapWidth-.7,y,.7,11);
+  ctx.fillRect(center+8.5-flapWidth,y,.7,11);
  }
- ctx.fillStyle=open>.35?'#8df4b1':'#ffdb9e';
- ctx.fillRect(frame.x+9,frame.y+11,2,2);
- ctx.fillRect(frame.x+40,frame.y+11,2,2);
+ ctx.fillStyle=open>.35?'#7ef0ac':'#f4d58a';
+ ctx.fillRect(center-16,y-7,1.8,2);
+ ctx.fillRect(center+14,y-7,1.8,2);
  ctx.restore();
 }
-function livePortrait(ctx,asset,x,y,height=31){
+function livePortrait(ctx,asset,x,y,height=31,col=0,row=0,cols=4,rows=2){
  if(!asset?.naturalWidth||!asset?.naturalHeight)return false;
- const sw=asset.naturalWidth/4,sh=asset.naturalHeight/2;
- // Both portraits use the same physical height, irrespective of atlas resolution.
+ const sw=asset.naturalWidth/cols,sh=asset.naturalHeight/rows;
  const aspect=sw/sh,dw=Math.min(22,height*aspect);
- ctx.drawImage(asset,0,0,sw,sh,x-dw/2,y,dw,height);
+ ctx.drawImage(asset,col*sw,row*sh,sw,sh,x-dw/2,y,dw,height);
  return true;
 }
-function drawEntranceJoinery(ctx){
- ctx.save();
- // These four independent low wall panels stop at the two authorized gate lanes.
- for(const [x,right] of [[58,76],[119,140],[230,236],[279,321]]){
-  const w=right-x;
-  ctx.fillStyle='#30274e';ctx.fillRect(x,196,w,17);
-  ctx.fillStyle='#715c86';ctx.fillRect(x,196,w,1.3);
-  ctx.fillStyle='#f0ae6c';ctx.fillRect(x,197,w,1);
-  ctx.fillStyle='#251f40';ctx.fillRect(x,211,w,2);
-  ctx.fillStyle='rgba(169,137,196,.18)';ctx.fillRect(x+2,200,Math.max(0,w-4),7);
+function liveFanPortrait(ctx,streams,kind,x,y){
+ // A cast-atlas fallback must crop the REAL guest cell; the top-left cell is Destiny.
+ if(kind>=12&&kind<=29){
+  const group=Math.floor((kind-12)/6),sheet=streams.extra?.[group];
+  if(sheet?.naturalWidth)return livePortrait(ctx,sheet,x,y,31,(kind-12)%6,0,6,2);
  }
- ctx.restore();
+ if(kind>=1&&kind<12){
+  const pose=streams.poses?.[kind];
+  if(pose?.naturalWidth&&pose!==streams.host)return livePortrait(ctx,pose,x,y);
+ }
+ const safeKind=Number.isInteger(kind)&&kind>=1&&kind<12?kind:2;
+ return livePortrait(ctx,streams.cast,x,y,31,safeKind%4,Math.floor(safeKind/4),4,3);
 }
-function drawBoothActivity(ctx,event,t){
- // Venue transactions get anchored icon particles, never raw floating debug labels.
- const points={merch:[57,92],snacks:[150,94],vending:[27,126],photo:[351,130]};
- const glyph={merch:'★',snacks:'♪',vending:'◆',photo:'✦'};
+function drawBoothActivity(ctx,event){
+ // Tiny contextual receipts that read as rewards; no unlabeled circles or notes.
+ const anchors={merch:[81,104],snacks:[155,104],vending:[23,107],photo:[346,139]};
+ const labels={merch:'+1 MERCH',snacks:'+1 SNACK',vending:'+1 DRINK',photo:'+1 PHOTO'};
  for(const fx of event?.effects||[]){
   if(fx.kind!=='booth')continue;
-  const point=points[fx.station];if(!point)continue;
+  const point=anchors[fx.station];if(!point)continue;
   const age=1-Math.max(0,Math.min(1,fx.ttl/(fx.maxTtl||1.15)));
-  const x=point[0]+Math.sin(age*8+(fx.seed||0))*.7,y=point[1]-5-age*9;
-  ctx.save();ctx.globalAlpha=Math.min(1,fx.ttl*2);
-  ctx.fillStyle='rgba(42,28,75,.8)';ctx.beginPath();ctx.arc(x,y,7.4,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle=fx.station==='photo'?'#b3eafb':'#f3be73';ctx.lineWidth=1.1;ctx.stroke();
-  ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillStyle='#fff0b5';ctx.fillText(glyph[fx.station],x,y+.3);
-  for(let i=0;i<3;i++){
-   const px=x+Math.cos(i*2.094+age*3)*(8+age*3),py=y+Math.sin(i*2.094+age*3)*5;
-   ctx.fillStyle=i===0?'#ffde9a':'#b1dff4';ctx.fillRect(px,py,1.7,1.7);
-  }
+  const y=point[1]-5-age*6,alpha=Math.min(.85,fx.ttl*1.8);
+  const label=labels[fx.station];
+  ctx.save();ctx.globalAlpha=alpha;
+  ctx.font='bold 5.4px ui-monospace,monospace';ctx.textAlign='center';
+  const width=Math.ceil(ctx.measureText(label).width+7);
+  ctx.fillStyle='rgba(24,20,46,.78)';ctx.fillRect(point[0]-width/2,y-7,width,10);
+  ctx.fillStyle='#dfb66f';ctx.fillRect(point[0]-width/2,y-7,width,1);
+  ctx.fillStyle='#fff1cc';ctx.fillText(label,point[0],y);
   ctx.restore();
  }
 }
@@ -154,8 +150,7 @@ export function drawModularTV(ctx,event,t,streams={}){
   ctx.fillStyle=wash;ctx.fillRect(6,8,56,38);
   ctx.globalAlpha=.96;
   livePortrait(ctx,streams.host,23,12,31);
-  const guest=streams.poses?.[feed.guestKind]||streams.cast;
-  livePortrait(ctx,guest,45,12,31);
+  liveFanPortrait(ctx,streams,feed.guestKind,45,12);
   ctx.globalAlpha=1;
   ctx.restore();
   ctx.fillStyle='#fff';ctx.font='bold 9px system-ui';ctx.fillText('PHOTO OP',79,21,32);
@@ -163,9 +158,9 @@ export function drawModularTV(ctx,event,t,streams={}){
   ctx.save();ctx.translate(33,44);ctx.rotate(-.08);
   ctx.font='italic bold 7px cursive';ctx.fillStyle='#ffdb9c';ctx.fillText('Destiny ✦',0,0,48);ctx.restore();
  }else if(feed?.type==='autograph'){
-  ctx.fillStyle='#f5f1e8';ctx.fillRect(9,10,82,36);
-  ctx.fillStyle='#526175';ctx.font='italic bold 13px cursive';ctx.fillText('Destiny ✦',50,31,74);
-  ctx.fillStyle='#4d836f';ctx.font='bold 8px system-ui';ctx.fillText('FAN MOMENT',50,41,74);
+  ctx.fillStyle='rgba(226,192,243,.10)';ctx.fillRect(9,10,82,36);
+  ctx.fillStyle='#f6d99d';ctx.font='italic bold 13px cursive';ctx.fillText('Destiny ✦',50,31,74);
+  ctx.fillStyle='#d5f1e1';ctx.font='bold 8px system-ui';ctx.fillText('FAN MOMENT',50,41,74);
  }else if(feed?.type==='debate'){
   ctx.fillStyle='#f3f5f6';ctx.font='bold 10px system-ui';ctx.fillText('DEBATE RESULT',50,18,92);
   ctx.fillStyle=feed.won?'#a7e0bc':'#ffc0ae';ctx.font='900 23px system-ui';
@@ -190,13 +185,10 @@ export function drawModularVenue(ctx,assets,event,t,streams={}){
   draw(ctx,assets.booths,MODULAR_PROPS[name],MODULAR_ATLAS[name]);
  }
  draw(ctx,assets.ropes,MODULAR_PROPS.queueRopes);
- drawEntranceJoinery(ctx);
- drawContactShadow(ctx,MODULAR_PROPS.checkin,.34);
- draw(ctx,assets.checkin,MODULAR_PROPS.checkin);
- for(const side of ['left','right'])drawGate(ctx,assets.gate,event,side);
- draw(ctx,assets.planters,{x:-5,y:141,w:89,h:75},MODULAR_ATLAS.planter.left);
- draw(ctx,assets.planters,{x:282,y:141,w:107,h:75},MODULAR_ATLAS.planter.right);
- drawBoothActivity(ctx,event,t);
+ // One physically continuous entrance layer ensures the pillars never wander.
+ draw(ctx,assets.entrance,MODULAR_PROPS.entrance);
+ for(const side of ['left','right'])drawGate(ctx,event,side);
+ drawBoothActivity(ctx,event);
  drawModularTV(ctx,event,t,streams);
  // The stage remains empty pending later dedicated furniture design.
  ctx.restore();

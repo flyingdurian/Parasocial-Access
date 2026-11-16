@@ -45,3 +45,9 @@ body.irl-sandbox{background:#0d1224;color:#fff1df;font-family:system-ui,sans-ser
 @media(max-width:650px){
  .harness-prompt{width:min(76%,380px);padding:6px 8px;font-size:clamp(10px,2.6vw,12px)}
 }
+
+
+/* v0.8.8e: compact original-size venue review card, without nested scroll. */
+.harness-prompt{width:min(39%,300px);max-width:calc(100% - 8px);max-height:none;overflow:visible;overflow-y:visible;padding:9px;font-size:clamp(9px,1.1vw,15px);pointer-events:none}
+.harness-prompt .irl-inline-emote{display:inline-block;width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.23em;margin:0 .05em}
+@media(max-width:650px){.harness-prompt{width:52%;padding:5px;font-size:clamp(9px,1.1vw,12px)}}

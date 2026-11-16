@@ -1,7 +1,22 @@
 # FeedFall: Rush Hour — v0.8.8 Lead Developer Recovery Handoff
 
-**Status:** v0.8.8 implementation and Node QA complete locally, 2026-11-16; GitHub text source synced, binary art and Vercel release pending (see latest checkpoint below). Authoritative working source lives in `rush-v08/`.  
-**GitHub:** `https://github.com/flyingdurian/Parasocial-Access` (`main` is the source-of-truth branch).  
+## Current checkpoint: v0.8.8e — November 16, 2026
+
+Release branch is release/v0.8.8 (GitHub repository root; Vercel auto-deployment). This checkpoint supersedes historical visual references below.
+
+- Fresh hall background asset: assets/irl-hall-v088e.webp. Deep-indigo floor, evening windows, amber lighting. Four magenta banners with original fictional gold comet-in-hexagon platform emblem; no Twitch signs, real-world logos or rainbow stripes. Right-rear wall reserved empty for separate stage layer.
+- Fresh stage asset: assets/irl-stage-shell-v088e.webp. Empty podium, dggL mascot banner pair, TV masked separately. No chairs or furniture. Stage geometry (200,9) width184 height96 in 384x216 native world. Floor seam maintained.
+- Unified entrance sprite: assets/irl-entrance-v088e.webp at (0,120), size384x96. Central counter, flush planters and fixed scanners; both walk-through lanes widened ~30-40%; code animates glass flaps only, with no scanner translation.
+- Stage queue ropes moved to true central stair approach. Navigation and collision match the entrance pillars and stage.
+- TV snapshot: one Destiny + actual guest atlas crop, translucent screen compositing and one signature; no duplicated host. Transaction feedback small labeled +1 chips; removed ambiguous circle icons.
+- Compact v0.8.7-scale speech/decision cards override oversized v0.8.8d CSS; no internal scrolling. dggL token renders inline image from assets/irl-dggl-v088e.webp in DOM and canvas speech/chat.
+- Updated modules: src/venue-rig-v088b.js, src/venue-geometry-v088b.js, src/venue-nav.js, src/dgg-emotes-v085.js, src/irl-atmosphere-v083.js, src/venue-effects-v086.js, src/ui.js, src/irl-sandbox-v085.js, plus CSS and tests/venue_modular_v088b.test.mjs.
+- Final QA: Vercel /irl-sandbox screenshot and iPhone viewport inspection must check lane passage, stage feet, TV crop, and card readability. Programmatic checks do not prove artistic perspective.
+
+---
+
+**Status:** v0.8.8e release and visual QA in progress; consult current checkpoint above.
+**GitHub:** https://github.com/flyingdurian/Parasocial-Access/tree/release/v0.8.8 (active).
 **Vercel project:** `feedfall-rush-hour`, project ID `prj_r9lPbfPzX5ycBnSQTVRHXSKc3V8J`.  
 **Prior verified preview:** `https://feedfall-rush-hour-4y1ot526m-michaelquach604-8018.vercel.app/irl-sandbox` and the same hostname's `/` route.  
 **Version target:** v0.8.8; do not label v0.8.7 features as newly completed work.

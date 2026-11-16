@@ -9,7 +9,7 @@ import {createGraphicsPanel} from './graphics-panel.js';
 import {drawVenueCharacter,drawContactShadow,venueSpriteGeometry,stageAction} from './sprite-animation.js';
 import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay} from './irl-atmosphere-v083.js';
 import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
-import {drawDggEmote} from './dgg-emotes-v085.js';
+import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
 import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 
@@ -27,7 +27,7 @@ let speed=Math.min(8,Math.max(1,Number(params.get('speed'))||1));
 
 const assets={};
 const modularVenue=loadModularVenueAssets();
-for(const [id,path] of Object.entries({hall:'irl-hall',cast:'irl-cast',walk:'irl-cast-walk',pose0:'irl-host-poses',pose1:'irl-photographer-poses',pose3:'irl-security-poses',additionalA:'irl-cast-set-a',additionalB:'irl-cast-set-b',additionalC:'irl-cast-set-c',walkA:'irl-cast-set-a-walk4',walkB:'irl-cast-set-b-walk4',walkC:'irl-cast-set-c-walk4',backA:'irl-cast-set-a-back4',backB:'irl-cast-set-b-back4',backC:'irl-cast-set-c-back4',stageA:'irl-cast-stage-a',stageB:'irl-cast-stage-b',reactionA:'irl-cast-set-a-react4',reactionB:'irl-cast-set-b-react4',reactionC:'irl-cast-set-c-react4',originalWalkA:'irl-cast-original-a-walk4',originalWalkB:'irl-cast-original-b-walk4',originalBackA:'irl-cast-original-a-back4',originalBackB:'irl-cast-original-b-back4',emotes:'irl-dgg-emotes6'})){
+for(const [id,path] of Object.entries({hall:'irl-hall',cast:'irl-cast',walk:'irl-cast-walk',pose0:'irl-host-poses',pose1:'irl-photographer-poses',pose3:'irl-security-poses',additionalA:'irl-cast-set-a',additionalB:'irl-cast-set-b',additionalC:'irl-cast-set-c',walkA:'irl-cast-set-a-walk4',walkB:'irl-cast-set-b-walk4',walkC:'irl-cast-set-c-walk4',backA:'irl-cast-set-a-back4',backB:'irl-cast-set-b-back4',backC:'irl-cast-set-c-back4',stageA:'irl-cast-stage-a',stageB:'irl-cast-stage-b',reactionA:'irl-cast-set-a-react4',reactionB:'irl-cast-set-b-react4',reactionC:'irl-cast-set-c-react4',originalWalkA:'irl-cast-original-a-walk4',originalWalkB:'irl-cast-original-b-walk4',originalBackA:'irl-cast-original-a-back4',originalBackB:'irl-cast-original-b-back4',emotes:'irl-dgg-emotes6',dggl:'irl-dggl-v088e'})){
  const img=new Image();img.src='/assets/'+path+'.webp';assets[id]=img;
 }
 const extra=[assets.additionalA,assets.additionalB,assets.additionalC],walk4=[assets.walkA,assets.walkB,assets.walkC],back4=[assets.backA,assets.backB,assets.backC],stage=[assets.stageA,assets.stageB],reactions=[assets.reactionA,assets.reactionB,assets.reactionC],originalWalk=[assets.originalWalkA,assets.originalWalkB],originalBack=[assets.originalBackA,assets.originalBackB];
@@ -35,7 +35,7 @@ assets.hall.src='/assets/irl-hall-open-v088.webp';
 assets.hall.onerror=()=>{assets.hall.onerror=()=>{assets.hall.onerror=null;assets.hall.src='/assets/irl-hall.webp';};assets.hall.src='/assets/irl-hall-open-v087.webp';};
 const poses={0:assets.pose0,1:assets.pose1,3:assets.pose3};
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8c · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8e · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
@@ -91,13 +91,13 @@ function draw(t){
   const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?'talk':g.type==='security'?'argue':g.type==='check'?'point':'idle'):g.walking?'walk':'idle';
   const stageSpeaker=role==='depart'&&g.stageVisit==='exchange';
   sprite(kind,g.x+(stageSpeaker?2.5:0),g.y+(stageSpeaker?5:0),stageSpeaker?29:w,stageSpeaker?37:h,state,g);
-  if(role==='crowd'&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout);ambient++;}
-  else if(role==='crowd'&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0&&!drawDggEmote(ctx,assets.emotes,g.emote,g.x+6,g.y-17,19)){ctx.fillStyle='#fff1d2';ctx.fillRect(g.x+7,g.y-9,15,9);ctx.fillStyle='#4e416e';ctx.font='bold 8px monospace';ctx.fillText(g.emote,g.x+10,g.y-2);}
+  if(role==='crowd'&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout,assets.dggl);ambient++;}
+  else if(role==='crowd'&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0&&!drawDggEmote(ctx,assets.emotes,g.emote,g.x+6,g.y-17,19,assets.dggl)){ctx.fillStyle='#fff1d2';ctx.fillRect(g.x+7,g.y-9,15,9);ctx.fillStyle='#4e416e';ctx.font='bold 8px monospace';ctx.fillText(g.emote,g.x+10,g.y-2);}
   if(role==='visitor'&&g.pending){ctx.fillStyle='#77ffe2';ctx.fillRect(g.x+9,g.y-4,16,7);}
  }
- drawStageConversation(ctx,event,bubbleLayout);
- if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<waiting.length;i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout);}
- for(const fx of event.effects){if(fx.kind==='booth')continue;ctx.font='bold 8px monospace';ctx.lineWidth=3;ctx.strokeStyle='#11152e';ctx.strokeText(fx.text,fx.x,fx.y);ctx.fillStyle=fx.color;ctx.fillText(fx.text,fx.x,fx.y);}
+ drawStageConversation(ctx,event,bubbleLayout,assets.dggl);
+ if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<waiting.length;i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout,assets.dggl);}
+ for(const fx of event.effects){if(fx.kind==='booth')continue;ctx.font='bold 8px monospace';ctx.lineWidth=3;ctx.strokeStyle='#11152e';if(!String(fx.text).includes('dggL'))ctx.strokeText(fx.text,fx.x,fx.y);ctx.fillStyle=fx.color;drawInlineDggL(ctx,fx.text,fx.x,fx.y,assets.dggl,11);}
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}
  drawCameraFlashes(ctx,event);
  if(useCamera)ctx.restore();
@@ -107,6 +107,15 @@ function draw(t){
 
 function update(){
  const set=(id,value)=>{q(id).textContent=String(value);};
+ const setRich=(id,value)=>{
+  const el=q(id),raw=String(value??'');if(el.dataset.richValue===raw)return;el.dataset.richValue=raw;
+  const fragment=document.createDocumentFragment();
+  for(const token of String(value??'').split(/(dggL)/g)){
+   if(token==='dggL'){const img=document.createElement('img');img.src='/assets/irl-dggl-v088e.webp';img.alt='dggL';img.className='irl-inline-emote';fragment.appendChild(img);}
+   else if(token)fragment.appendChild(document.createTextNode(token));
+  }
+  el.replaceChildren(fragment);
+ };
  set('#h-session',event.session==='endless'?'SURVIVAL':'LEVEL '+(event.levelIndex+1));
  set('#h-time',Math.floor(event.clock/60)+':'+String(Math.floor(event.clock%60)).padStart(2,'0'));
  set('#h-guests',(event.finished.length+event.lost)+' / '+(event.session==='endless'?'∞':event.cards.length));
@@ -114,7 +123,7 @@ function update(){
  set('#h-caption',event.message);set('#h-pause',event.paused?'▶ Resume':'Ⅱ Pause');
  const guest=event.selected,bubble=q('#h-speech');bubble.hidden=!guest;
  if(guest){
-  set('#h-name','◉ '+guest.name);set('#h-text','“'+guest.text+'”');set('#h-cue',guest.cue);set('#h-timer',Math.max(0,Math.ceil(guest.life-guest.age))+' seconds · '+guest.type.toUpperCase());
+  set('#h-name','◉ '+guest.name);setRich('#h-text','“'+guest.text+'”');setRich('#h-cue',guest.cue);set('#h-timer',Math.max(0,Math.ceil(guest.life-guest.age))+' seconds · '+guest.type.toUpperCase());
   const wrap=q('#h-stage').getBoundingClientRect(),point=modularVenueReady(modularVenue)?venueCameraPoint(guest.x+17,guest.y-2):{x:guest.x+17,y:guest.y-2},sx=point.x/384*wrap.width,sy=point.y/216*wrap.height,bw=bubble.offsetWidth,bh=bubble.offsetHeight;
   const left=Math.max(3,Math.min(wrap.width-bw-3,sx-bw*.48)),top=Math.max(3,Math.min(wrap.height-bh-3,sy-bh-12));
   bubble.style.left=left+'px';bubble.style.top=top+'px';bubble.style.setProperty('--speech-tail',Math.max(12,Math.min(bw-18,sx-left))+'px');

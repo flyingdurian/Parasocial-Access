@@ -1,3 +1,4 @@
+import {drawInlineDggL} from './dgg-emotes-v085.js';
 /* Diegetic 384x216 effects over the new empty-gate, blank-LED base art. */
 import {venueStageQueueSpot} from './venue-nav.js';
 import {stageDialogueBeat} from './irl-debates-v088.js';
@@ -112,7 +113,7 @@ export function drawStageQueueGuides(ctx,event){
  ctx.restore();
 }
 
-export function drawStageConversation(ctx,event,layout=null){
+export function drawStageConversation(ctx,event,layout=null,mascot=null){
  const guest=event.departures?.find(g=>g.stageVisit==='exchange');
  const dialogue=stageDialogueBeat(guest);if(!dialogue)return null;
  const person=dialogue.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
@@ -138,7 +139,7 @@ export function drawStageConversation(ctx,event,layout=null){
  ctx.fillText(dialogue.speaker==='destiny'?'DESTINY':String(guest.name||'GUEST').slice(0,16),x+4,y+6,w-8);
  ctx.fillStyle='#252940';ctx.font='bold 5.3px sans-serif';
  ctx.save();ctx.beginPath();ctx.rect(x+3,y+9,w-6,h-10);ctx.clip();
- lines.forEach((line,i)=>ctx.fillText(line,x+4,y+13+i*7,w-8));
+ lines.forEach((line,i)=>drawInlineDggL(ctx,line,x+4,y+13+i*7,mascot,8));
  ctx.restore();
  drawBubblePointer(ctx,{x,y,w,h},anchorX,anchorY,background);
  ctx.restore();

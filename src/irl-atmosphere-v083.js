@@ -1,3 +1,4 @@
+import {drawInlineDggL,measureInlineDggL} from './dgg-emotes-v085.js';
 /* Lightweight Canvas equivalents of warm point lighting and drifting particles. */
 export function drawStageAtmosphere(ctx,time,phase=1){
  const pulse=.82+.18*Math.sin(time/850),crowd=Math.min(1,phase/3);
@@ -129,7 +130,7 @@ export function drawBubblePointer(ctx,box,anchorX,anchorY,color){
  }
  ctx.closePath();ctx.fill();
 }
-export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',layout=null){
+export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',layout=null,mascot=null){
  if(!content)return null;
  const {alpha,scale}=decisionBubbleStyle(index),miniature=index>=3;
  const text=String(content).replace(/\s+/g,' ').trim();
@@ -155,7 +156,7 @@ export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',la
  if(miniature)ctx.fillText('◷ QUEUED · '+(index+2),6,12,width-12);
  else{
   ctx.beginPath();ctx.rect(4,3,width-8,height-5);ctx.clip();
-  lines.forEach((line,i)=>ctx.fillText(line,6,11+i*8,width-12));
+  lines.forEach((line,i)=>drawInlineDggL(ctx,line,6,11+i*8,mascot,9));
  }
  ctx.restore();
  ctx.save();ctx.globalAlpha=alpha;
@@ -163,12 +164,12 @@ export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',la
  ctx.restore();
  return placed;
 }
-export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null){
+export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null,mascot=null){
  if(!content||opacity<=0)return null;
  ctx.save();ctx.globalAlpha=opacity;ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.font='bold 5.8px system-ui,sans-serif';
  const text=String(content).slice(0,max).replace(/\s+/g,' ').trim();
- const width=Math.min(155,ctx.measureText(text).width+10);
+ const width=Math.min(155,measureInlineDggL(ctx,text,mascot,8)+10);
  const placed=layout?layout.place(x,y,width,11):{
   x:clampBubble(x-width/2,2,382-width),y:clampBubble(y-16,2,203),w:width,h:11
  };
@@ -176,7 +177,7 @@ export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null){
  const clipped=fitMeasuredText(ctx,text,width-10);
  ctx.fillStyle='#fff9ef';ctx.fillRect(placed.x,placed.y,width,11);
  ctx.save();ctx.beginPath();ctx.rect(placed.x+4,placed.y+1,width-8,9);ctx.clip();
- ctx.fillStyle='#344052';ctx.fillText(clipped,placed.x+5,placed.y+7.5,width-10);
+ ctx.fillStyle='#344052';drawInlineDggL(ctx,clipped,placed.x+5,placed.y+7.5,mascot,8);
  ctx.restore();ctx.restore();
  return placed;
 }
