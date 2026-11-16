@@ -3,7 +3,7 @@
 **Current candidate:** v0.8.8k code-polish candidate (asset swap pending), built on the v0.8.8j gated-venue baseline.  
 **Working branch:** `recovery/v088i-arcade-debates` (continuing the v0.8.8h unified-plate baseline).  
 **Baseline:** `release/v0.8.8`, commit `bcbb27de6df8bb8f395cd3bbfe392315be7360b6`.  
-**Status:** v0.8.8k animation/audio regression changes are under verification. The new plate and independent mascot named below are NOT in this branch or the accessible generated-asset collection. Keep the v088h plate until the exact PNGs are supplied and reviewed. No production promotion is approved.
+**Status:** v0.8.8k code-only polish passed 20/20 focused Node tests (venue + navigation + new scene/audio regressions), and the Git branch preview is READY with HTTP 200 on `/irl-sandbox`. The new plate and independent mascot named below are NOT in this branch or the accessible generated-asset collection. Keep the v088h plate until the exact PNGs are supplied and visually reviewed. No production promotion is approved.
 
 ## v0.8.8k partial polish — asset handoff required
 
@@ -13,7 +13,7 @@
 - **Ghost claw containment:** the existing machine animates only when occupied, and grapple/prize pixels are strictly clipped to a glass rectangle computed from the *same* cabinet bounds used by navigation. No independent machine texture is introduced. The glass coordinates **must be visually recalibrated** after the new image is mounted.
 - **Gate/check-in:** v0.8.8j's 39–43px traversal width, shutters, clerical operator and roaming greeter are unchanged.
 - **Required asset inputs (BLOCKER):** exact `Neon Convention Hall Claw Machine.png` unified plate, and exact `Adorable blue mascot clutching a red heart.png` dggL cutout. Neither filename appears in connected saved assets or the current GitHub branch. The current `assets/irl-venue-baked-v088h.webp` stays active, and no independent walking mascot is yet rendered. Once supplied: inspect dimensions/transparency; convert to optimized WebP; wire scene and independent sprite; realign claw/glass/colliders; add mascot crowd reaction route; visual regression + iPhone QA.
-- **Verification:** `tests/venue_v088k.test.mjs` covers cabinet containment, live aura draw calls, frequent banter/aggressive host and challenger poses, and debounce of debate audio. Execute Node suite before marking the code pass stable; Vercel preview is not a visual acceptance.
+- **Verification:** `tests/venue_v088k.test.mjs` covers cabinet containment, live aura draw calls, frequent banter/aggressive host and challenger poses, and debounce of debate audio. Focused Node suite passed **20/20** on the 1-vCPU remote sandbox; Vercel branch preview served `/irl-sandbox` successfully. Browser visual/phone acceptance pending.
   
 ## Purpose
 
