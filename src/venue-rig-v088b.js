@@ -1,7 +1,7 @@
-/* Single baked v0.8.8g indigo/magenta convention plate plus strictly dynamic TV and gate glass. */
+/* v0.8.8h unified plate, interactive TV, tickets, gate glass and dust motes. */
 import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_BLOCKERS} from './venue-geometry-v088b.js';
 
-const FILES=Object.freeze({plate:'irl-venue-baked-v088g.webp'});
+const FILES=Object.freeze({plate:'irl-venue-baked-v088h.webp',clerk:'irl-ticket-clerk-v088h.webp'});
 export function loadModularVenueAssets(){
  const assets={};
  for(const [key,file] of Object.entries(FILES)){
@@ -51,6 +51,47 @@ function drawGate(ctx,event,side){
   ctx.fillRect(lane.left-4,lane.top+2,1.4,2);
   ctx.fillRect(lane.right+2,lane.top+2,1.4,2);
   ctx.restore();
+}
+// A single, non-roaming staff member behind the desk, deliberately rendered
+// under the baked foreground counter mask applied after all walking actors.
+export function drawTicketClerk(ctx,assets,event){
+ if(!assets?.clerk?.naturalWidth||!event?.ticketClerk)return;
+ const worker=event.ticketClerk;
+ ctx.save();ctx.drawImage(assets.clerk,worker.x,worker.y,29,36);
+ const scanned=(event.elapsed-worker.lastScanAt)<.55;
+ if(scanned){
+  ctx.globalAlpha=Math.max(0,1-(event.elapsed-worker.lastScanAt)/.55)*.66;
+  ctx.fillStyle='#b8fff2';ctx.fillRect(worker.x+19,worker.y+19,3,2);
+ }
+ ctx.restore();
+}
+// Independent tiny atmosphere layer: only near light sources, independent of
+// character simulation and fully cosmetic. No particles on the UI overlays.
+export function drawVenueDustMotes(ctx,t){
+ const lights=[[75,15,10,7],[325,15,11,8],[71,63,15,9],[345,66,13,10],[234,70,8,5],[267,70,8,5],[294,70,8,5]];
+ ctx.save();
+ for(let l=0;l<lights.length;l++){
+  const [cx,cy,rx,ry]=lights[l];
+  for(let i=0;i<5;i++){
+   const seed=l*31+i*71;const drift=t*(.37+(seed%7)*.09);
+   const x=cx+Math.sin(seed*1.57+drift)*rx,y=cy+Math.cos(seed*.71+drift*.6)*ry-(drift*1.4)%3;
+   const glow=.08+.12*(.5+.5*Math.sin(t*.9+seed));
+   ctx.globalAlpha=glow;ctx.fillStyle=l>=4?'#f5caac':'#fee6c3';
+   ctx.fillRect(Math.round(x),Math.round(y),i%4===0?1.2:.7,i%3===0?1.1:.6);
+  }
+ }
+ ctx.restore();
+}
+export function drawStageDebateUplight(ctx,event,t){
+ const debate=event?.departures?.some(g=>g.debater&&g.stageVisit==='exchange');
+ if(!debate)return;
+ ctx.save();
+ for(const [x,y] of [[235,74],[268,74],[296,74]]){
+  const grad=ctx.createRadialGradient(x,y,1,x,y-7,19);
+  grad.addColorStop(0,'rgba(246,166,255,.22)');grad.addColorStop(1,'rgba(128,88,215,0)');
+  ctx.globalAlpha=.70+.25*Math.sin(t*3+x);ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(x,y-8,10,20,0,0,Math.PI*2);ctx.fill();
+ }
+ ctx.restore();
 }
 function livePortrait(ctx,asset,x,y,height=31,col=0,row=0,cols=4,rows=2){
  if(!asset?.naturalWidth||!asset?.naturalHeight)return false;
@@ -146,6 +187,9 @@ export function drawModularVenue(ctx,assets,event,t,streams={}){
   // ONE baked perspective: no stage/booth/entrance sprites, no overscan,
   // no layered prop offsets. Gameplay lives in the plate's 384x216 UV map.
   draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
+  drawVenueDustMotes(ctx,t);
+  drawStageDebateUplight(ctx,event,t);
+  drawTicketClerk(ctx,assets,event);
   for(const side of ['left','right'])drawGate(ctx,event,side);
   drawBoothActivity(ctx,event);
   drawModularTV(ctx,event,t,streams);
@@ -158,7 +202,10 @@ export function drawBakedForegroundOccluders(ctx,assets){
   // This makes people pass behind the counter/posts without separate art.
   for(const block of MODULAR_BLOCKERS){
     if(!(block.name==='checkin'||block.name.startsWith('entrance')||block.name.includes('scanner')))continue;
-    ctx.save();ctx.beginPath();ctx.rect(block.x,block.y,block.w,block.h);ctx.clip();
+    // The counter has a raised illustrated countertop 5px above its solid
+    // floor hitbox; mask the clerk's legs behind the actual drawn front face.
+    const mask=block.name==='checkin'?{x:block.x,y:block.y-5,w:block.w,h:block.h+5}:block;
+    ctx.save();ctx.beginPath();ctx.rect(mask.x,mask.y,mask.w,mask.h);ctx.clip();
     draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
     ctx.restore();
   }

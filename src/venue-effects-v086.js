@@ -101,15 +101,8 @@ export function drawVenueScreens(ctx,event,t,images={}){
 }
 
 export function drawStageQueueGuides(ctx,event){
- const waiting=(event.departures||[]).filter(g=>g.stageVisit==='queued');
- if(!waiting.length)return;
- ctx.save();ctx.textAlign='center';
- for(let i=0;i<Math.min(waiting.length,7);i++){
-  const [x,y]=venueStageQueueSpot(i),feetX=x+17,feetY=y+41;
-  ctx.strokeStyle=i===0?'#ffe1a5':'#a6deec88';ctx.lineWidth=i===0?1.6:1;
-  ctx.beginPath();ctx.ellipse(feetX,feetY,13,4.5,0,0,Math.PI*2);ctx.stroke();
- }
- ctx.restore();
+ // v0.8.8h draws the ACTUAL velvet ropes in the unified venue plate, so the
+ // old unexplained foot-circles were redundant UI clutter. No overlay.
 }
 
 export function drawStageConversation(ctx,event,layout=null,mascot=null){

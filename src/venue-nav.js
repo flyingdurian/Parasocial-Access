@@ -23,18 +23,18 @@ export function isVenueWalkable(x,y,gateAccess=false){
  // Path anchors are sprite top-left, but obstruction contact happens at feet.
  // Testing top-left alone let characters appear to walk through the desk.
  const feetX=x+16,feetY=y+35;
- // A compact, immovable perimeter with two broad 42px scanner lanes and sprite-radius clearance.
+ // Narrow-looking but physically clear 39–43px scanner lanes, matched to
+ // the 30px character envelopes in the actual v0.8.8h baked plate.
  // Feet, not sprite top-lefts, must remain inside a clear authorized lane.
  if(feetY>=183){
-  const inGate=(feetX>=80&&feetX<=125)||(feetX>=258&&feetX<=305);
+  const inGate=(feetX>=86&&feetX<=123)||(feetX>=255&&feetX<=296);
   if(!gateAccess||!inGate)return false;
  }
- // The velvet-rope aisle widens toward the camera; collide with its visible
- // sloping edges, leaving the center free for authorized stage guests.
- if(feetY>=99&&feetY<=143){
-  const approach=(feetY-99)/44;
-  const left=246-16*approach,right=275+18*approach;
-  if(Math.abs(feetX-left)<2.7||Math.abs(feetX-right)<2.7)return false;
+ // Baked zigzag velvet ropes are real floor barriers for free-roaming guests.
+ // The stage line has its own scripted walk-through corridor with alternating
+ // open ends; free-roam never cuts through the cords.
+ for(const rope of [[210,311,147,153],[219,306,127,133],[230,302,108,114],[240,285,97,102]]){
+  if(feetX>=rope[0]&&feetX<=rope[1]&&feetY>=rope[2]&&feetY<=rope[3])return false;
  }
  // Explicit post/planter solids in MODULAR_BLOCKERS cover the entire prop
  // footprint, including the image's top. No collision-only sliding gates.
@@ -130,11 +130,38 @@ export function moveVenue(actor,targetX,targetY,dt,speed=30){
  return arrived;
 }
 export function venueQueueSpot(index){
- // Eighteen distinct visible crowd positions; avoid wrapping after eight.
+ // Ambient foot-traffic waits in a separate open side aisle, never directly
+ // on top of the ticket counter or the dedicated stage serpentine ropes.
  const slot=((index%18)+18)%18,row=slot%6,col=Math.floor(slot/6);
- return [237+col*15,94+row*9];
+ return [160+col*15,97+row*10];
 }
-export function venueStageQueueSpot(index){const i=Math.min(11,Math.max(0,index));return [VENUE_STAGE.staging[0]+Math.floor(i/6)*20,VENUE_STAGE.staging[1]+(i%6)*10];}
+// One continuous S-shaped path. Each switchback turns beyond the end of its
+// corresponding cord; guests advance along distance instead of teleporting to
+// a row or walking diagonally through the rope art.
+export const VENUE_STAGE_SERPENTINE=Object.freeze([
+ [180,126],[194,120],[194,106],[277,106],[298,106],
+ [298,91],[216,91],[207,91],[207,79],[280,79],
+ [280,68],[253,68]
+].map(point=>Object.freeze(point)));
+const stageLengths=[0];for(let i=1;i<VENUE_STAGE_SERPENTINE.length;i++)stageLengths.push(stageLengths[i-1]+Math.hypot(VENUE_STAGE_SERPENTINE[i][0]-VENUE_STAGE_SERPENTINE[i-1][0],VENUE_STAGE_SERPENTINE[i][1]-VENUE_STAGE_SERPENTINE[i-1][1]));
+export const VENUE_STAGE_QUEUE_LENGTH=stageLengths.at(-1);
+export function venueStagePoint(distance){
+ const d=clamp(distance,0,VENUE_STAGE_QUEUE_LENGTH);
+ for(let i=1;i<stageLengths.length;i++)if(d<=stageLengths[i]){
+  const t=(d-stageLengths[i-1])/(stageLengths[i]-stageLengths[i-1]);
+  return [VENUE_STAGE_SERPENTINE[i-1][0]+t*(VENUE_STAGE_SERPENTINE[i][0]-VENUE_STAGE_SERPENTINE[i-1][0]),VENUE_STAGE_SERPENTINE[i-1][1]+t*(VENUE_STAGE_SERPENTINE[i][1]-VENUE_STAGE_SERPENTINE[i-1][1])];
+ }
+ return [...VENUE_STAGE_SERPENTINE.at(-1)];
+}
+export function venueStageQueueSpot(index){return venueStagePoint(VENUE_STAGE_QUEUE_LENGTH-clamp(index,0,14)*24);}
+export function moveVenueSerpentineQueue(actor,index,dt,speed=23){
+ const target=clamp(VENUE_STAGE_QUEUE_LENGTH-index*24,0,VENUE_STAGE_QUEUE_LENGTH);
+ actor.stageQueueProgress=clamp(actor.stageQueueProgress??0,0,VENUE_STAGE_QUEUE_LENGTH);
+ actor.stageQueueProgress=Math.min(target,actor.stageQueueProgress+Math.max(0,dt)*speed);
+ const [x,y]=venueStagePoint(actor.stageQueueProgress);
+ moveStageActor(actor,x,y,dt,Math.max(speed,48));
+ return Math.abs(actor.stageQueueProgress-target)<.5&&Math.hypot(actor.x-x,actor.y-y)<1.5;
+}
 // Authorized stage guests follow a dedicated, visible corridor through the
 // staircase. This path is never available to general-purpose roaming NPCs.
 export function moveStageActor(actor,targetX,targetY,dt,speed=25){

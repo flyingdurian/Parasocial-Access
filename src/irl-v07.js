@@ -1,4 +1,5 @@
-import {VENUE_STATIONS,VENUE_STAGE,VENUE_GATES,isVenueWalkable,snapVenue,moveVenue,moveStageActor,venueQueueSpot,venueStageQueueSpot,venueRoamPoint,venueStationApproachPoint} from './venue-nav.js';
+import {VENUE_STATIONS,VENUE_STAGE,VENUE_GATES,isVenueWalkable,snapVenue,moveVenue,moveStageActor,moveVenueSerpentineQueue,venueQueueSpot,venueStageQueueSpot,venueRoamPoint,venueStationApproachPoint} from './venue-nav.js';
+import {issueVenueTicket,hasVenueTicket,processVenueTicket} from './venue-tickets-v088h.js';
 import {IRL_LEVELS,IRL_ENDLESS,irlClampLevel,endlessWaveGuests,endlessArrivalInterval} from './irl-progression-v085.js';
 import {DESTINY_IRL_SCENARIOS,ambientLine} from './irl-lore-v082.js';
 import {DESTINY_LORE_CARDS,loreAmbientLine,loreStageLine} from './irl-lore-v084.js';
@@ -93,6 +94,8 @@ function arrange(run){const groups={};for(const raw of IRL_SCENARIOS){const s=is
 export class IRLEvent {
  constructor(engine,options={}){this.engine=engine;this.session=options.mode==='endless'?'endless':'standard';this.levelIndex=irlClampLevel(options.level??0);this.config=IRL_LEVELS[this.levelIndex];this.wave=0;this.breakRemaining=0;this.congestionClock=0;this.safetyStrikes=0;this.highestWave=0;this.serial=0;this.mode='intro';this.elapsed=0;this.clock=this.session==='endless'?0:this.config.seconds;this.phase=1;this.score=0;this.vibe=76;this.errors=0;this.correct=0;this.lost=0;this.visitors=[];this.arrivals=[];this.finished=[];this.departures=[];this.stageCompleted=0;this.effects=[];this.focus=null;this.focusGrace=0;this.dispatchQueue=[];this.staff=[[170,145],[314,145]].map(([x,y])=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null};});this.guardPositions=[[87,142],[310,106],[335,141]].map(([x,y],i)=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null,cooldown:0,patrolIndex:i,patrolDwell:i*.6};});this.nextArrival=1.2;this.paused=false;this.message='CONVENTION OPENING · Destiny is preparing for fans.';this.log=[];this.failure='';this.result=null;this.run=(engine.progress.irlRecords?.destinyMeet?.attempts||0);const deck=arrange(this.run+this.levelIndex*37);this.cards=this.session==='endless'?[]:Array.from({length:this.config.guests},(_,i)=>i<deck.length?deck[i]:arrange(this.run+this.levelIndex*37+Math.floor(i/deck.length))[i%deck.length]);this.next=0;this.hostMood='idle';this.hostUntil=0;this.hostX=204;this.hostY=44;this.hostWalking=false;this.incidentFade=0;this.arcadeFlash=0;this.lastVerdict=null;this.gateControllers={left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}};this.cameraFlashes=[];this.tvEvent=null;this.speechQuietUntil=7;
   this.debateHistory=[];
+  // Dedicated stationary ticket operator, not part of the roaming staff pool.
+  this.ticketClerk={id:'checkin-clerk',name:'Ticket Clerk',x:179,y:153,processed:0,lastScanAt:-20,lastTicket:null};
   this.crowd=Array.from({length:13},(_,i)=>{const seed=irlHash(this.run*4919+i*811+17);return {id:i,kind:[1,2,4,5,6,8,9,10,11][i%9],x:171+(seed%31)-15,y:169+(seed%13),station:'entrance',target:'entrance',dwell:i*.22,visits:0,walking:false,facing:1,emote:'',emoteTime:0};});
   const startingSpots=[[29,106],[74,119],[118,103],[167,107],[217,118],[285,117],[317,127],[343,123],[211,141],[109,138],[46,145],[198,103],[345,104]];
   this.crowd.forEach((person,i)=>{[person.x,person.y]=snapVenue(...startingSpots[i]);person.station='wander';person.target='wander';person.animation='idle';person.actionClock=0;person.speech='';});
@@ -105,7 +108,8 @@ export class IRLEvent {
    if(this.crowd.length>=IRL_VISIBLE_CROWD_CAP)break;
    const id=this.crowd.length;
    const gate=(id%2?VENUE_GATES.left:VENUE_GATES.right);
-   this.crowd.push({id,kind:12+(set-1)*6+n,x:gate.spawn[0],y:gate.spawn[1],gate,gateAccess:true,entryPhase:'enter',entryDelay:n*.6,ticketClock:.6,station:'wander',target:'wander',dwell:.7+n*.22,visits:0,walking:false,animation:'idle',actionClock:0,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
+   const newcomer={id,kind:12+(set-1)*6+n,x:gate.spawn[0],y:gate.spawn[1],gate,gateAccess:true,entryPhase:'enter',entryDelay:n*.6,ticketClock:.6,station:'wander',target:'wander',dwell:.7+n*.22,visits:0,walking:false,animation:'idle',actionClock:0,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0};
+   issueVenueTicket(newcomer,`crowd-${set}-${id}`);this.crowd.push(newcomer);
   }
  }
  begin(){if(this.mode==='intro'){this.mode='playing';if(this.session==='endless')this.startNextWave();this.message='DOORS OPEN · Watch the highlighted guest in the hall.';return true;}return false;}
@@ -113,7 +117,7 @@ export class IRLEvent {
  rejoinCrowd(g){
   // Welcomed, verified and redirected people remain part of the convention.
   if(this.crowd.length>=IRL_VISIBLE_CROWD_CAP)return;
-  this.crowd.push({id:1000+g.serial,kind:g.kind,x:g.x,y:g.y,station:'rejoined',target:'rejoined',dwell:1.2,visits:0,walking:false,animation:g.debater?'talk':'cheer',actionClock:0,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
+  this.crowd.push({id:1000+g.serial,kind:g.kind,x:g.x,y:g.y,ticket:g.ticket,station:'rejoined',target:'rejoined',dwell:1.2,visits:0,walking:false,animation:g.debater?'talk':'cheer',actionClock:0,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
  }
  startNextWave(){this.wave++;this.highestWave=Math.max(this.highestWave,this.wave);const deck=arrange(this.run+this.wave*71);const count=endlessWaveGuests(this.wave);this.cards.push(...Array.from({length:count},(_,i)=>deck[i%deck.length]));this.nextArrival=this.wave===1?1.2:1.5;this.breakRemaining=0;this.breatherActive=false;this.phase=Math.min(3,1+Math.floor((this.wave-1)/2));this.message='WAVE '+this.wave+' · CROWD INBOUND';if(this.wave>1){if(this.crowd.length<IRL_ENDLESS.maxCrowd)this.addCrowdSet((this.wave-2)%3+1);this.effects.push({x:213,y:65,text:'WAVE '+this.wave+'!',color:'#ffe2a1',ttl:3});}}
  get selected(){return this.visitors.find(g=>g.id===this.focus&&!g.pending)||null;}
@@ -126,7 +130,7 @@ export class IRLEvent {
   this.focus=waiting[0]?.id||null;if(this.focus)this.focusGrace=.7;
  }
  add(options={}){if(this.next>=this.cards.length)return;const row=this.cards[this.next],station=this.locationFor(row),[sx,sy]=IRL_STATIONS[station];const id='irl-'+(++this.serial),types=[1,2,4,5,6,8,9,10,11,...Array.from({length:18},(_,i)=>12+i)],jitter=(irlHash(this.run*2021+this.serial*117)%13)-6,guest={id,serial:this.serial,type:row[0],name:row[1],text:row[2],cue:row[3],check:row[4],category:row[6]||'venue',loreId:row[7]||null,age:0,waitAge:0,life:row[0]==='security'?26:32,looked:false,pending:false,x:sx+jitter,y:sy+(this.serial%3)*3,station,slot:this.next%4,kind:types[(this.next*7+this.run*3)%types.length]};[guest.x,guest.y]=snapVenue(guest.x,guest.y);this.next++;
-  if(options.throughGate){const gate=this.serial%2?VENUE_GATES.left:VENUE_GATES.right;guest.gate=gate;guest.gateAccess=true;guest.entryPhase='enter';guest.ticketClock=.65;guest.toX=guest.x;guest.toY=guest.y;[guest.x,guest.y]=gate.spawn;this.arrivals.push(guest);}else{this.visitors.push(guest);this.promote();}
+  if(options.throughGate){const gate=this.serial%2?VENUE_GATES.left:VENUE_GATES.right;guest.gate=gate;guest.gateAccess=true;guest.entryPhase='enter';guest.ticketClock=.65;guest.toX=guest.x;guest.toY=guest.y;[guest.x,guest.y]=gate.spawn;issueVenueTicket(guest,guest.serial);this.arrivals.push(guest);}else{this.visitors.push(guest);this.promote();}
   this.message=this.next===7?'SIGNING SESSION · Fans are circulating around the hall.':this.next===14?'PUBLIC Q&A · Watch for disturbances around the mic.':this.message;
  }
  choose(id){if(this.visitors.some(g=>g.id===id&&!g.pending)){if(this.focus!==id){this.focus=id;this.focusGrace=.7;}return true;}return false;}
@@ -145,8 +149,10 @@ export class IRLEvent {
    if(person.entryPhase){
     if(person.entryDelay>0){person.entryDelay-=dt;person.walking=false;continue;}
     if(person.entryPhase==='enter'&&moveVenue(person,...person.gate.check,dt,25)){person.entryPhase='ticket';person.walking=false;person.animation='point';}
-    else if(person.entryPhase==='ticket'){person.ticketClock-=dt;person.walking=false;person.animation='point';if(person.ticketClock<=0){person.entryPhase='inside';this.openGate(person.gate,2.1);}}
-    else if(person.entryPhase==='inside'&&moveVenue(person,...person.gate.inside,dt,27)){person.entryPhase=null;person.gateAccess=false;person.dwell=.25;person.animation='idle';}
+    else if(person.entryPhase==='ticket'){person.ticketClock-=dt;person.walking=false;person.animation='point';if(person.ticketClock<=0&&hasVenueTicket(person)){person.entryPhase='inside';this.openGate(person.gate,2.1);}}
+    else if(person.entryPhase==='inside'&&moveVenue(person,...person.gate.inside,dt,27)){
+     if(processVenueTicket(person,this.ticketClerk,this.elapsed)){person.entryPhase=null;person.gateAccess=false;person.dwell=.25;person.animation='idle';}
+    }
     continue;
    }
    // Stage guests have priority through the staircase, not an invisible wall.
@@ -239,7 +245,7 @@ export class IRLEvent {
   if(success&&action==='security')this.effects.push({x:267,y:40,text:'STAGE SECURE',color:'#a6ffe4',ttl:2.8});
   const destination=this.destination(g,action),[toX,toY]=IRL_STATIONS[destination];
   const stageVisit=success&&(action==='welcome'||action==='debate');
-  const departure={id:g.id,serial:g.serial,x:g.x,y:g.y,kind:g.kind,toX:stageVisit?VENUE_STAGE.floor[0]:toX,toY:stageVisit?VENUE_STAGE.floor[1]:toY,ttl:stageVisit?65:30,success,station:destination,escorted:false,stageVisit:stageVisit?'queued':success&&action==='security'?'evictionQueued':'rejoin',exchangeClock:0,exchangeAction:'idle',name:g.name,text:g.text,cue:g.cue,category:g.category,debater:action==='debate',fanKind:action==='welcome'?fanInteractionKind(g):null,stageLaneReady:false,stageAtFront:false};
+  const departure={id:g.id,serial:g.serial,x:g.x,y:g.y,kind:g.kind,ticket:g.ticket,toX:stageVisit?VENUE_STAGE.floor[0]:toX,toY:stageVisit?VENUE_STAGE.floor[1]:toY,ttl:stageVisit?65:30,success,station:destination,escorted:false,stageVisit:stageVisit?'queued':success&&action==='security'?'evictionQueued':'rejoin',exchangeClock:0,exchangeAction:'idle',name:g.name,text:g.text,cue:g.cue,category:g.category,debater:action==='debate',fanKind:action==='welcome'?fanInteractionKind(g):null,stageLaneReady:false,stageAtFront:false};
   if(stageVisit&&departure.debater)departure.debateTopic=selectDebateTopic(g,this.run);
   this.departures.push(departure);
   this.hostMood=success?action==='security'?'surge':stageVisit?'nod':'point':'concern';this.hostUntil=this.elapsed+2.3;
@@ -262,9 +268,9 @@ export class IRLEvent {
     if(moveVenue(g,...g.gate.check,dt,30)){g.entryPhase='ticket';g.walking=false;g.animation='point';}
    }else if(g.entryPhase==='ticket'){
     g.ticketClock-=dt;g.walking=false;g.animation='point';
-    if(g.ticketClock<=0){g.entryPhase='inside';this.openGate(g.gate,2.1);}
+    if(g.ticketClock<=0&&hasVenueTicket(g)){g.entryPhase='inside';this.openGate(g.gate,2.1);}
    }else if(g.entryPhase==='inside'){
-    if(moveVenue(g,...g.gate.inside,dt,31)){g.entryPhase='floor';g.animation='idle';}
+    if(moveVenue(g,...g.gate.inside,dt,31)&&processVenueTicket(g,this.ticketClerk,this.elapsed)){g.entryPhase='floor';g.animation='idle';}
    }else if(g.entryPhase==='floor'&&moveVenue(g,g.toX,g.toY,dt,33)){
     g.entryPhase=null;g.gateAccess=false;g.walking=false;this.arrivals=this.arrivals.filter(x=>x!==g);this.visitors.push(g);
    }
@@ -285,8 +291,8 @@ export class IRLEvent {
   const stageLine=this.departures.filter(g=>g.stageVisit==='queued');
   for(let i=0;i<stageLine.length;i++)if(stageLine[i].stageVisit==='queued'){
    const g=stageLine[i];
-   if(!g.stageLaneReady){if(moveVenue(g,...VENUE_STAGE.floor,dt,26))g.stageLaneReady=true;}
-   else if(moveStageActor(g,...venueStageQueueSpot(i),dt,22)){
+   if(!g.stageLaneReady){if(moveVenue(g,...VENUE_STAGE.floor,dt,26)){g.stageLaneReady=true;g.stageQueueProgress=0;}}
+   else if(moveVenueSerpentineQueue(g,i,dt,23)){
     if(i===0){g.stageAtFront=true;g.frontClock=(g.frontClock||0)+dt;}
    }
   }
@@ -295,7 +301,7 @@ export class IRLEvent {
    if(g.stageVisit==='approach'){
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,24))g.stageVisit='climbStairs';
    }else if(g.stageVisit==='climbStairs'){
-    if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:VENUE_STAGE.exchange),dt,23)){
+    if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:g.fanKind==='photo'?VENUE_STAGE.photoGuest:VENUE_STAGE.exchange),dt,23)){
      g.stageVisit='exchange';g.exchangeClock=g.debater?3.8:3.1;g.exchangeDuration=g.exchangeClock;g.walking=false;g.facing=g.debater?1:-1;
      this.hostMood=g.debater?'point':'talk';this.hostUntil=this.elapsed+g.exchangeClock;
      this.effects.push({x:217,y:78,text:g.debater?'LIVE DEBATE!':g.fanKind==='autograph'?'✦ AUTOGRAPH!':'♥ PHOTO OP!',color:'#ffeaa5',ttl:1.5});
@@ -307,7 +313,7 @@ export class IRLEvent {
     g.exchangeAction=g.debater?(beat<.36?'point':beat<.72?'talk':'argue'):(beat<.32?'cheer':beat<.7?'talk':'laugh');
     this.hostMood=g.debater?(beat<.4?'talk':beat<.8?'point':'nod'):(beat<.3?'cheer':beat<.78?'talk':'nod');this.hostUntil=this.elapsed+.3;
     if(!g.debater&&g.fanKind==='photo'&&beat>.68&&!g.photoTaken){
-     g.photoTaken=true;this.cameraFlashes.push({x:g.x+14,y:g.y+5,ttl:.28},{x:this.hostX+17,y:this.hostY+7,ttl:.24});
+     g.photoTaken=true;this.cameraFlashes.push({x:VENUE_STAGE.tripod[0]+14,y:VENUE_STAGE.tripod[1]+8,ttl:.34},{x:g.x+14,y:g.y+5,ttl:.22});
     }
     if(g.exchangeClock<=0){
      g.stageVisit='leaveStage';g.exchangeAction='idle';g.toX=VENUE_STAGE.floor[0];g.toY=VENUE_STAGE.floor[1];g.ttl=25;this.hostMood='nod';this.hostUntil=this.elapsed+1;
@@ -362,7 +368,8 @@ export class IRLEvent {
   }
   this.dispatchOrders();
   const performance=stageAction(this.phase,this.elapsed,this.visitors.filter(g=>!g.pending).length,this.elapsed<this.hostUntil?this.hostMood:'idle');
-  const stageTarget=stagePosition(performance,this.elapsed,this.departures.some(g=>['approach','climbStairs','exchange'].includes(g.stageVisit)));
+  const photoSession=this.departures.some(g=>g.stageVisit==='exchange'&&g.fanKind==='photo');
+  const stageTarget=photoSession?{x:VENUE_STAGE.photoHost[0],y:VENUE_STAGE.photoHost[1]}:stagePosition(performance,this.elapsed,this.departures.some(g=>['approach','climbStairs','exchange'].includes(g.stageVisit)));
   const dx=stageTarget.x-this.hostX,dy=stageTarget.y-this.hostY,d=Math.hypot(dx,dy),step=Math.min(d,dt*13);
   this.hostX+=d?dx/d*step:0;this.hostY+=d?dy/d*step:0;this.hostWalking=d>1.1;
   if(this.session==='standard'&&this.clock<=0&&this.mode==='playing'&&!decisionsDone){this.failure='The event ended with an unresolved guest queue.';this.end(false);}
