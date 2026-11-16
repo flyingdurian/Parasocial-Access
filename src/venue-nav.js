@@ -29,6 +29,13 @@ export function isVenueWalkable(x,y,gateAccess=false){
   const inGate=(feetX>=91&&feetX<=109)||(feetX>=245&&feetX<=269);
   if(!gateAccess||!inGate)return false;
  }
+ // The velvet-rope aisle widens toward the camera; collide with its visible
+ // sloping edges, leaving the center free for authorized stage guests.
+ if(feetY>=112&&feetY<=167){
+  const approach=(feetY-112)/55;
+  const left=247-35*approach,right=298+34*approach;
+  if(Math.abs(feetX-left)<3.4||Math.abs(feetX-right)<3.4)return false;
+ }
  // Guards/guests cannot step on the fixed scanner pedestals or rail posts.
  if(feetY>178&&feetY<212&&(
    (feetX>=77&&feetX<=89)||(feetX>=110&&feetX<=122)||

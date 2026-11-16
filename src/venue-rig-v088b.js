@@ -7,6 +7,7 @@ const FILES=Object.freeze({
  stage:'irl-stage-shell-v088c.webp',
  gate:'irl-gate-atlas-v088c.webp',
  planters:'irl-entrance-planters-v088c.webp',
+ ropes:'irl-stage-queue-ropes-v088c.webp',
  booths:'irl-booth-atlas-vibrant-v088b.webp',
  furniture:'irl-stage-furniture-vibrant-v088b.webp',
  checkin:'irl-checkin-v088c.webp'
@@ -29,30 +30,6 @@ const draw=(ctx,image,bounds,source)=>{
 };
 // The stage is intentionally fixed; gameplay changes actor poses, not furniture.
 export function modularStageMode(){return 'fixed';}
-function drawStageQueueRopes(ctx){
- // Two visible short violet velvet ropes guide stage guests to the central stairs;
- // slim gold stanchions sit on the floor, outside the walkable guest lane.
- ctx.save();
- for(const side of [0,1]){
-  const x=side?300:235;
-  const points=[[x,118],[x+(side?2:-2),138],[x+(side?4:-4),158]];
-  for(let i=0;i<points.length-1;i++){
-   const [x1,y1]=points[i],[x2,y2]=points[i+1];
-   const curve=()=>{ctx.beginPath();ctx.moveTo(x1,y1-8);ctx.quadraticCurveTo((x1+x2)/2,(y1+y2)/2-2,x2,y2-8);};
-   curve();ctx.lineWidth=2.8;ctx.strokeStyle='#211935';ctx.stroke();
-   curve();ctx.lineWidth=1.55;ctx.strokeStyle='#e15cbb';ctx.stroke();
-   curve();ctx.lineWidth=.5;ctx.strokeStyle='#ffc6df';ctx.stroke();
-  }
-  for(const [px,py] of points){
-   ctx.fillStyle='rgba(12,9,35,.44)';ctx.fillRect(px-3,py+1,7,2);
-   ctx.fillStyle='#433356';ctx.fillRect(px-1.5,py-11,3,12);
-   ctx.fillStyle='#f0ae6d';ctx.fillRect(px-1,py-10,1,11);
-   ctx.fillStyle='#dfad70';ctx.fillRect(px-3,py,6,1.5);
-   ctx.fillStyle='#ffdf9d';ctx.fillRect(px-2,py-12,4,3);
-  }
- }
- ctx.restore();
-}
 function drawContactShadow(ctx,bounds,alpha=.25){
  ctx.save();ctx.fillStyle='rgba(15,9,41,'+alpha+')';ctx.beginPath();
  ctx.ellipse(bounds.x+bounds.w/2,bounds.y+bounds.h-.8,bounds.w*.45,2.3,0,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -143,7 +120,7 @@ export function drawModularVenue(ctx,assets,event,t,streams={}){
   drawContactShadow(ctx,MODULAR_PROPS[name],.22);
   draw(ctx,assets.booths,MODULAR_PROPS[name],MODULAR_ATLAS[name]);
  }
- drawStageQueueRopes(ctx);
+ draw(ctx,assets.ropes,MODULAR_PROPS.queueRopes);
  drawContactShadow(ctx,MODULAR_PROPS.checkin,.34);
  draw(ctx,assets.checkin,MODULAR_PROPS.checkin);
  for(const side of ['left','right'])drawGate(ctx,assets.gate,event,side);

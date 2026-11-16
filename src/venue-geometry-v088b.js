@@ -20,6 +20,7 @@ export const MODULAR_PROPS=Object.freeze({
  vending:Object.freeze({x:2,y:111,w:34,h:42,solid:{x:3,y:125,w:32,h:28}}),
  photo:Object.freeze({x:321,y:109,w:61,h:62,solid:{x:331,y:132,w:52,h:39}}),
  checkin:Object.freeze({x:135,y:164,w:94,h:49,solid:{x:140,y:164,w:89,h:52}}),
+ queueRopes:Object.freeze({x:211,y:103,w:122,h:64}),
  fixedFurniture:Object.freeze({x:206,y:50,w:97,h:31})
 });
 export const MODULAR_BLOCKERS=Object.freeze([
@@ -27,8 +28,6 @@ export const MODULAR_BLOCKERS=Object.freeze([
  {name:'stage and screen structure',x:196,y:0,w:188,h:98},
  {name:'stage front stairs',x:242,y:98,w:49,h:21},
  {name:'stage crowd rail',x:320,y:98,w:28,h:35},
- {name:'stage queue left rope',x:229,y:120,w:6,h:40},
- {name:'stage queue right rope',x:300,y:120,w:6,h:40},
  ...['merch','food','vending','photo','checkin'].map(name=>({name,...MODULAR_PROPS[name].solid})),
  {name:'entrance left structural edge',x:0,y:185,w:21,h:31},
  {name:'entrance right structural edge',x:363,y:185,w:21,h:31}

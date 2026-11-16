@@ -6,9 +6,9 @@ import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue}
 import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable} from '../src/venue-nav.js';
 const asset=name=>new URL('../assets/'+name,import.meta.url);
 
-test('seven modular assets mix stable hall/booths with corrected entrance and stage',()=>{
+test('eight modular assets mix stable hall/booths with corrected entrance and stage',()=>{
  const names=Object.values(MODULAR_VENUE_FILES);
- assert.equal(names.length,7);
+ assert.equal(names.length,8);
  for(const file of names){
   const url=asset(file);assert(existsSync(url),file);
   assert.equal(readFileSync(url).toString('ascii',8,12),'WEBP',file);
@@ -31,6 +31,8 @@ test('every independent booth shares hitbox coordinates with the navigation map'
   assert(isVenueWalkable(...gate.check,true),side+' badge verified');
   assert(isVenueWalkable(...gate.inside,true),side+' reached inside');
  }
+ assert(!isVenueWalkable(211,115),'velvet rope blocks off-lane crossing');
+ assert(isVenueWalkable(260,115),'center guest aisle remains walkable');
  assert(VENUE_STAGE.debate[0]<VENUE_STAGE.stairs[0]&&VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);
  assert.equal(VENUE_STAGE.exchange[1],55,'fan waits in front of the signing table after the stairs');
 });
@@ -57,7 +59,7 @@ function mockCtx(){
   save(){depth++;},restore(){depth--;assert(depth>=0);},
   drawImage(...args){calls.push({type:'image',args});},
   createLinearGradient(){return {addColorStop(){}};},
-  beginPath(){},rect(){},clip(){},fillRect(){},fillText(){},translate(){},transform(){},moveTo(){},lineTo(){},quadraticCurveTo(){},stroke(){},ellipse(){},fill(){},rotate(){}{}
+  beginPath(){},rect(){},clip(){},fillRect(){},fillText(){},translate(){},transform(){},moveTo(){},lineTo(){},quadraticCurveTo(){},stroke(){},ellipse(){},fill(){},rotate(){}
  };
  return ctx;
 }

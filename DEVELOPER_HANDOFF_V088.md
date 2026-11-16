@@ -165,12 +165,12 @@ This checkpoint supersedes older nested-directory notes above. The active GitHub
 Owner-approved focus: restore the vibrant evening indigo/magenta convention language and the v0.8.7 compact entrance proportions while correcting v0.8.8b spatial assembly. Do not return to neutral office style. Do not add interchangeable stage furniture.
 
 - Branch: `release/v0.8.8`; Vercel automatically builds after a GitHub branch update. `/irl-sandbox?level=0` remains the direct room test.
-- New modular WebPs: `assets/irl-checkin-v088c.webp` (v0.8.7-inspired original compact booth with planters), `assets/irl-gate-atlas-v088c.webp` (closed/open compact scanner posts), `assets/irl-entrance-planters-v088c.webp` (two independent entrance planters), `assets/irl-stage-shell-v088c.webp` (thin, grounded riser and fixed TV). The vivid room plate and merch/food/photo/vending atlas remain from v0.8.8b.
+- New modular WebPs: `assets/irl-stage-queue-ropes-v088c.webp` (transparent perspective-matched six-stanchion velvet aisle), `assets/irl-checkin-v088c.webp` (v0.8.7-inspired original compact booth with planters), `assets/irl-gate-atlas-v088c.webp` (closed/open compact scanner posts), `assets/irl-entrance-planters-v088c.webp` (two independent entrance planters), `assets/irl-stage-shell-v088c.webp` (thin, grounded riser and fixed TV). The vivid room plate and merch/food/photo/vending atlas remain from v0.8.8b.
 - `src/venue-geometry-v088b.js`: single source for active prop drawing bounds, collision and LCD projection; vending at left perimeter; booth at entrance center; left and right scanner art coincide with authorized crossing zones; stage-queue rope collision guides. Native canvas 384x216. Historic filenames stay for compatibility until future version consolidation.
 - `src/venue-rig-v088b.js`: stage furniture is permanently 1-on-1 debate desks, no signing/debate mode art swap. Render contact shadows and queue ropes, integrated entrance plants and bounded, perspective-mapped TV. Live photo TV now draws Destiny AND guest using `streams.poses[guestKind]` with signature overlay. One permanent table supports both debate and signing interactions.
 - `src/venue-effects-v086.js`: stage speech bubbles use short-tail speaker-locked placement at x>=183 rather than ambient bubble collision solver sending them to screen edges. Measured text wrapping retained.
 - `src/irl-v07.js`: debates last 3.8 seconds (fans 3.1). Active crowd favors merch, snacks, vending, photos, with visit dwell, receipts, flashes and per-booth transaction counters. `src/venue-nav.js` adds vending station matching the moved prop. `src/ui.js` and `src/irl-sandbox-v085.js`: stage guest sprite normalized to 29x37, bottom anchored relative to Destiny 31x39, and pass all pose atlases to live photo TV.
-- Regression tests: `tests/venue_modular_v088b.test.mjs` updated for 7 independent art assets and permanent furnishings; canvas renderer dry-run passed with simulated closed gates, photo event, and depth-neutral save/restore.
+- Regression tests: `tests/venue_modular_v088b.test.mjs` updated for 8 independent art assets and permanent furnishings; canvas renderer dry-run passed with simulated closed gates, photo event, and depth-neutral save/restore.
 
 ### Final visual QA on deployed preview
 
@@ -181,3 +181,5 @@ Owner-approved focus: restore the vibrant evening indigo/magenta convention lang
 5. Mobile Safari/desktop test for clipping, scenery scale, dialogue, speed controls <=2x and no regression to the primary game loop. If artwork placement needs adjustment, change only the single geometry map before regenerating art.
 
 - Final v0.8.8c preview polish: stronger magenta velvet stage-lane ropes with gold floor stanchions; visible version strings updated in both the main game and isolated sandbox HTML/JS to distinguish browser builds.
+
+- Final v0.8.8c art correction: six-post transparent stage rope prop replaces the too-thin canvas-drawn queue lines; its widening perspective is mirrored by dynamic rope-line collisions in `isVenueWalkable`, preserving an open actor lane.
