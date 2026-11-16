@@ -1,0 +1,12 @@
+# Keep source modular. Generated single-file builds never belong in Git.
+**/dist/
+**/previews/
+**/*-Play-Now.html
+**/*.log
+**/.vercel/
+**/node_modules/
+**/.DS_Store
+*.zip
+.env
+.env.*
+!.env.example

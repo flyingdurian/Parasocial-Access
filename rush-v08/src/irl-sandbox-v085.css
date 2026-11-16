@@ -1,0 +1,29 @@
+body.irl-sandbox{background:#0d1224;color:#fff1df;font-family:system-ui,sans-serif;min-height:100vh;padding:12px;margin:0}
+.irl-sandbox *{box-sizing:border-box}
+#irl-harness{width:min(1180px,100%);margin:auto}
+.harness-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px}
+.harness-head h1{font-size:clamp(17px,2.6vw,28px);margin:0}.harness-head small{color:#a7abc5}
+.harness-head a{color:#ffc986}
+.harness-stats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.harness-stats>span{background:#222843;border:1px solid #62668d;border-radius:7px;padding:7px 10px;font-size:12px;flex:1;min-width:90px}
+.harness-stats b{display:block;font-size:16px;color:#ffe0a0;margin-top:3px}
+.harness-stage{position:relative;aspect-ratio:384/216;background:#171529;overflow:hidden;border:2px solid #b99271;border-radius:10px}
+.harness-stage canvas{display:block;width:100%;height:100%;image-rendering:auto;touch-action:manipulation}
+.harness-prompt{position:absolute;z-index:7;left:1%;top:1%;width:min(39%,300px);padding:9px;background:#fff6e5;border:2px solid #322941;box-shadow:4px 4px #161127cc;color:#332b43;font-weight:700;font-size:clamp(9px,1.1vw,15px);pointer-events:none}
+.harness-prompt[hidden]{display:none}
+.harness-prompt b,.harness-prompt small{display:block}.harness-prompt small{font-size:.74em;opacity:.78;margin-top:4px}
+.harness-prompt p{margin:5px 0;font-size:1.05em}
+.harness-prompt:after{content:'';position:absolute;bottom:-8px;left:var(--speech-tail,30px);width:12px;height:12px;background:#fff6e5;transform:rotate(45deg);border-right:2px solid #322941;border-bottom:2px solid #322941}
+.harness-caption{min-height:34px;padding:8px;background:#282740;color:#efdfcc;border-radius:0 0 8px 8px;font-size:13px}
+.harness-controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.harness-controls button,.harness-settings button{border:1px solid #8c8399;border-radius:8px;padding:12px 14px;background:#35395e;color:#fff4df;cursor:pointer;font-weight:800}
+.harness-controls button{flex:1;min-width:115px}.harness-controls button:nth-child(1){background:#285a59}.harness-controls button:nth-child(4){background:#782c4a}
+.harness-controls button.debate-key{background:linear-gradient(120deg,#812568,#572aa6);border:2px solid #f9c27b;color:#fff4d2;box-shadow:inset 0 0 0 1px #f9a7e666,0 3px 0 #341349;text-shadow:0 0 7px #f4a5fc;font-weight:1000;letter-spacing:.02em}
+.harness-controls button.debate-key:hover{filter:brightness(1.18)}
+.harness-settings{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;padding:12px;background:#20243b;border:1px solid #555b7b;border-radius:8px}
+.harness-settings label{font-size:13px}.harness-settings select{background:#33395a;color:white;padding:9px}
+.harness-foot{font-size:12px;line-height:1.5;color:#b8b3c4;margin:12px 0 25px}
+.harness-start{position:absolute;z-index:5;left:50%;top:48%;transform:translate(-50%,-50%);background:#211b38ed;color:#fff3dc;padding:18px;border:2px solid #efbd89;border-radius:10px;max-width:82%;text-align:center;box-shadow:0 10px 30px #05060b99}
+.harness-start[hidden]{display:none}.harness-start h2{font-size:clamp(17px,3vw,29px);margin:0 0 8px}.harness-start p{font-size:13px}
+.harness-start button{padding:12px 23px;border:0;border-radius:8px;background:#f0be73;color:#332742;font-weight:900;cursor:pointer}
+@media(max-width:650px){.harness-settings{padding:8px}.harness-controls button{padding:10px 4px;min-width:calc(50% - 8px)}.harness-prompt{width:52%;padding:5px}.harness-start{padding:12px;max-width:94%}}
