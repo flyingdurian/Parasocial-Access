@@ -11,7 +11,7 @@ import {createGraphicsPanel} from './graphics-panel.js';
 import {avatarPath,avatarError} from './avatars-v083.js';
 import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay,placeFocusedVenuePrompt} from './irl-atmosphere-v083.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
-import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,VENUE_LED_SCREEN} from './venue-effects-v086.js';
+import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const fmt=n=>Math.round(n).toLocaleString();
 const avatar=avatarPath;
@@ -238,7 +238,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  if(irl.phase===2&&Math.floor(t/1050)%2===0){ctx.fillStyle='#fff1a6';ctx.fillRect(330,110,3,3);ctx.fillRect(333,107,1,8);}
  if(irl.phase===3){ctx.fillStyle=Math.floor(t/460)%2?'#83edf5':'#f9b1df';ctx.fillRect(276,44,12,2);ctx.fillRect(300,50,6,2);}
  if(irl.recovery>0){ctx.fillStyle='#84fce2';ctx.fillRect(7,8,100,12);ctx.fillStyle='#14283d';ctx.font='bold 7px monospace';ctx.fillText('RECOVERY · BREATHE',11,16);}
- for(const e of irl.effects){if(e.kind==='booth')continue;ctx.font='bold 9px monospace';const x=Math.max(3,Math.min(381-ctx.measureText(e.text).width,e.x));ctx.lineWidth=3;ctx.strokeStyle='#172039';if(!String(e.text).includes('dggL'))ctx.strokeText(e.text,x,e.y);ctx.fillStyle=e.color;drawInlineDggL(ctx,e.text,x,e.y,irlDggl,12);}
+ drawVenueFeedback(ctx,irl.effects,irlDggl);
  if(irl.arcadeFlash>0){
   ctx.save();ctx.globalAlpha=Math.min(.32,irl.arcadeFlash*.42);ctx.fillStyle=irl.lastVerdict?.success?'#80ffdb':'#ff4764';ctx.fillRect(0,0,384,216);ctx.restore();
  }

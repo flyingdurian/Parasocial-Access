@@ -152,6 +152,26 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  return placed;
 }
 
+// Shared bounded transaction/decision feedback; never overflow the hall LCD
+// or create a giant free-floating debug label at the edge of the scene.
+export function drawVenueFeedback(ctx,effects=[],mascot=null){
+ for(const effect of effects){
+  if(effect.kind==='booth')continue;
+  const label=String(effect.text||'');if(!label)continue;
+  ctx.save();
+  ctx.font='900 5.6px ui-monospace,monospace';
+  const width=Math.min(97,Math.max(22,Math.ceil(ctx.measureText(label).width)+9));
+  const x=clamp(effect.x-width/2,3,381-width);
+  const y=clamp(effect.y,12,205);
+  ctx.globalAlpha=clamp((effect.ttl||1)*.75,.3,.91);
+  ctx.fillStyle='rgba(19,21,46,.91)';ctx.fillRect(x,y-9,width,12);
+  ctx.fillStyle=effect.color||'#d2edfb';ctx.fillRect(x,y-9,width,1);
+  ctx.fillStyle='#fff8e5';
+  drawInlineDggL(ctx,label,x+4,y,mascot,7);
+  ctx.restore();
+ }
+}
+
 export function drawVenueRush(ctx,event,t){
  const rush=event.mode==='playing'&&(event.phase===2||(event.session==='endless'&&event.wave%3===0));
  if(!rush)return;

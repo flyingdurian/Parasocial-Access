@@ -11,7 +11,7 @@ import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBub
 import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
-import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,VENUE_LED_SCREEN} from './venue-effects-v086.js';
+import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 
 const root=document.querySelector('#irl-harness');
 const q=(selector)=>root.querySelector(selector);
@@ -97,7 +97,7 @@ function draw(t){
  if(modern)drawBakedForegroundOccluders(ctx,modularVenue);
  drawStageConversation(ctx,event,bubbleLayout,assets.dggl);
  if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<Math.min(2,waiting.length);i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout,assets.dggl);}
- for(const fx of event.effects){if(fx.kind==='booth')continue;ctx.font='bold 8px monospace';ctx.lineWidth=3;ctx.strokeStyle='#11152e';if(!String(fx.text).includes('dggL'))ctx.strokeText(fx.text,fx.x,fx.y);ctx.fillStyle=fx.color;drawInlineDggL(ctx,fx.text,fx.x,fx.y,assets.dggl,11);}
+ drawVenueFeedback(ctx,event.effects,assets.dggl);
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}
  drawCameraFlashes(ctx,event);
  if(useCamera)ctx.restore();
