@@ -59,6 +59,14 @@ test('v0.8.8f elevated hall preserves room and aligns slim rear stage / counter'
  assert(isVenueWalkable(...VENUE_STATIONS.photo),'interactive photo booth is accessible');
 });
 
+test('staff and guards start on walkable floor instead of old entrance furniture',()=>{
+ const homes=[[170,145],[314,145],[87,142],[310,106],[335,141]];
+ for(const [x,y] of homes)assert(isVenueWalkable(x,y),`actor home ${x},${y} must not overlap scanner or planter`);
+ const eventSource=readFileSync(new URL('../src/irl-v07.js',import.meta.url),'utf8');
+ assert(eventSource.includes('this.staff=[[170,145],[314,145]]'));
+ assert(!eventSource.includes('[349,160]'),'retired right planter guard spawn');
+});
+
 test('LCD projection fits inside the re-anchored empty stage shell',()=>{
  const s=MODULAR_PROPS.stage,tv=MODULAR_TV_BOUNDS;
  assert(tv.x>=s.x&&tv.y>=s.y&&tv.x+tv.w<=s.x+s.w&&tv.y+tv.h<=s.y+s.h);
