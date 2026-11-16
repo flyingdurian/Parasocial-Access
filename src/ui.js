@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,drawVenueMascot,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 import {engine,UPGRADES,WORLD_DEFS,GENERATOR_STATS,SURFACES,CONTRACTS,OPERATOR_UPGRADES,CREATORS,NETWORK_CREATORS,CREATOR_EVENTS,CREATOR_UPGRADES} from './engine.js';
 import {sound} from './audio.js';
@@ -9,7 +9,7 @@ import {VENUE_OBSTACLES,VENUE_CELL,isVenueWalkable} from './venue-nav.js';
 import {drawVenueCharacter,drawContactShadow,venueSpriteGeometry,stageAction} from './sprite-animation.js';
 import {createGraphicsPanel} from './graphics-panel.js';
 import {avatarPath,avatarError} from './avatars-v083.js';
-import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay,placeFocusedVenuePrompt} from './irl-atmosphere-v083.js';
+import {drawStageAtmosphere,drawAmbientBubble,drawDebateShout,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay,placeFocusedVenuePrompt} from './irl-atmosphere-v083.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -183,7 +183,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  ctx.fillStyle=(Math.floor(t/750)%2)?'#f9c7ff':'#a0f5fb';ctx.fillRect(309,23,2,2);
  // People visit actual venue stations and stop for pictures, food, merch and Q&A.
  // Individual walk bobs translate entire rigid sprites by one pixel at most.
- const actors=[...irl.crowd.map(person=>({person,role:'crowd',w:27,h:34})),...irl.arrivals.map(person=>({person,role:'arrival',w:30,h:38})),...irl.departures.map(person=>({person,role:'departure',w:30,h:38})),...irl.guardPositions.map(person=>({person,role:'guard',w:30,h:38})),...irl.staff.map(person=>({person,role:'staff',w:30,h:38})),...irl.visitors.map(person=>({person,role:'guest',w:30,h:38}))];
+ const actors=[...irl.crowd.map(person=>({person,role:'crowd',w:27,h:34})),...irl.arrivals.map(person=>({person,role:'arrival',w:30,h:38})),...irl.departures.map(person=>({person,role:'departure',w:30,h:38})),...irl.guardPositions.map(person=>({person,role:'guard',w:30,h:38})),...irl.staff.map(person=>({person,role:'staff',w:30,h:38})),...irl.visitors.map(person=>({person,role:'guest',w:30,h:38})),...(irl.mascot?[{person:irl.mascot,role:'mascot',w:22,h:24}]:[])];
  actors.sort((a,b)=>(a.person.y+a.h)-(b.person.y+b.h));
  const bubbleLayout=createBubbleLayout([modularVenueReady(modularVenue)?MODULAR_TV_BOUNDS:VENUE_LED_SCREEN]);
  reserveCanvasOverlay(bubbleLayout,canvas,$('#irl-world-speech'));
@@ -191,28 +191,32 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  // Other bubbles compete for free space; the focus guest must never be covered.
  const selected=irl.visitors.find(person=>person.id===irl.focus);
  if(selected)bubbleLayout.reserve({x:selected.x-5,y:selected.y-18,w:47,h:61});
- let ambientBubbles=0;
+ let ambientBubbles=0,debateBubbles=0;
  // An active typewriter line owns the reaction layer for the whole room;
  // other actors' emotes must wait rather than sit on top of the bubble.
  const roomIsSpeaking=irl.crowd.some(person=>person.speechTime>0);
  for(const {person:g,role,w,h} of actors){
+  if(role==='mascot'){drawVenueMascot(ctx,modularVenue,irl,t);continue;}
   const cx=g.x+w/2,cy=g.y+h-3;
   if(role==='guest'&&g.id===irl.focus){const pulse=.45+.25*Math.sin(t/240);
    ctx.fillStyle='rgba(255,229,135,'+pulse+')';ctx.beginPath();ctx.ellipse(cx,cy+4,20,7,0,0,Math.PI*2);ctx.fill();
    ctx.lineWidth=2;ctx.strokeStyle='#fff1a5';ctx.beginPath();ctx.ellipse(cx,cy+4,17,6,0,0,Math.PI*2);ctx.stroke();
    ctx.strokeStyle='#ff6d91';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,g.y+4,21,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-g.age/g.life));ctx.stroke();
   }
-  const action=role==='crowd'?(g.walking?'walk':g.animation):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='departure'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='guard'?(g.task?.phase==='escort'?'point':g.walking?'walk':'idle'):role==='staff'?(g.walking?'walk':'idle'):g.pending?'talk':g.type==='redirect'?'heckle':g.type==='security'?'argue':g.type==='check'?'point':'idle';
+  const action=role==='crowd'?(g.walking?'walk':g.animation):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='departure'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='guard'?(g.task?.phase==='escort'?'point':g.walking?'walk':'idle'):role==='staff'?(g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):g.pending?'talk':g.type==='redirect'?'heckle':g.type==='security'?'argue':g.type==='check'?'point':'idle';
   const toss=role==='departure'&&g.tossTime>0?-Math.sin((.65-g.tossTime)/.65*Math.PI)*12:0;
   const stageSpeaker=role==='departure'&&g.stageVisit==='exchange';
-  sprite(g.kind??(role==='guard'?3:7),g.x+(stageSpeaker?2.5:0),g.y+toss+(stageSpeaker?5:0),stageSpeaker?29:w,stageSpeaker?37:h,action,g);
+  sprite(g.kind??(role==='guard'?3:7),g.x+(stageSpeaker?2.5:0),g.y+toss+(stageSpeaker?5:0)-(role==='crowd'?(g.hypeJump||0):0),stageSpeaker?29:w,stageSpeaker?37:h,action,g);
   if(role==='crowd'){
-   if(g.speechTime>0&&ambientBubbles===0){
+   if(g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){
+    if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;
+   }
+   if(!g.debateWatching&&g.speechTime>0&&ambientBubbles===0){
     const visible=g.speech.slice(0,Math.max(0,Math.floor(g.speechProgress||0)));
     drawAmbientBubble(ctx,visible,g.x+13,g.y,.86,45,bubbleLayout,irlDggl);
     if(!graphics.chatterMuted&&visible.length%3===0&&visible.length!==irlSpeechLastCount&&t-irlSpeechLastTick>120){sound.irlSpeechTick(g.id*53+visible.length);irlSpeechLastTick=t;irlSpeechLastCount=visible.length;}
     ambientBubbles++;
-   }else if(!roomIsSpeaking&&g.emoteTime>0&&g.dwell>0){
+   }else if(!g.debateWatching&&!roomIsSpeaking&&g.emoteTime>0&&g.dwell>0){
     // Only real emote art, never raw fallback star/music tiles.
     drawDggEmote(ctx,irlEmotes,g.emote,Math.round(g.x+9),Math.round(g.y-15),13,irlDggl);
    }

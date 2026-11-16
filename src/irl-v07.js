@@ -92,16 +92,18 @@ function arrange(run){const groups={};for(const raw of IRL_SCENARIOS){const s=is
   s[0],w[3],w[4],r[3],c[2],d[2],w[5],r[4],c[3],s[1]
  ];}
 export class IRLEvent {
- constructor(engine,options={}){this.engine=engine;this.session=options.mode==='endless'?'endless':'standard';this.levelIndex=irlClampLevel(options.level??0);this.config=IRL_LEVELS[this.levelIndex];this.wave=0;this.breakRemaining=0;this.congestionClock=0;this.safetyStrikes=0;this.highestWave=0;this.serial=0;this.mode='intro';this.elapsed=0;this.clock=this.session==='endless'?0:this.config.seconds;this.phase=1;this.score=0;this.vibe=76;this.errors=0;this.correct=0;this.lost=0;this.visitors=[];this.arrivals=[];this.finished=[];this.departures=[];this.stageCompleted=0;this.effects=[];this.focus=null;this.focusGrace=0;this.dispatchQueue=[];this.staff=[[170,145],[314,145]].map(([x,y])=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null};});this.guardPositions=[[87,142],[310,106],[335,141]].map(([x,y],i)=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null,cooldown:0,patrolIndex:i,patrolDwell:i*.6};});this.nextArrival=1.2;this.paused=false;this.message='CONVENTION OPENING · Destiny is preparing for fans.';this.log=[];this.failure='';this.result=null;this.run=(engine.progress.irlRecords?.destinyMeet?.attempts||0);const deck=arrange(this.run+this.levelIndex*37);this.cards=this.session==='endless'?[]:Array.from({length:this.config.guests},(_,i)=>i<deck.length?deck[i]:arrange(this.run+this.levelIndex*37+Math.floor(i/deck.length))[i%deck.length]);this.next=0;this.hostMood='idle';this.hostUntil=0;this.hostX=204;this.hostY=44;this.hostWalking=false;this.incidentFade=0;this.arcadeFlash=0;this.lastVerdict=null;this.gateControllers={left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}};this.cameraFlashes=[];this.tvEvent=null;this.debateChat=[];this.speechQuietUntil=7;
+ constructor(engine,options={}){this.engine=engine;this.session=options.mode==='endless'?'endless':'standard';this.levelIndex=irlClampLevel(options.level??0);this.config=IRL_LEVELS[this.levelIndex];this.wave=0;this.breakRemaining=0;this.congestionClock=0;this.safetyStrikes=0;this.highestWave=0;this.serial=0;this.mode='intro';this.elapsed=0;this.clock=this.session==='endless'?0:this.config.seconds;this.phase=1;this.score=0;this.vibe=76;this.errors=0;this.correct=0;this.lost=0;this.visitors=[];this.arrivals=[];this.finished=[];this.departures=[];this.stageCompleted=0;this.effects=[];this.focus=null;this.focusGrace=0;this.dispatchQueue=[];this.staff=[[170,145],[314,145],[270,142]].map(([x,y])=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null};});this.guardPositions=[[87,142],[310,106],[335,141]].map(([x,y],i)=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null,cooldown:0,patrolIndex:i,patrolDwell:i*.6};});this.nextArrival=1.2;this.paused=false;this.message='CONVENTION OPENING · Destiny is preparing for fans.';this.log=[];this.failure='';this.result=null;this.run=(engine.progress.irlRecords?.destinyMeet?.attempts||0);const deck=arrange(this.run+this.levelIndex*37);this.cards=this.session==='endless'?[]:Array.from({length:this.config.guests},(_,i)=>i<deck.length?deck[i]:arrange(this.run+this.levelIndex*37+Math.floor(i/deck.length))[i%deck.length]);this.next=0;this.hostMood='idle';this.hostUntil=0;this.hostX=204;this.hostY=44;this.hostWalking=false;this.incidentFade=0;this.arcadeFlash=0;this.lastVerdict=null;this.gateControllers={left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}};this.cameraFlashes=[];this.tvEvent=null;this.debateChat=[];this.speechQuietUntil=7;
   this.debateHistory=[];
   // Dedicated stationary ticket operator, not part of the roaming staff pool.
   this.ticketClerk={id:'checkin-clerk',name:'Ticket Clerk',x:179,y:153,processed:0,lastScanAt:-20,lastTicket:null};
   this.crowd=Array.from({length:13},(_,i)=>{const seed=irlHash(this.run*4919+i*811+17);return {id:i,kind:[1,2,4,5,6,8,9,10,11][i%9],x:171+(seed%31)-15,y:169+(seed%13),station:'entrance',target:'entrance',dwell:i*.22,visits:0,walking:false,facing:1,emote:'',emoteTime:0};});
   const startingSpots=[[29,106],[74,119],[118,103],[167,107],[217,118],[285,117],[317,127],[343,123],[211,141],[109,138],[46,145],[198,103],[345,104]];
   this.crowd.forEach((person,i)=>{[person.x,person.y]=snapVenue(...startingSpots[i]);person.station='wander';person.target='wander';person.animation='idle';person.actionClock=0;person.speech='';});
-  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=i?[304,137]:[184,137];worker.homeX=worker.x;worker.homeY=worker.y;worker.patrolIndex=0;worker.patrolDwell=1.2;});
+  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=[[184,137],[304,137],[268,139]][i];worker.homeX=worker.x;worker.homeY=worker.y;worker.patrolIndex=0;worker.patrolDwell=1.2;});
   this.guardPositions.forEach((worker,i)=>{[worker.x,worker.y]=[[72,138],[311,116],[343,137]][i];worker.homeX=worker.x;worker.homeY=worker.y;});
-  this.crowdMoments=0;this.boothTransactions={merch:0,claw:0,snacks:0,vending:0,photo:0};this.clawMachine={activeUntil:0,plays:0,lastPrize:null};this.recovery=0;this.mistakeStreak=0;
+  this.staff[0].gateMonitor=true;this.staff[0].monitoring=false;
+  this.mascot={x:198,y:140,targetX:198,targetY:140,walking:false,facing:1,dwell:1.5,heartClock:3,heartBurst:0,patrolIndex:0};
+  this.crowdMoments=0;this.boothTransactions={merch:0,claw:0,snacks:0,drinks:0,photo:0};this.stationActivity={};this.clawMachine={activeUntil:0,plays:0,lastPrize:null};this.recovery=0;this.mistakeStreak=0;
  }
  addCrowdSet(set){
   for(let n=0;n<6;n++){
@@ -134,7 +136,7 @@ export class IRLEvent {
   this.message=this.next===7?'SIGNING SESSION · Fans are circulating around the hall.':this.next===14?'PUBLIC Q&A · Watch for disturbances around the mic.':this.message;
  }
  choose(id){if(this.visitors.some(g=>g.id===id&&!g.pending)){if(this.focus!==id){this.focus=id;this.focusGrace=.7;}return true;}return false;}
- freeWorker(action){return action==='security'?this.guardPositions.find(g=>!g.task&&g.cooldown<=0):this.staff.find(g=>!g.task);}
+ freeWorker(action){return action==='security'?this.guardPositions.find(g=>!g.task&&g.cooldown<=0):this.staff.find(g=>!g.task&&!g.gateMonitor);}
  destination(g,action){const line=(/queue|line|mic|panel|interview/i).test(g.name+' '+g.cue),merch=(/merch|shirt|collector|poster/i).test(g.name+' '+g.cue);
   if(action==='security')return 'exit';
   if(action==='check')return 'entrance';
@@ -142,12 +144,36 @@ export class IRLEvent {
   return merch?'merch':/photo|camera|picture|selfie/i.test(g.cue)?'photo':'signing';
  }
  // Reproducible, independent activity that does not create new player tasks.
+ // Purely cosmetic dggL wanderer, separate from the venue plate.
+ // It emits occasional hearts and triggers nearby crowd poses, no game rewards.
+ mascotTick(dt){
+  const m=this.mascot;if(!m)return;
+  m.heartBurst=Math.max(0,m.heartBurst-dt);
+  m.heartClock-=dt;
+  const stops=[[184,139],[128,130],[71,129],[192,146],[308,136],[334,115],[211,151]];
+  if(m.dwell>0){m.dwell-=dt;m.walking=false;}
+  else{
+   const [tx,ty]=stops[m.patrolIndex%stops.length];
+   m.facing=tx<m.x?-1:1;
+   if(moveVenue(m,tx,ty,dt,9)){
+    m.patrolIndex++;m.dwell=1.8+(m.patrolIndex%3)*.7;
+   }
+  }
+  if(m.heartClock<=0){
+   m.heartClock=3.5+(m.patrolIndex%3)*1.15;
+   m.heartBurst=1.15;
+   const nearby=this.crowd.filter(g=>!g.entryPhase&&!g.debateWatching&&Math.hypot(g.x-m.x,g.y-m.y)<56).slice(0,3);
+   for(const g of nearby){g.animation=g.id%2?'point':'cheer';g.emote='♥';g.emoteTime=1.2;g.dwell=Math.max(g.dwell,.75);}
+  }
+ }
  // Nearby pairs sometimes stop to talk; stage and booth crowds change by phase.
  crowdTick(dt){const stageBusy=this.departures.some(g=>['queued','approach','climbStairs','exchange','leaveStairs'].includes(g.stageVisit));
    const liveDebate=this.departures.find(g=>g.debater&&g.stageVisit==='exchange');
    for(const person of this.crowd){
    person.emoteTime=Math.max(0,person.emoteTime-dt);
    person.speechTime=Math.max(0,(person.speechTime||0)-dt);
+   person.debateSpeechTime=Math.max(0,(person.debateSpeechTime||0)-dt);
+   if(person.debateSpeechTime>0)person.debateSpeechProgress=(person.debateSpeechProgress||0)+dt*32;
    if(person.entryPhase){
     if(person.entryDelay>0){person.entryDelay-=dt;person.walking=false;continue;}
     if(person.entryPhase==='enter'&&moveVenue(person,...person.gate.check,dt,25)){person.entryPhase='ticket';person.walking=false;person.animation='point';}
@@ -166,12 +192,14 @@ export class IRLEvent {
     if(!person.debateWatching){person.debateWatching=true;person.target='debate';person.dwell=0;}
     const [tx,ty]=venueDebateAudienceSpot(person.id);
     const arrived=moveVenue(person,tx,ty,dt,22);
-    person.animation=arrived?(Math.floor(this.elapsed*2+person.id)%3===0?'cheer':'point'):'walk';
+    const wave=Math.floor(this.elapsed*3+person.id*1.4)%4;
+    person.animation=arrived?['cheer','point','argue','laugh'][wave]:'walk';
+    person.hypeJump=arrived&&wave===0?Math.abs(Math.sin(this.elapsed*10+person.id))*3.2:0;
     person.station=arrived?'debate':person.station;
     if(arrived&&Math.floor(this.elapsed*3+person.id)%8===0){person.emote='♥';person.emoteTime=Math.max(person.emoteTime,.35);}
     continue;
    }
-   if(person.debateWatching){person.debateWatching=false;person.station='wander';person.target='roam';person.roamTo=venueRoamPoint(this.run*541+person.id*127+person.visits*37);person.dwell=0;}
+   if(person.debateWatching){person.debateWatching=false;person.debateSpeechTime=0;person.hypeJump=0;person.station='wander';person.target='roam';person.roamTo=venueRoamPoint(this.run*541+person.id*127+person.visits*37);person.dwell=0;}
    // Stage guests have priority through the staircase, not an invisible wall.
    // Rerouting idle wanderers avoids the earlier hard-blocking deadlock.
    if(stageBusy&&person.x>264&&person.x<327&&person.y>94&&person.y<158&&['mic','signing','photo'].includes(person.target)){
@@ -179,7 +207,7 @@ export class IRLEvent {
    }
    if(person.dwell>0){person.dwell-=dt;person.walking=false;if(person.animation==='walk')person.animation='idle';continue;}
    if(person.target===person.station){const seed=irlHash(this.run*3001+person.id*751+person.visits*283+this.phase*109),index=seed%IRL_STATION_NAMES.length;
-    const favored=this.phase===1?['entrance','merch','claw','snacks','vending','photo','line']:this.phase===2?['merch','claw','photo','vending','signing','snacks']:['mic','line','snacks','merch','claw','vending','photo'];
+    const favored=this.phase===1?['entrance','merch','claw','snacks','photo','line']:this.phase===2?['merch','claw','photo','signing','snacks']:['mic','line','snacks','merch','claw','photo'];
     // Every second destination is an actual booth: venue activity must be visible.
     person.target=person.visits%2===0?favored[(index+person.id*2+person.visits*3)%favored.length]:'roam';
     if(person.target==='roam')person.roamTo=venueRoamPoint(seed*31+person.id*541);
@@ -190,10 +218,13 @@ export class IRLEvent {
    person.animation=person.walking?'walk':person.animation==='walk'?'idle':person.animation;
    if(arrived){person.station=person.target;person.dwell=1.0+(irlHash(person.visits*149+person.id*13)%42)/12;
     const activity=person.station;
-    person.boothActivity=['merch','claw','snacks','vending','photo'].includes(activity)?activity:null;
+    person.boothActivity=['merch','claw','snacks','photo'].includes(activity)?activity:null;
     if(person.boothActivity){
      this.boothTransactions[activity]=(this.boothTransactions[activity]||0)+1;
-     person.animation=activity==='photo'||activity==='claw'||activity==='vending'?'point':activity==='snacks'?'cheer':'talk';
+      // Every physical station gets its own animated transaction window.
+      this.stationActivity[activity]={activeUntil:this.elapsed+2.4,guestId:person.id,variant:(person.visits+person.id)%3};
+      if(activity==='snacks')this.boothTransactions.drinks++; // drinks served at the FOOD stall
+     person.animation=activity==='photo'||activity==='claw'?'point':activity==='snacks'?'cheer':'talk';
      person.dwell=Math.max(2.1,person.dwell);
      this.effects.push({kind:'booth',station:activity,seed:person.id,x:person.x,y:person.y-7,ttl:1.15,maxTtl:1.15});
      if(activity==='photo')this.cameraFlashes.push({x:person.x+15,y:person.y+5,ttl:.28});
@@ -201,7 +232,7 @@ export class IRLEvent {
     }
     const poses=['talk','laugh','cheer','point','argue','heckle','impatient','idle'];
     if(!person.boothActivity)person.animation=poses[(person.visits+person.id+this.phase)%poses.length];
-    const marks=person.station==='merch'?['♥','★','!']:person.station==='claw'?['★','♥','!']:person.station==='snacks'?['♪','♥']:person.station==='vending'?['♫','★']:person.station==='mic'?['?','✦']:['♥','✦','…'];
+    const marks=person.station==='merch'?['♥','★','!']:person.station==='claw'?['★','♥','!']:person.station==='snacks'?['♪','♥']:person.station==='mic'?['?','✦']:['♥','✦','…'];
     person.emote=(person.visits+person.id)%3===0?dggEmoteFor(person.visits*13+person.id):marks[(person.visits+person.id)%marks.length];person.emoteTime=1.1;
     const seed=this.run*37+person.visits*19+person.id;
     person.speech=ambientEmote(seed%2?ambientLine(person.station,seed):loreAmbientLine(person.station,seed,this.phase),seed);
@@ -271,7 +302,7 @@ export class IRLEvent {
   this.visitors=this.visitors.filter(x=>x.id!==g.id);this.finished.push({...g,success,action});this.promote();return true;
  }
  tick(dt){if(this.mode!=='playing'||this.paused)return;dt=irlClamp(dt,0,.1);if(this.incidentFade>0){this.incidentFade-=dt;if(this.incidentFade<=0){this.incidentFade=0;this.end(false);}return;}this.elapsed+=dt;const decisionsDone=this.next>=this.cards.length&&this.arrivals.length===0&&this.visitors.length===0&&this.dispatchQueue.length===0;if(this.session==='endless')this.clock=this.elapsed;else if(!decisionsDone)this.clock-=dt;this.arcadeFlash=Math.max(0,this.arcadeFlash-dt);this.recovery=Math.max(0,this.recovery-dt);this.focusGrace=Math.max(0,this.focusGrace-dt);for(const guard of this.guardPositions)guard.cooldown=Math.max(0,guard.cooldown-dt);const fraction=this.cards.length?this.next/this.cards.length:0,phase=this.session==='endless'?Math.min(3,1+Math.floor((this.wave-1)/2)):fraction<.3?1:fraction<.68?2:3;if(phase!==this.phase){this.effects.push({x:270,y:70,text:phase===2?'SIGNING RUSH!':'Q&A IS LIVE!',color:'#ffda8f',ttl:2.5});if(this.session==='standard'){this.addCrowdSet(phase-1);if(phase===3)this.addCrowdSet(3);}this.hostMood='surge';this.hostUntil=this.elapsed+2.5;}this.phase=phase;
-  this.crowdTick(dt);
+  this.crowdTick(dt);this.mascotTick(dt);
   this.spreadCrowd();
   for(const person of this.crowd)if(person.speechTime>0)person.speechProgress=Math.min(person.speech.length,(person.speechProgress||0)+dt*13);
   for(const flash of this.cameraFlashes)flash.ttl-=dt;this.cameraFlashes=this.cameraFlashes.filter(flash=>flash.ttl>0);
@@ -330,10 +361,30 @@ export class IRLEvent {
    }else if(g.stageVisit==='exchange'){
     g.walking=false;g.exchangeClock-=dt;
     if(g.debater){
-     g.hypeClock-=dt;
+     // Intentional duty cycles: Destiny ~25% of debate time; challenger ~10%.
+      // Staggered by guest serial so there is no mandatory aura at round start.
+      const phase=Math.max(0,Math.min(1,(g.exchangeDuration-g.exchangeClock)/g.exchangeDuration));
+      // Normalize to THIS debate's duration: exactly 25% vs 10% uptime
+      // across four boss surges and two rare challenger surges.
+      const hostOn=(phase*4+((g.serial||0)%4)/13)%1<.25;
+      const guestOn=(phase*2+((g.serial||0)%3)/11)%1<.10;
+      if((hostOn&&!g.hostAuraActive)||(guestOn&&!g.challengerAuraActive)){
+       this.vibe=irlClamp(this.vibe+(hostOn?1:0)+(guestOn?2:0),0,100);
+       this.crowdMoments++;this.cameraFlashes.push({x:274,y:66,ttl:.16});
+      }
+      g.hostAuraActive=hostOn;g.challengerAuraActive=guestOn;
+      g.hypeClock-=dt;
      if(g.hypeClock<=0){
       const line=debateChatLine(g,g.hypeBeat++);
       this.debateChat.push({text:line,ttl:1.95,maxTtl:1.95});this.debateChat=this.debateChat.slice(-3);
+       // A different actual audience member shouts the line above their head.
+       // This is world-space speech; the big stage TV is camera-only.
+       const viewers=this.crowd.filter(p=>p.debateWatching&&!p.entryPhase);
+       if(viewers.length){
+        const order=(g.hypeBeat*7+(g.serial||0)*3)%viewers.length;
+        const who=viewers[order];who.debateSpeech=line;who.debateSpeechTime=1.85;
+        who.debateSpeechProgress=0;who.animation=g.hypeBeat%2?'point':'argue';
+       }
       g.hypeClock=.72+(g.hypeBeat%3)*.085;
       if(g.hypeBeat%3===0)this.cameraFlashes.push({x:295,y:63,ttl:.16});
      }
@@ -392,13 +443,14 @@ export class IRLEvent {
    }else if(this.guardPositions.includes(worker)){
     const route=[[78,143],[118,132],[201,129],[312,119],[310,167],[266,169],[101,166],[40,164]];
     worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
+     worker.monitoring=Object.values(this.gateControllers).some(g=>g.openUntil>this.elapsed)||worker.patrolIndex%2===0;
     if(worker.patrolDwell<=0){
      const [tx,ty]=route[worker.patrolIndex%route.length];
      if(moveVenue(worker,tx,ty,dt,24)){worker.patrolIndex=(worker.patrolIndex+3)%route.length;worker.patrolDwell=.6;}
     }else worker.walking=false;
    }else if(worker===this.staff[0]){
     // The greeter patrols both gated approaches and returns to the desk.
-    const stops=[[135,137],[184,137],[237,137],[184,137]];
+    const stops=[[113,137],[184,137],[238,137],[184,137]];
     worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
     if(worker.patrolDwell<=0){
      if(moveVenue(worker,...stops[worker.patrolIndex%stops.length],dt,30)){

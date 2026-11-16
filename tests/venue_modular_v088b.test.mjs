@@ -23,15 +23,20 @@ function paintContext(){
  };
 }
 const assets={plate:{complete:true,naturalWidth:1672,naturalHeight:941},clerk:{complete:true,naturalWidth:150,naturalHeight:190}};
-test('new unified WebP and transparent staff stay modular under one perspective',()=>{
- const files=Object.values(MODULAR_VENUE_FILES);
- assert.deepEqual(files,['irl-venue-baked-v088h.webp','irl-ticket-clerk-v088h.webp']);
- for(const file of files){
+test('uploaded hall PNG and independent transparent mascot are wired by exact filename',()=>{
+ const {plate,clerk,mascot}=MODULAR_VENUE_FILES;
+ assert.equal(plate,'Neon Convention Hall Claw Machine.png');
+ assert.equal(mascot,'Adorable blue mascot clutching a red heart.png');
+ assert.equal(clerk,'irl-ticket-clerk-v088h.webp');
+ for(const file of [plate,mascot,clerk]){
   const url=new URL('../assets/'+file,import.meta.url);
-  assert(existsSync(url),file+' available');
-  const header=readFileSync(url).subarray(0,12);
-  assert.equal(header.toString('ascii',0,4),'RIFF');
-  assert.equal(header.toString('ascii',8,12),'WEBP');
+  assert(existsSync(url),file+' must exist on this branch');
+  const buf=readFileSync(url),isPng=file.endsWith('.png');
+  assert.equal(buf.toString('ascii',isPng?1:0,isPng?4:4),isPng?'PNG':'RIFF');
+  if(isPng){
+   assert.equal(buf.toString('ascii',12,16),'IHDR');
+   assert(buf.readUInt32BE(16)>300&&buf.readUInt32BE(20)>300);
+  }else assert.equal(buf.toString('ascii',8,12),'WEBP');
  }
  assert(modularVenueReady(assets));
  assert.equal(modularStageMode(),'fixed');
@@ -39,7 +44,7 @@ test('new unified WebP and transparent staff stay modular under one perspective'
 
 test('booths and check-in use solid contact footprints, with sprite-scale entrance',()=>{
  assert.equal(VENUE_OBSTACLES,MODULAR_BLOCKERS);
- for(const name of ['merch','claw','food','vending','photo','checkin']){
+ for(const name of ['merch','claw','food','photo','checkin']){
   const p=MODULAR_PROPS[name],hit=VENUE_OBSTACLES.find(o=>o.name===name);
   assert(hit&&p.solid, name+' blocker exists');
   assert(hit.x>=p.x&&hit.y>=p.y&&hit.x+hit.w<=p.x+p.w+2);
@@ -93,8 +98,8 @@ test('stage and queues remain navigable, with grounded on-plate geometry',()=>{
   assert(isVenueWalkable(x,y), 'queue spot '+i+' open');
  }
  assert.equal(queue.size,18);
- assert(VENUE_STAGE_QUEUE_LENGTH>280);
- assert(VENUE_STAGE_SERPENTINE.length>=10);
+ assert(VENUE_STAGE_QUEUE_LENGTH>70&&VENUE_STAGE_QUEUE_LENGTH<150,'queue follows one short painted rope, never phantom serpentines');
+ assert(VENUE_STAGE_SERPENTINE.length>=6);
  for(let i=0;i<12;i++){
   const [x,y]=venueStageQueueSpot(i);
   assert(x>=180&&x<=302&&y>=68&&y<=127);
@@ -108,8 +113,8 @@ test('stage and queues remain navigable, with grounded on-plate geometry',()=>{
   if(done)break;
  }
  assert(Math.hypot(actor.x-venueStagePoint(VENUE_STAGE_QUEUE_LENGTH)[0],actor.y-venueStagePoint(VENUE_STAGE_QUEUE_LENGTH)[1])<2);
- assert(turns>=4,'guest visibly switches directions at the rope ends');
- for(const name of ['merch','claw','snacks','vending','photo']){
+ assert(turns>=2,'guest follows the illustrated stage approach');
+ for(const name of ['merch','claw','snacks','photo']){
   assert(venueStationApproachPoint(name,6,2));
  }
 });
@@ -171,7 +176,7 @@ test('scripted arrival, crowd arrivals, and permanent clerk share ticket economy
  assert.equal(event.ticketClerk.processed,count,'no double charge on subsequent ticks');
 });
 
-test('photo guests traverse the serpentine line and face a stage tripod snapshot',()=>{
+test('photo guests traverse the physical short velvet-rope line and face a stage tripod snapshot',()=>{
  const engine={progress:{irlRecords:{destinyMeet:{attempts:0}}}};
  const event=new IRLEvent(engine,{mode:'standard',level:0});event.begin();event.nextArrival=999;event.clock=500;
  event.add({throughGate:false});
@@ -185,7 +190,7 @@ test('photo guests traverse the serpentine line and face a stage tripod snapshot
   sawPhotoTv||=event.tvEvent?.type==='photo';
   if(event.stageCompleted>0)break;
  }
- assert(sawQueue,'stage-bound guest enters serpentines rather than a direct-line queue');
+ assert(sawQueue,'stage-bound guest follows the grounded short-queue path');
  assert(sawTripodFlash,'snapshot triggered by physical stage tripod');
  assert(sawPhotoTv,'dynamic TV receives the single-fan photo result');
  assert(event.stageCompleted>0,'stage line completes without deadlock');

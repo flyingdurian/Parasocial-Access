@@ -1,11 +1,25 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8k code-polish candidate (asset swap pending), built on the v0.8.8j gated-venue baseline.  
+**Current candidate:** v0.8.8l functional-venue and live-audience polish on the v0.8.8k code baseline.  
 **Working branch:** `recovery/v088i-arcade-debates` (continuing the v0.8.8h unified-plate baseline).  
 **Baseline:** `release/v0.8.8`, commit `bcbb27de6df8bb8f395cd3bbfe392315be7360b6`.  
-**Status:** v0.8.8k code-only polish passed 20/20 focused Node tests (venue + navigation + new scene/audio regressions), and the Git branch preview is READY with HTTP 200 on `/irl-sandbox`. The new plate and independent mascot named below are NOT in this branch or the accessible generated-asset collection. Keep the v088h plate until the exact PNGs are supplied and visually reviewed. No production promotion is approved.
+**Status:** Exact user-provided hall PNG and transparent dggL mascot are now committed under `assets/`; v0.8.8l integrates those files. Feature tests and browser smoke verification are required before owner visual acceptance. No production promotion approved.
 
-## v0.8.8k partial polish — asset handoff required
+## v0.8.8l — source of truth and visual acceptance
+
+**Asset wiring:** The only hall backdrop is `assets/Neon Convention Hall Claw Machine.png` (1672×941). Walking dggL is a separate alpha sprite `assets/Adorable blue mascot clutching a red heart.png` (1220×1289), independently depth-sorted, reacting with decorative hearts and no player rewards. The clerk continues to use `irl-ticket-clerk-v088h.webp`.
+
+**Physical fixtures:** Merch x18–93, food/drinks x94–165, claw x165–193, booth x338–384, front desk x149–237; all four service points are autonomous NPC destinations with an activity window, visible transaction pixels, receipts, and physical collision. The claw glass grapple and prize drop are clipped within the baked machine's physical glass x167–191; the old x21–50 floating claw and imaginary vending station are removed.
+
+**Gate behavior:** Left scanner gap 39px, right gap 43px; the short slotted metal/glass shutter leaves telescope into the fixed scanners when an authorized ticket is inspected. One permanent scan clerk stands at the single monitor; a separate roaming `gateMonitor` patrols the gate zone while two other worker sprites remain dispatchable.
+
+**Stage:** The plate has one short red velvet rope at x233–287, y98; remove invisible zigzag barriers and route to stairs along a short matching approach. Around active debaters, stage spectators form a crowd ring, alternate point/argue/cheer/jump, and speak meme lines as animated world-space speech bubbles. Do NOT print lore/meme phrases on the stage TV: the screen cuts between close-ups of Destiny/challenger and the actual venue audience. Hide content beneath the upper TV bezel to prevent rough edge bleed.
+
+**Debate effects:** Aggressive sprite poses for both actors; round 6–12s. Destiny blue/gold aura active ~25% of each round and challenger red/purple aura active ~10%, with vibe/camera-flash spikes only when a surge begins. Retro boxer-style syllables are original synthesized SFX played at dialogue beats, never recordings, never every animation frame, respecting mute.
+
+**Acceptance:** Compare v0.8.8l sandbox on iPhone and desktop to prior k: verify non-ghost claw at x165, actual booth visitors and award graphics, dggL independent traversal, shutter motion, gate monitor, stage crowd floating speech, camera cuts and rare glow phases. Do not merge to release without owner visual approval.
+
+## v0.8.8k historical notes — superseded by v0.8.8l
 
 - **Boss FX:** blue/gold final-boss and crimson/purple challenger glow built from three additive halos, stepped flame tongues, jagged electric arcs and capped rising particles. All animation timebase values normalize browser milliseconds to seconds; TV switches Destiny's live close-up between authored combat pose cells.
 - **Combat animation:** no neutral talk/nod/idle while a debate runs. Challenger and Destiny alternate authored argue, point and heckle stances every ~0.57s, including during high queue pressure.
@@ -75,4 +89,4 @@ Owner must review:
 8. No old plate flashes while the new asset is loading.
 9. iPhone Safari layout and save/unlock flow remain usable; the clerk remains permanent and is not assigned general NPC tasks.
 
-**Next step:** run the new Node regression suite and preview the candidate on Vercel; obtain desktop/iPhone visual approval before promotion. Keep earlier v0.8.8g and release source history recoverable.
+**Next step:** run the new Node regression suite and inspect the v0.8.8l `/irl-sandbox` preview; obtain desktop/iPhone visual approval before promotion. Preserve earlier release history.

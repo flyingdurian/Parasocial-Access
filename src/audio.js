@@ -57,8 +57,22 @@ export class RushAudio{
  }
  // Synthesized clashes, keyed to story beats so there is no 60fps audio spam.
  // Existing global SFX toggle gates every osc(), and no recordings are used.
+ // Original retro boxer-corner babble: pitched vowel-like syllables, never sampled dialogue.
+ // Called at the exchange beat (~0.8s), not every render frame.
+ irlDebateVoice(beat=0){
+  if(!this.sfxEnabled)return;
+  const host=beat%2===0;
+  const base=(host?49:58)+(beat%4)*2;
+  for(let syllable=0;syllable<3+(beat%3);syllable++){
+   const delay=syllable*.065;
+   const vowel=[0,6,-3,4,1][(beat+syllable)%5];
+   this.osc(base+vowel,.065,delay,syllable%2?'triangle':'sawtooth',host?.038:.033,'sfx',base+vowel-4);
+   this.osc(base+12+vowel,.045,delay+.012,'square',.010,'sfx',base+7+vowel);
+  }
+ }
  irlDebateClash(beat=0){
   const pitch=50+(beat%5)*2;
+  this.irlDebateVoice(beat);
   this.osc(pitch,.09,0,'sawtooth',.055,'sfx',pitch-10);
   this.osc(pitch+19,.13,.07,'triangle',.065,'sfx',pitch+10);
   if(beat%3===0)this.osc(83,.11,.095,'sine',.042);

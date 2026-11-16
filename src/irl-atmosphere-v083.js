@@ -190,6 +190,32 @@ export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',la
  ctx.restore();
  return placed;
 }
+// Short comic-style shout above an actual spectator, never broadcast on TV.
+export function drawDebateShout(ctx,person,layout=null){
+ const ttl=person?.debateSpeechTime||0;
+ if(ttl<=0||!person?.debateSpeech)return null;
+ const max=1.85,elapsed=max-ttl;
+ const message=String(person.debateSpeech).slice(0,54);
+ const parts=message.length<27?[message]:(()=>{
+  const pivot=message.lastIndexOf(' ',27);
+  const cut=pivot>12?pivot:27;return [message.slice(0,cut).trim(),message.slice(cut).trim()];
+ })();
+ ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font='bold 5.5px system-ui,sans-serif';
+ const width=Math.min(85,Math.max(...parts.map(s=>ctx.measureText(s).width))+10),height=7+parts.length*7;
+ const x=person.x+14,y=person.y-5-Math.min(6,elapsed*6);
+ const box=layout?.place(x,y,width,height)||{x:Math.max(2,Math.min(382-width,x-width/2)),y:Math.max(1,y-height-3),w:width,h:height};
+ if(!box){ctx.restore();return null;}
+ ctx.globalAlpha=Math.max(0,Math.min(1,ttl/.3));
+ const angry=person.animation==='argue'||person.animation==='heckle';
+ ctx.fillStyle=angry?'#fff0e5':'#f7f8ff';ctx.fillRect(box.x,box.y,width,height);
+ ctx.strokeStyle=angry?'#ef6681':'#7ad5e3';ctx.lineWidth=1;ctx.strokeRect(box.x+.5,box.y+.5,width-1,height-1);
+ ctx.fillStyle='#262a49';
+ for(let i=0;i<parts.length;i++)ctx.fillText(parts[i],box.x+5,box.y+9+i*7,width-10);
+ ctx.fillStyle=angry?'#ef6681':'#7ad5e3';
+ ctx.beginPath();ctx.moveTo(box.x+width*.45,box.y+height);ctx.lineTo(box.x+width*.50,box.y+height+3);
+ ctx.lineTo(box.x+width*.58,box.y+height);ctx.fill();
+ ctx.restore();return box;
+}
 export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null,mascot=null){
  if(!content||opacity<=0)return null;
  ctx.save();ctx.globalAlpha=opacity;ctx.textAlign='left';ctx.textBaseline='alphabetic';

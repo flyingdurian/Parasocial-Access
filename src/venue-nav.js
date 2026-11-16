@@ -6,7 +6,7 @@ export const VENUE_W=384;
 export const VENUE_H=216;
 export const VENUE_CELL=8;
 export const VENUE_STATIONS=Object.freeze({
- entrance:[184,139],merch:[55,73],claw:[49,115],snacks:[133,73],vending:[182,65],photo:[321,83],
+ entrance:[184,139],merch:[55,73],claw:[166,65],snacks:[133,73],photo:[321,83],
  signing:[248,107],line:[249,119],mic:[313,98],help:[184,116],
  quiet:[95,143],exit:[43,145]
 });
@@ -30,12 +30,7 @@ export function isVenueWalkable(x,y,gateAccess=false){
   const inGate=(feetX>=86&&feetX<=123)||(feetX>=255&&feetX<=296);
   if(!gateAccess||!inGate)return false;
  }
- // Baked zigzag velvet ropes are real floor barriers for free-roaming guests.
- // The stage line has its own scripted walk-through corridor with alternating
- // open ends; free-roam never cuts through the cords.
- for(const rope of [[210,311,147,153],[219,306,127,133],[230,302,108,114],[240,285,97,102]]){
-  if(feetX>=rope[0]&&feetX<=rope[1]&&feetY>=rope[2]&&feetY<=rope[3])return false;
- }
+ // The current plate has ONE short rope, represented by MODULAR_BLOCKERS.
  // Explicit post/planter solids in MODULAR_BLOCKERS cover the entire prop
  // footprint, including the image's top. No collision-only sliding gates.
  return !VENUE_OBSTACLES.some(o=>feetX>=o.x&&feetX<o.x+o.w&&feetY>=o.y&&feetY<o.y+o.h);
@@ -135,13 +130,10 @@ export function venueQueueSpot(index){
  const slot=((index%18)+18)%18,row=slot%6,col=Math.floor(slot/6);
  return [160+col*15,97+row*10];
 }
-// One continuous S-shaped path. Each switchback turns beyond the end of its
-// corresponding cord; guests advance along distance instead of teleporting to
-// a row or walking diagonally through the rope art.
+// Straight approach with a short side-turn around the illustrated velvet rope.
+// No phantom three-row serpentine barriers exist on the new unified plate.
 export const VENUE_STAGE_SERPENTINE=Object.freeze([
- [180,126],[194,120],[194,106],[277,106],[298,106],
- [298,91],[216,91],[207,91],[207,79],[280,79],
- [280,68],[253,68]
+ [183,125],[202,120],[221,115],[225,108],[232,106],[248,102],[253,82]
 ].map(point=>Object.freeze(point)));
 const stageLengths=[0];for(let i=1;i<VENUE_STAGE_SERPENTINE.length;i++)stageLengths.push(stageLengths[i-1]+Math.hypot(VENUE_STAGE_SERPENTINE[i][0]-VENUE_STAGE_SERPENTINE[i-1][0],VENUE_STAGE_SERPENTINE[i][1]-VENUE_STAGE_SERPENTINE[i-1][1]));
 export const VENUE_STAGE_QUEUE_LENGTH=stageLengths.at(-1);
@@ -153,9 +145,9 @@ export function venueStagePoint(distance){
  }
  return [...VENUE_STAGE_SERPENTINE.at(-1)];
 }
-export function venueStageQueueSpot(index){return venueStagePoint(VENUE_STAGE_QUEUE_LENGTH-clamp(index,0,14)*24);}
+export function venueStageQueueSpot(index){return venueStagePoint(VENUE_STAGE_QUEUE_LENGTH-clamp(index,0,14)*11);}
 export function moveVenueSerpentineQueue(actor,index,dt,speed=23){
- const target=clamp(VENUE_STAGE_QUEUE_LENGTH-index*24,0,VENUE_STAGE_QUEUE_LENGTH);
+ const target=clamp(VENUE_STAGE_QUEUE_LENGTH-index*11,0,VENUE_STAGE_QUEUE_LENGTH);
  actor.stageQueueProgress=clamp(actor.stageQueueProgress??0,0,VENUE_STAGE_QUEUE_LENGTH);
  actor.stageQueueProgress=Math.min(target,actor.stageQueueProgress+Math.max(0,dt)*speed);
  const [x,y]=venueStagePoint(actor.stageQueueProgress);
@@ -198,7 +190,7 @@ function connectedRoamCells(){
 }
 export function venueStationApproachPoint(name,id=0,visit=0){
  const station=VENUE_STATIONS[name];if(!station)return null;
- if(!['merch','claw','snacks','vending','photo','entrance','help','quiet','mic'].includes(name))return station;
+ if(!['merch','claw','snacks','photo','entrance','help','quiet','mic'].includes(name))return station;
  const offsets=[[0,0],[-13,0],[13,0],[-23,6],[23,6],[-8,10],[8,10]];
  const idx=Math.abs((id*13+visit*17)|0)%offsets.length;
  for(let i=0;i<offsets.length;i++){
@@ -207,8 +199,8 @@ export function venueStationApproachPoint(name,id=0,visit=0){
  }
  return station;
 }
-// Audience gathers on both flanks; stage/rope/desk solids remain respected.
-const DEBATE_AUDIENCE_SPOTS=Object.freeze([[164,104],[177,115],[186,135],[154,131],[303,96],[313,111],[317,128],[335,114],[191,109],[328,141]]);
+// A floor-level semicircular ring around the stage, avoiding the real rope and stairs.
+const DEBATE_AUDIENCE_SPOTS=Object.freeze([[158,102],[172,112],[185,125],[201,136],[219,139],[239,142],[260,142],[280,139],[300,134],[316,125],[328,113],[339,101],[181,101],[308,105],[194,117],[321,137]]);
 export function venueDebateAudienceSpot(index){
  const point=DEBATE_AUDIENCE_SPOTS[((index%DEBATE_AUDIENCE_SPOTS.length)+DEBATE_AUDIENCE_SPOTS.length)%DEBATE_AUDIENCE_SPOTS.length];
  return isVenueWalkable(...point)?[...point]:snapVenue(...point);

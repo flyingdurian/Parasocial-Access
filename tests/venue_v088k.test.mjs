@@ -25,7 +25,7 @@ test('v088k cabinet animation is glass-clipped and never paints a second fixture
  const event={elapsed:5,clawMachine:{activeUntil:6.5},effects:[],gateControllers:{},departures:[]};
  const ctx=fakeCtx();
  assert(drawModularVenue(ctx,assets,event,5000,{}));
- assert(ctx.calls.some(c=>c[0]==='rect'&&c[1]===prop.x+2&&c[2]===prop.y+3&&c[3]===prop.w-4));
+ assert(ctx.calls.some(c=>c[0]==='rect'&&c[1]===prop.x+2&&c[2]===prop.y+9&&c[3]===prop.w-4));
  assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,1,'one baked background only');
  for(const gate of Object.values(MODULAR_GATES))
   assert(gate.lane.right-gate.lane.left>=39&&gate.lane.right-gate.lane.left<=43);
@@ -33,7 +33,7 @@ test('v088k cabinet animation is glass-clipped and never paints a second fixture
 
 test('v088k boss scene generates energy layers and sparks during live debate',()=>{
  const ctx=fakeCtx();
- const event={elapsed:7,hostX:204,hostY:44,departures:[{debater:true,stageVisit:'exchange',x:239,y:44,kind:2,exchangeClock:8}],gateControllers:{}};
+ const event={elapsed:7,hostX:204,hostY:44,departures:[{debater:true,stageVisit:'exchange',x:239,y:44,kind:2,exchangeClock:8,hostAuraActive:true,challengerAuraActive:true}],gateControllers:{}};
  assert(drawModularVenue(ctx,assets,event,7000,{}));
  assert(ctx.calls.filter(c=>c[0]==='fillRect').length>85,'multi-layer flames and spark particles render');
  assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,1,'only one world plate');

@@ -1,17 +1,17 @@
 /* v0.8.8h unified plate, interactive TV, tickets, gate glass and dust motes. */
 import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_BLOCKERS} from './venue-geometry-v088b.js';
 
-const FILES=Object.freeze({plate:'irl-venue-baked-v088h.webp',clerk:'irl-ticket-clerk-v088h.webp'});
+const FILES=Object.freeze({plate:'Neon Convention Hall Claw Machine.png',clerk:'irl-ticket-clerk-v088h.webp',mascot:'Adorable blue mascot clutching a red heart.png'});
 export function loadModularVenueAssets(){
  const assets={};
  for(const [key,file] of Object.entries(FILES)){
   const image=new Image();
-  image.src='/assets/'+file;
+  image.src='/assets/'+encodeURIComponent(file);
   assets[key]=image;
  }
  return assets;
 }
-export const modularVenueReady=assets=>!!assets&&Object.keys(FILES).every(key=>assets[key]?.complete&&assets[key]?.naturalWidth>0);
+export const modularVenueReady=assets=>!!assets&&assets.plate?.complete&&assets.plate?.naturalWidth>0&&assets.clerk?.complete&&assets.clerk?.naturalWidth>0;
 
 const draw=(ctx,image,bounds,source)=>{
  if(!image?.naturalWidth)return;
@@ -75,6 +75,27 @@ export function drawTicketClerk(ctx,assets,event){
 }
 // Independent tiny atmosphere layer: only near light sources, independent of
 // character simulation and fully cosmetic. No particles on the UI overlays.
+// Independent from the baked scenery, depth-sorted with other walking sprites.
+export function drawVenueMascot(ctx,assets,event,t){
+ const sprite=assets?.mascot,actor=event?.mascot;
+ if(!sprite?.naturalWidth||!actor)return false;
+ ctx.save();
+ const beat=t*.0028;
+ const bob=actor.walking?Math.abs(Math.sin(beat*2.2))*1.6:Math.sin(beat)*.65;
+ const w=22,h=24;
+ const x=Math.round(actor.x),y=Math.round(actor.y-bob);
+ ctx.fillStyle='rgba(19,13,53,.24)';
+ ctx.beginPath();ctx.ellipse(x+w/2,actor.y+h-1,9,2.4,0,0,Math.PI*2);ctx.fill();
+ if(actor.facing<0){ctx.translate(x+w,0);ctx.scale(-1,1);ctx.drawImage(sprite,0,y,w,h);}
+ else ctx.drawImage(sprite,x,y,w,h);
+ if(actor.heartBurst>0){
+  const alpha=Math.min(1,actor.heartBurst/.4);
+  ctx.globalAlpha=alpha;ctx.fillStyle='#ff679b';ctx.font='bold 8px sans-serif';
+  for(let k=0;k<3;k++)ctx.fillText('♥',x+3+k*6,actor.y-4-Math.sin(beat*2+k)*3-(1-alpha)*5);
+ }
+ ctx.restore();
+ return true;
+}
 export function drawVenueDustMotes(ctx,t){
  const lights=[[75,15,10,7],[325,15,11,8],[71,63,15,9],[345,66,13,10],[234,70,8,5],[267,70,8,5],[294,70,8,5]];
  ctx.save();
@@ -154,8 +175,8 @@ export function drawStageDebateUplight(ctx,event,t){
  }
  ctx.restore();
  // Glows are behind the actual sprites; the clipped television paints above.
- drawFighterAura(ctx,(event.hostX??204)+16,(event.hostY??44)+19,t,true);
- drawFighterAura(ctx,debater.x+16,debater.y+20,t,false);
+ if(debater.hostAuraActive)drawFighterAura(ctx,(event.hostX??204)+16,(event.hostY??44)+19,t,true);
+ if(debater.challengerAuraActive)drawFighterAura(ctx,debater.x+16,debater.y+20,t,false);
 }
 function livePortrait(ctx,asset,x,y,height=31,col=0,row=0,cols=4,rows=2){
  if(!asset?.naturalWidth||!asset?.naturalHeight)return false;
@@ -179,8 +200,8 @@ function liveFanPortrait(ctx,streams,kind,x,y){
 }
 function drawBoothActivity(ctx,event){
  // Tiny contextual receipts that read as rewards; no unlabeled circles or notes.
- const anchors={merch:[57,103],claw:[39,120],snacks:[133,100],vending:[178,95],photo:[350,105]};
- const labels={merch:'+1 MERCH',claw:'+1 PRIZE',snacks:'+1 SNACK',vending:'+1 DRINK',photo:'+1 PHOTO'};
+ const anchors={merch:[57,86],claw:[180,72],snacks:[132,88],photo:[351,92]};
+ const labels={merch:'MERCH SOLD',claw:'PRIZE WON',snacks:'FOOD + DRINK',photo:'PHOTO TAKEN'};
  for(const fx of event?.effects||[]){
   if(fx.kind!=='booth')continue;
   const point=anchors[fx.station];if(!point)continue;
@@ -199,13 +220,37 @@ function drawBoothActivity(ctx,event){
   ctx.fillRect(point[0]+4,y-12-Math.floor(age*3),1.5,2);
   ctx.restore();
  }
+ // Physical station animations sit on the pictured fixtures, not on ghost props.
+ for(const [name,activity] of Object.entries(event?.stationActivity||{})){
+  if(!activity||activity.activeUntil<=event.elapsed)continue;
+  const age=Math.max(0,activity.activeUntil-event.elapsed);
+  ctx.save();
+  if(name==='merch'){
+   const x=49+Math.sin(age*7)*2,y=82;
+   ctx.fillStyle='#f9d8ec';ctx.fillRect(x-3,y-7,6,5);
+   ctx.fillStyle='#9475ea';ctx.fillRect(x-4,y-8,2,3);ctx.fillRect(x+3,y-8,2,3);
+   ctx.fillStyle='#ffe2a5';ctx.fillRect(61,y-5,3,2);
+  }else if(name==='snacks'){
+   ctx.fillStyle='#ffd582';ctx.fillRect(129,80,9,2);
+   ctx.fillStyle='#f7a65b';ctx.fillRect(130,76,6,4);
+   ctx.fillStyle='#7cf5df';ctx.fillRect(140,74,3,7);
+   ctx.fillStyle='#e8ffff';ctx.fillRect(141,72,1,3);
+  }else if(name==='photo'){
+   if((Math.floor(event.elapsed*7)%5)===0){
+    ctx.globalAlpha=.43;ctx.fillStyle='#f9f9ff';ctx.fillRect(344,60,31,30);
+   }
+   ctx.fillStyle='#e3e9ff';ctx.fillRect(368,83,6,5);
+   ctx.fillStyle='#d6a4fe';ctx.fillRect(369,80,4,2);
+  }
+  ctx.restore();
+ }
  // The transparent glass shows a working grapple and prize drop only while
  // a visitor is at the left-aisle cabinet; no duplicate machine sprite.
  if((event?.clawMachine?.activeUntil||0)>(event?.elapsed||0)){
   // Moving pieces are physically clipped to the cabinet glass:
   // no standalone floating claw prop can bleed into the scene.
   const cabinet=MODULAR_PROPS.claw;
-  const glass={x:cabinet.x+2,y:cabinet.y+3,w:cabinet.w-4,h:cabinet.solid.y-cabinet.y-5};
+  const glass={x:cabinet.x+2,y:cabinet.y+9,w:cabinet.w-4,h:22}; // pictured glass below marquee
   const progress=Math.max(0,Math.min(1,1-(event.clawMachine.activeUntil-event.elapsed)/2.3));
   const swing=Math.round(glass.x+glass.w/2+Math.sin(progress*7)*glass.w*.17);
   const drop=progress<.5?progress*glass.h*.72:(1-progress)*glass.h*.72;
@@ -230,29 +275,37 @@ export function drawModularTV(ctx,event,t,streams={}){
  grad.addColorStop(0,'#19143c');grad.addColorStop(1,'#363373');
  ctx.fillStyle=grad;ctx.fillRect(0,0,100,56);
  // A second inset clip protects the upper bezel and suppresses edge artifacts.
- ctx.beginPath();ctx.rect(2,2,96,52);ctx.clip();
- ctx.fillStyle='#c7b9ff';ctx.fillRect(4,4,92,1);
- ctx.fillStyle='#d5a5f0';ctx.fillRect(4,5,24,1);
+ ctx.beginPath();ctx.rect(3,7,94,46);ctx.clip(); // no drawing across the top bezel
  ctx.textBaseline='alphabetic';ctx.textAlign='center';
  if(debate){
-  // Live arcade broadcast: a close-up of the two fighters, health bars,
-  // 6–12 second round clock, and a community chat crawl.
-  ctx.fillStyle='rgba(8,11,37,.62)';ctx.fillRect(3,7,94,45);
-  ctx.fillStyle='#ffe098';ctx.font='900 6px ui-monospace,monospace';ctx.fillText('FINAL BOSS',74,14,40);
-  ctx.fillStyle='#a4e5ff';ctx.fillRect(5,4,42,2.4);
-  ctx.fillStyle='#fa9dfe';ctx.fillRect(53,4,42,2.4);
-  ctx.fillStyle='#bdefff';ctx.font='900 7px monospace';ctx.fillText('VS',50,21);
-  ctx.save();ctx.beginPath();ctx.rect(6,10,53,36);ctx.clip();
-  // The camera cuts to aggressive, authored Destiny action frames.
-  const hostFrame=[6,5,6][Math.floor(t/310)%3];
-  livePortrait(ctx,streams.host,22,12,36,hostFrame%4,Math.floor(hostFrame/4));
-  liveFanPortrait(ctx,streams,debate.kind,47,12);
-  ctx.restore();
-  ctx.font='900 5px ui-monospace,monospace';ctx.fillStyle='#b7f8ff';ctx.fillText('DESTINY',77,23,38);
-  ctx.fillStyle='#ffd9ff';ctx.fillText(String(debate.name||'CHALLENGER').toUpperCase().slice(0,16),77,31,39);
-  const live=event?.debateChat?.at(-1)?.text||'BLOODSPORTS LIVE';
-  ctx.fillStyle='#fff0a5';ctx.font='bold 5px ui-monospace,monospace';ctx.fillText(live,77,41,39);
-  ctx.fillStyle='#ffffff';ctx.font='900 7px ui-monospace,monospace';ctx.fillText('00:'+String(Math.max(0,Math.ceil(debate.exchangeClock))).padStart(2,'0'),77,49,36);
+  // Broadcast close-ups: fighters or the actual cheering crowd.
+  // Meme/reaction lines are world-space speech, never LCD text.
+  const audience=(event.crowd||[]).filter(p=>p.debateWatching);
+  const crowdCam=audience.length>=2&&Math.floor(t/2900)%3===2;
+  ctx.fillStyle='rgba(7,10,35,.85)';ctx.fillRect(4,9,92,43);
+  ctx.fillStyle='#f2d692';ctx.font='bold 5px ui-monospace,monospace';
+  ctx.fillText(crowdCam?'CROWD CAM':'DEBATE CAM',50,14,65);
+  ctx.fillStyle='#ee557f';ctx.fillRect(7,10,2.6,2);
+  if(crowdCam){
+   ctx.save();ctx.beginPath();ctx.rect(6,16,88,30);ctx.clip();
+   for(let i=0;i<3;i++){
+    const person=audience[(Math.floor(t/2900)*3+i)%audience.length];
+    liveFanPortrait(ctx,streams,person.kind,23+i*29,15);
+   }
+   ctx.restore();
+   ctx.fillStyle='#dcffd6';ctx.font='bold 5.5px ui-monospace,monospace';
+   ctx.fillText('LIVE AUDIENCE',50,51,82);
+  }else{
+   ctx.save();ctx.beginPath();ctx.rect(7,16,86,30);ctx.clip();
+   const hostFrame=[6,5,6][Math.floor(t/310)%3];
+   livePortrait(ctx,streams.host,29,15,31,hostFrame%4,Math.floor(hostFrame/4));
+   liveFanPortrait(ctx,streams,debate.kind,69,15);
+   ctx.restore();
+   ctx.fillStyle='#9de5ff';ctx.font='bold 5px ui-monospace,monospace';ctx.fillText('DESTINY',25,49,40);
+   ctx.fillStyle='#ffb3db';ctx.fillText('CHALLENGER',74,49,44);
+  }
+  ctx.fillStyle='#f4f7ff';ctx.font='bold 6px ui-monospace,monospace';
+  ctx.fillText(String(Math.max(0,Math.ceil(debate.exchangeClock)))+'s',91,15,13);
  }else if(feed?.type==='photo'){
   // Translucent broadcast-glass wash instead of an opaque white photo card.
   ctx.save();ctx.beginPath();ctx.rect(6,8,56,38);ctx.clip();
