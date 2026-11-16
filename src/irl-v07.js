@@ -443,13 +443,13 @@ export class IRLEvent {
    }else if(this.guardPositions.includes(worker)){
     const route=[[78,143],[118,132],[201,129],[312,119],[310,167],[266,169],[101,166],[40,164]];
     worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
-     worker.monitoring=Object.values(this.gateControllers).some(g=>g.openUntil>this.elapsed)||worker.patrolIndex%2===0;
     if(worker.patrolDwell<=0){
      const [tx,ty]=route[worker.patrolIndex%route.length];
      if(moveVenue(worker,tx,ty,dt,24)){worker.patrolIndex=(worker.patrolIndex+3)%route.length;worker.patrolDwell=.6;}
     }else worker.walking=false;
    }else if(worker===this.staff[0]){
-    // The greeter patrols both gated approaches and returns to the desk.
+    // Distinct gate monitor watches scanner activity while the ticket clerk stays at the desk.
+    worker.monitoring=Object.values(this.gateControllers).some(g=>g.openUntil>this.elapsed)||worker.patrolIndex%2===0;
     const stops=[[113,137],[184,137],[238,137],[184,137]];
     worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
     if(worker.patrolDwell<=0){
