@@ -32,6 +32,7 @@ test('every independent booth shares hitbox coordinates with the navigation map'
   assert(isVenueWalkable(...gate.inside,true),side+' reached inside');
  }
  assert(!isVenueWalkable(232,117),'stage-queue rope blocks its visible lower-left stanchion');
+ assert(!isVenueWalkable(167,115),'roaming guests cannot stand on the check-in counter roof');
  assert(isVenueWalkable(260,115),'center guest aisle remains walkable');
  assert(VENUE_STAGE.debate[0]<VENUE_STAGE.stairs[0]&&VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);
  assert.equal(VENUE_STAGE.exchange[1],55,'fan waits in front of the signing table after the stairs');

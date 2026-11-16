@@ -95,7 +95,7 @@ export class IRLEvent {
   this.crowd=Array.from({length:13},(_,i)=>{const seed=irlHash(this.run*4919+i*811+17);return {id:i,kind:[1,2,4,5,6,8,9,10,11][i%9],x:171+(seed%31)-15,y:169+(seed%13),station:'entrance',target:'entrance',dwell:i*.22,visits:0,walking:false,facing:1,emote:'',emoteTime:0};});
   const startingSpots=[[29,104],[76,133],[119,98],[167,115],[244,117],[283,130],[310,139],[340,140],[215,139],[108,140],[45,137],[199,100],[348,94]];
   this.crowd.forEach((person,i)=>{[person.x,person.y]=snapVenue(...startingSpots[i]);person.station='wander';person.target='wander';person.animation='idle';person.actionClock=0;person.speech='';});
-  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=i?[308,149]:[234,156];worker.homeX=worker.x;worker.homeY=worker.y;});
+  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=i?[308,149]:[258,130];worker.homeX=worker.x;worker.homeY=worker.y;});
   this.guardPositions.forEach((worker,i)=>{[worker.x,worker.y]=[[78,143],[312,119],[314,168]][i];worker.homeX=worker.x;worker.homeY=worker.y;});
   this.crowdMoments=0;this.boothTransactions={merch:0,snacks:0,vending:0,photo:0};this.recovery=0;this.mistakeStreak=0;
  }

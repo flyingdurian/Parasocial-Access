@@ -19,7 +19,7 @@ export const MODULAR_PROPS=Object.freeze({
  food:Object.freeze({x:119,y:48,w:79,h:70,solid:{x:120,y:94,w:78,h:24}}),
  vending:Object.freeze({x:2,y:76,w:33,h:47,solid:{x:3,y:98,w:32,h:25}}),
  photo:Object.freeze({x:321,y:109,w:61,h:62,solid:{x:331,y:132,w:52,h:39}}),
- checkin:Object.freeze({x:134,y:152,w:115,h:64,solid:{x:134,y:175,w:115,h:41}}),
+ checkin:Object.freeze({x:134,y:138,w:115,h:78,solid:{x:134,y:138,w:115,h:78}}),
  entrance:Object.freeze({x:0,y:120,w:384,h:96}),
  queueRopes:Object.freeze({x:226,y:112,w:94,h:55})
 });
