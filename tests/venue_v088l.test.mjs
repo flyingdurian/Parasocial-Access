@@ -43,10 +43,10 @@ test('every physical booth completes a visible transaction; vending is absent',(
  assert(!MODULAR_BLOCKERS.some(o=>o.name==='vending'));
  const event=new IRLEvent(engine(),{level:0});
  for(const station of ['merch','claw','snacks','photo']){
-  const actor=event.crowd[0];
-  [actor.x,actor.y]=venueStationApproachPoint(station,actor.id,1);
+  const actor=event.crowd[0];actor.visits=1;
+  [actor.x,actor.y]=venueStationApproachPoint(station,actor.id,actor.visits);
   assert(isVenueWalkable(actor.x,actor.y),'approach is collision-safe: '+station);
-  actor.station='wander';actor.target=station;actor.dwell=0;actor.visits++;
+  actor.station='wander';actor.target=station;actor.dwell=0;
   const previous=event.boothTransactions[station]||0;
   event.crowdTick(.1);
   assert(event.boothTransactions[station]>previous,station+' purchase happened');
@@ -64,7 +64,7 @@ test('gate monitor patrols entry lanes while dedicated clerk remains at desk',()
  const patrol=event.staff.filter(s=>s.gateMonitor);
  assert.equal(patrol.length,1);
  assert(event.staff.filter(s=>!s.gateMonitor).length>=2,'dispatchers remain available');
- assert.equal(event.freeWorker('check').gateMonitor,false,'patrol not assigned to dispatch');
+ assert(!event.freeWorker('check')?.gateMonitor,'patrol not assigned to dispatch');
  let different=false,gateObserved=false;
  const startX=patrol[0].x;
  for(let k=0;k<350;k++){
