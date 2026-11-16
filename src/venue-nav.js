@@ -86,13 +86,8 @@ export function venueRoute(x,y,toX,toY,gateAccess=false){
  waypoints.push([endX,endY]);
  const path=[];let last=[startX,startY],index=0;
  while(index<waypoints.length){
-  // Line-of-sight smoothing stops at the first blocked corridor cell,
-  // avoiding quadratic segment scans across every roaming NPC route.
   let furthest=index;
-  for(let j=index+1;j<waypoints.length;j++){
-   if(!venueSegmentClear(...last,...waypoints[j],gateAccess))break;
-   furthest=j;
-  }
+  for(let j=waypoints.length-1;j>index;j--)if(venueSegmentClear(...last,...waypoints[j],gateAccess)){furthest=j;break;}
   path.push(waypoints[furthest]);last=waypoints[furthest];index=furthest+1;
  }
  return path;
@@ -101,9 +96,6 @@ export function moveVenue(actor,targetX,targetY,dt,speed=30){
  const oldX=actor.x,oldY=actor.y;
  const gateAccess=!!actor.gateAccess;
  const endpoint=snapVenue(targetX,targetY,gateAccess),destination=endpoint.map(v=>Math.round(v*2)/2).join(':')+':'+Number(gateAccess);
-  // Stationary spectators and workers must not rebuild an entire BFS route
-  // 10 times per second while already standing on their destination.
-  if(Math.hypot(actor.x-endpoint[0],actor.y-endpoint[1])<1.5){actor.route=[];actor.routeTo=destination;actor.routeBlocked=false;actor.walking=false;actor.stepDistance=0;return true;}
  if(actor.routeTo!==destination||!actor.route?.length){
   actor.route=venueRoute(actor.x,actor.y,...endpoint,gateAccess);
   actor.routeTo=destination;

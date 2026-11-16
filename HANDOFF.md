@@ -3,7 +3,7 @@
 **Current candidate:** v0.8.8j, interactive arcade debates / gate shutters / claw machine on the v0.8.8h unified plate.  
 **Working branch:** `recovery/v088i-arcade-debates` (continuing the v0.8.8h unified-plate baseline).  
 **Baseline:** `release/v0.8.8`, commit `bcbb27de6df8bb8f395cd3bbfe392315be7360b6`.  
-**Status:** v0.8.8j implementation and new regression tests prepared; runtime and iPhone visual verification required before release approval. Do not silently replace an accepted release.
+**Status:** v0.8.8j focused Node tests passed in the remote runner; Vercel branch preview is READY. Desktop/iPhone visual verification is still required before release approval. Do not silently replace an accepted release.
 
 ## Purpose
 
@@ -17,7 +17,7 @@ The v0.8.8b–f hall rebuilds introduced prop-scale drift, floating stage pieces
 - **Boss stage:** critic exchanges run deterministically for 6–11.8 seconds according to topic difficulty, guest serial and level. Ambient onlookers move to safe front-flank audience points without stepping through stage ropes. Destiny gets the blue/gold final-boss pixel aura; challengers get pink/purple energy.
 - **Stage TV:** still clips to one measured in-plate LCD with an inset bezel clip; during live debates it shows two close-up opponents, health-bar styling, countdown and rotating *fictional* chat banter. Results animate as pixel-arcade K.O. boards with score; photos/autographs use brief white flash/ink reveals.
 - **Lore:** fictional chat reactions include `COPIUM`, `ShrimpleAs`, `AngelThump`, `Abathur`, `REFUTE THE TIMELINE.`, `Let him cook!`, `Where's the fact-check?!` and more. They are not real transcripts or claims about historical outcomes.
-- **Testing:** `tests/venue_modular_v088b.test.mjs` now includes greeter patrol, claw-prize usage, and long boss exchange/TV regression coverage; run the full suite before production promotion.
+- **Testing:** `tests/venue_modular_v088b.test.mjs` now includes greeter patrol, claw-prize usage, and long boss exchange/TV regression coverage (**12/12 passed**, Node 22). The current `tests/venue_v088b.test.mjs` also passed. Earlier `venue_v082`–`venue_v088` suites assert pre-unified art/queue geometry and are no longer valid release gates. The 100-seed v0.7 simulation is CPU-heavy in a 1-vCPU sandbox; one complete 20-guest perfect session passed with 3 stars.
 
 ## Scene ownership and key files
 
@@ -51,7 +51,7 @@ The v0.8.8b–f hall rebuilds introduced prop-scale drift, floating stage pieces
 
 ## Verification and release gate
 
-Focused regression coverage: `tests/venue_modular_v088b.test.mjs` checks both valid WebPs, solid/scaled lane routes, 18 ambient queue positions, S-line advancement with directional changes, TV clipping/two distinct portraits, stage pacing, and ticket issuance/one-time consumption for scripted and ambient guests, plus an end-to-end stage photo through the tripod. **9/9 passing at the earlier v0.8.8h checkpoint; current v0.8.8j tests must be rerun.** Verify full repository tests and browser-test `/irl-sandbox` at desktop and mobile dimensions.
+Focused regression coverage: `tests/venue_modular_v088b.test.mjs` checks both valid WebPs, solid/scaled lane routes, 18 ambient queue positions, S-line advancement with directional changes, TV clipping/two distinct portraits, stage pacing, and ticket issuance/one-time consumption for scripted and ambient guests, plus an end-to-end stage photo through the tripod. **9/9 passing at the earlier v0.8.8h checkpoint; 12/12 current v0.8.8j focused cases passed.** Verify full repository tests and browser-test `/irl-sandbox` at desktop and mobile dimensions.
 
 Owner must review:
 
