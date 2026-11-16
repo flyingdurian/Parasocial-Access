@@ -106,11 +106,11 @@ export function stageAction(phase,seconds,queuePressure=0,mood='idle'){
  return 'idle';
 }
 export function stagePosition(action,seconds=0,meeting=false){
- // Five purpose-driven stations span the usable raised stage. Approach a fan
- // or critic by returning to the central mic without snapping instantly.
- if(meeting)return {x:260,y:39};
- const route=[{x:229,y:39},{x:248,y:39},{x:283,y:39},{x:291,y:39},{x:260,y:39}];
- const slot=Math.floor(seconds/5)%route.length;
- if(action==='mic')return {x:slot%2?259:276,y:39};
- return route[slot];
+ // The baked stage's LCD spans x233..303 and its legend occupies the right
+ // third. Destiny stays on the LEFT performance zone; the visiting guest
+ // uses the right exchange spot. No five-stop pacing across the display.
+ if(meeting)return {x:204,y:44};
+ if(action==='mic')return {x:211,y:44};
+ const route=[{x:204,y:44},{x:208,y:44},{x:212,y:44},{x:206,y:44}];
+ return route[Math.floor(seconds/5)%route.length];
 }

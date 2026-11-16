@@ -9,7 +9,7 @@ body.irl-sandbox{background:#0d1224;color:#fff1df;font-family:system-ui,sans-ser
 .harness-stats b{display:block;font-size:16px;color:#ffe0a0;margin-top:3px}
 .harness-stage{position:relative;aspect-ratio:384/216;background:#171529;overflow:hidden;border:2px solid #b99271;border-radius:10px}
 .harness-stage canvas{display:block;width:100%;height:100%;image-rendering:auto;touch-action:manipulation}
-.harness-prompt{position:absolute;z-index:7;left:1%;top:1%;width:min(39%,300px);padding:9px;background:#fff6e5;border:2px solid #322941;box-shadow:4px 4px #161127cc;color:#332b43;font-weight:700;font-size:clamp(9px,1.1vw,15px);pointer-events:none}
+.harness-prompt{position:absolute;z-index:7;left:1%;top:1%;width:min(36%,260px);padding:9px;background:#fff6e5;border:2px solid #322941;box-shadow:4px 4px #161127cc;color:#332b43;font-weight:700;font-size:clamp(9px,1.1vw,15px);pointer-events:none}
 .harness-prompt[hidden]{display:none}
 .harness-prompt b,.harness-prompt small{display:block}.harness-prompt small{font-size:.74em;opacity:.78;margin-top:4px}
 .harness-prompt p{margin:5px 0;font-size:1.05em}

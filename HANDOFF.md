@@ -26,7 +26,7 @@ The v0.8.8b–f hall rebuilds introduced prop-scale drift, floating stage pieces
 ## Coordinates and invariants
 
 - Local canvas: `384×216`. Every stage/fixture coordinate, NPC sprite foot position, gate lane and TV transform uses this single space.
-- Stage: fixed illustrated footprint approximately `x188..338, y19..95`; stairs at upper-right hall center; no dynamic stage furniture.
+- Stage: fixed illustrated footprint approximately `x188..338, y19..95`; stairs at upper-right hall center; no dynamic stage furniture. Destiny's animation target is restricted to `x204..212,y44`, always left of the LCD broadcast title.
 - TV LCD: `x233,y32,w70,h32`; the runtime feed is clipped to the screen. A photo moment renders exactly **one Destiny portrait and one guest** plus signature, not two Destinys.
 - Front counter: `x149,y180,w88,h36`; human-scale relative to ~30×38 NPC sprites (waist-high, not miniature).
 - Left gate lane `x76..130`; right gate `x253..310`, each ≥54 world units wide. The posts and planters are fixed, solid obstacles. Only thin glass shutters retract; no translated posts.
@@ -37,7 +37,7 @@ The v0.8.8b–f hall rebuilds introduced prop-scale drift, floating stage pieces
 
 ## Verification and release gate
 
-Focused regression coverage: `tests/venue_modular_v088b.test.mjs` checks one valid WebP, proper solidity and scale, both gate routes, 18 queue spots, on-plate rendering, TV clipping and dual-person photo, and foreground masking. Verify full `node --test` if the repository test harness is available, then browser-test `/irl-sandbox` at mobile dimensions.
+Focused regression coverage (including stage-pacing bounds): `tests/venue_modular_v088b.test.mjs` checks one valid WebP, proper solidity and scale, both gate routes, 18 queue spots, on-plate rendering, TV clipping and dual-person photo, and foreground masking. Verify full `node --test` if the repository test harness is available, then browser-test `/irl-sandbox` at mobile dimensions.
 
 Owner must review:
 

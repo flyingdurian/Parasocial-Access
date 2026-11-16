@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {existsSync,readFileSync} from 'node:fs';
 import {MODULAR_GATES,MODULAR_PROPS,MODULAR_BLOCKERS,MODULAR_TV_BOUNDS} from '../src/venue-geometry-v088b.js';
 import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV,drawBakedForegroundOccluders} from '../src/venue-rig-v088b.js';
+import {stagePosition} from '../src/sprite-animation.js';
 import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,venueQueueSpot,venueStageQueueSpot,venueStationApproachPoint} from '../src/venue-nav.js';
 
 function paintContext(){
@@ -104,4 +105,14 @@ test('TV/photo feed is clipped to one on-plate screen; no opaque card',()=>{
  drawBakedForegroundOccluders(mask,assets);
  assert.equal(mask.depth,0);
  assert(mask.calls.filter(c=>c[0]==='drawImage').length>=5,'foreground uses source pixels rather than separate props');
+});
+
+test('Destiny keeps his pacing and debate pose left of the broadcast title',()=>{
+ for(let t=0;t<180;t+=2.5){
+  for(const action of ['idle','mic']){
+   const pose=stagePosition(action,t,false);
+   assert(pose.x>=200&&pose.x<=216&&pose.y>=40&&pose.y<=46);
+  }
+  assert.equal(stagePosition('talk',t,true).x,204);
+ }
 });
