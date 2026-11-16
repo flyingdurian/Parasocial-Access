@@ -72,7 +72,7 @@ function draw(t){
  const canvas=q('#h-canvas'),ctx=setupGraphicsCanvas(canvas,graphics);
  if(!ctx)return;
  const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,cast:assets.cast,extra});
- if(!modern){if(assets.hall.complete&&assets.hall.naturalWidth)ctx.drawImage(assets.hall,0,0,384,216);else{ctx.fillStyle='#e8edf0';ctx.fillRect(0,0,384,216);}
+ if(!modern){if(assets.hall.complete&&assets.hall.naturalWidth)ctx.drawImage(assets.hall,0,0,384,216);else{ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);}
   drawStageAtmosphere(ctx,t,event.phase);drawVenueRush(ctx,event,t);drawVenueScreens(ctx,event,t,{host:assets.pose0,cast:assets.cast,extra});drawVenueGates(ctx,assets.hall,event);}
  drawStageQueueGuides(ctx,event);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#91f9b868';for(let y=84;y<230;y+=VENUE_CELL)for(let x=12;x<357;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}

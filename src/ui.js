@@ -160,7 +160,7 @@ function irlPage(){const r=irl?.result||null;return `<div class="page irl-page">
  </main>${footer()}</div>`.replace('Guide twenty guests through the convention.',irl.session==='endless'?'Survive endless waves of guests and protect the venue.':'Guide '+irl.config.guests+' guests through '+irl.config.title+'.').replace('One guest at a time, even when the venue is busy.','The highlighted guest stays prominent; Chaos Mode can show incoming prompts simultaneously.').replace('the four actions below','the five actions below').replace('Welcome</b> fans and peaceful critics.','Welcome</b> fans. <b>Invite to Debate</b> peaceful critics.').replace('1 · FAN / CRITIC','1 · FAN');}
 function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-canvas');if(!canvas)return;const ctx=setupGraphicsCanvas(canvas,graphics);if(!ctx)return;
  const modern=drawModularVenue(ctx,modularVenue,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});
- if(!modern){if(irlImages.hall.complete&&irlImages.hall.naturalWidth)ctx.drawImage(irlImages.hall,0,0,384,216);else{ctx.fillStyle='#e8edf0';ctx.fillRect(0,0,384,216);}
+ if(!modern){if(irlImages.hall.complete&&irlImages.hall.naturalWidth)ctx.drawImage(irlImages.hall,0,0,384,216);else{ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);}
   drawStageAtmosphere(ctx,t,irl.phase);drawVenueRush(ctx,irl,t);drawVenueScreens(ctx,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});drawVenueGates(ctx,irlImages.hall,irl);}
  drawStageQueueGuides(ctx,irl);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);

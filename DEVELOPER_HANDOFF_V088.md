@@ -156,3 +156,5 @@ This checkpoint supersedes older nested-directory notes above. The active GitHub
 **Live preview correction:** Vercel first browser screenshot showed signing furniture covering the center stairs and a drawn registration rail crossing the check-in counter. Stage debate/signing sprites were moved higher on the deck, fan approach moved to [285,55], and only short perimeter rail segments are drawn between the physical gates and central counter. Native prop collider footprints and authorized gate checks were not changed.
 
 **Final visual correction:** During live browser QA, moving the signing table above the stair opening caused its top edge to cover the lower TV ticker. Its independent sprite bounds are now [297,57,76,30] on the right-hand deck. Fan path remains center-stairs then [285,55] at the left side of the signing table. Stage LCD and stair clearance no longer share the table's area.
+
+**Loading color:** Until the six modular WebPs complete loading, both entry points use a deep indigo (#211a40) interim canvas rather than the discarded bright office-white flash. Once ready, the shared full venue renderer takes over atomically.
