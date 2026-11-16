@@ -30,3 +30,11 @@
  #irl-graphics-trigger{padding:7px 9px;font-size:9px}
  #irl-graphics-panel{top:37px;max-height:calc(100dvh - 115px)}
 }
+
+
+/* v0.8.8b: constrain fixed debug controls to the visible viewport. */
+#irl-graphics-shell{max-width:calc(100vw - 16px);min-width:0;gap:4px}
+#irl-graphics-mute-trigger,#irl-graphics-trigger{min-width:0;max-width:min(152px,calc((100vw - 28px)/2));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:660px){
+ #irl-graphics-mute-trigger,#irl-graphics-trigger{max-width:min(112px,calc((100vw - 20px)/2))}
+}

@@ -5,11 +5,11 @@ import {IRL_LEVELS} from './irl-progression-v085.js';
 import {loadGraphics,saveGraphics,setupGraphicsCanvas,applyVenueTexture,applyVenueCRT} from './graphics-v082.js';
 import {createGraphicsPanel} from './graphics-panel.js';
 import {drawVenueCharacter,drawContactShadow,venueSpriteGeometry,stageAction} from './sprite-animation.js';
-import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble} from './irl-atmosphere-v083.js';
+import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay} from './irl-atmosphere-v083.js';
 import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
 import {drawDggEmote} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
-import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides} from './venue-effects-v086.js';
+import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 
 const root=document.querySelector('#irl-harness');
 const q=(selector)=>root.querySelector(selector);
@@ -76,6 +76,8 @@ function draw(t){
  const mood=stageAction(event.phase,event.elapsed,event.visitors.length,event.elapsed<event.hostUntil?event.hostMood:'idle');
  sprite(0,event.hostX,event.hostY,31,39,event.hostWalking&&!event.departures.some(g=>g.stageVisit==='exchange')?'walk':mood);
  const actors=[...event.crowd.map(g=>({g,role:'crowd',w:27,h:34})),...event.arrivals.map(g=>({g,role:'arrival',w:34,h:42})),...event.visitors.map(g=>({g,role:'visitor',w:34,h:42})),...event.departures.map(g=>({g,role:'depart',w:34,h:42})),...event.staff.map(g=>({g,role:'staff',w:31,h:40})),...event.guardPositions.map(g=>({g,role:'guard',w:34,h:42}))].sort((a,b)=>a.g.y+a.h-(b.g.y+b.h));
+ const bubbleLayout=createBubbleLayout([VENUE_LED_SCREEN]);
+ reserveCanvasOverlay(bubbleLayout,canvas,q('#h-speech'));
  let ambient=0;
  const roomIsSpeaking=event.crowd.some(g=>g.speechTime>0);
  for(const {g,role,w,h} of actors){
@@ -83,12 +85,12 @@ function draw(t){
   const kind=role==='guard'?3:role==='staff'?7:g.kind;
   const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?'talk':g.type==='security'?'argue':g.type==='check'?'point':'idle'):g.walking?'walk':'idle';
   sprite(kind,g.x,g.y,w,h,state,g);
-  if(role==='crowd'&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86);ambient++;}
+  if(role==='crowd'&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout);ambient++;}
   else if(role==='crowd'&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0&&!drawDggEmote(ctx,assets.emotes,g.emote,g.x+6,g.y-17,19)){ctx.fillStyle='#fff1d2';ctx.fillRect(g.x+7,g.y-9,15,9);ctx.fillStyle='#4e416e';ctx.font='bold 8px monospace';ctx.fillText(g.emote,g.x+10,g.y-2);}
   if(role==='visitor'&&g.pending){ctx.fillStyle='#77ffe2';ctx.fillRect(g.x+9,g.y-4,16,7);}
  }
- drawStageConversation(ctx,event);
- if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=waiting.length-1;i>=0;i--)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type);}
+ drawStageConversation(ctx,event,bubbleLayout);
+ if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<waiting.length;i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout);}
  for(const fx of event.effects){ctx.font='bold 8px monospace';ctx.lineWidth=3;ctx.strokeStyle='#11152e';ctx.strokeText(fx.text,fx.x,fx.y);ctx.fillStyle=fx.color;ctx.fillText(fx.text,fx.x,fx.y);}
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}
  drawCameraFlashes(ctx,event);

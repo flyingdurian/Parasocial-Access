@@ -78,6 +78,8 @@ export function setupGraphicsCanvas(canvas,settings){
  const ctx=canvas.getContext('2d');
  if(!ctx)return null;
  ctx.setTransform(canvas.width/384,0,0,canvas.height/216,0,0);
+ // Reset persistent canvas text state before every frame.
+ ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.imageSmoothingEnabled=safe.mode!=='nearest';
  if(ctx.imageSmoothingEnabled)ctx.imageSmoothingQuality='high';
  return ctx;

@@ -27,3 +27,8 @@ body.irl-sandbox{background:#0d1224;color:#fff1df;font-family:system-ui,sans-ser
 .harness-start[hidden]{display:none}.harness-start h2{font-size:clamp(17px,3vw,29px);margin:0 0 8px}.harness-start p{font-size:13px}
 .harness-start button{padding:12px 23px;border:0;border-radius:8px;background:#f0be73;color:#332742;font-weight:900;cursor:pointer}
 @media(max-width:650px){.harness-settings{padding:8px}.harness-controls button{padding:10px 4px;min-width:calc(50% - 8px)}.harness-prompt{width:52%;padding:5px}.harness-start{padding:12px;max-width:94%}}
+
+
+/* v0.8.8b: keep the isolated guest card fully inside its camera frame. */
+.harness-prompt{min-width:0;max-width:calc(100% - 8px);max-height:calc(100% - 8px);overflow-y:auto;overflow-wrap:anywhere;overscroll-behavior:contain;pointer-events:auto}
+.harness-prompt b,.harness-prompt p,.harness-prompt small{overflow-wrap:anywhere}

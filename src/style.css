@@ -461,3 +461,22 @@
  .irl-debate-row button strong{font-size:14px}
  .irl-debate-row>span{display:none}
 }
+
+
+/* v0.8.8b: decision cards grow with their text; no fixed two-line clipping. */
+.irl-stage-top{min-width:0}
+.irl-stage-top>span:nth-child(2){min-width:0}
+.irl-stage-top>span:last-child{min-width:0;max-width:46%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.irl-world-speech{min-width:0;max-width:calc(100% - 12px);max-height:calc(100% - 12px);overflow-y:auto;overflow-wrap:anywhere;overscroll-behavior:contain;pointer-events:auto}
+.irl-world-speech p,.irl-world-speech small{display:block;-webkit-line-clamp:unset;-webkit-box-orient:initial;overflow-wrap:anywhere;overflow:visible}
+.irl-speech-label{min-width:0}
+.irl-speech-label>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.irl-telemetry{grid-template-columns:repeat(5,minmax(0,1fr))}
+.irl-telemetry span{min-width:0;overflow:hidden}
+.irl-telemetry b{min-width:0}
+.irl-debate-row{min-width:0}
+.irl-debate-row button,.irl-debate-row>span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:660px){
+ .irl-stage-top>span:last-child{max-width:38%}
+ .irl-world-speech{max-height:calc(100% - 10px);width:min(58%,235px)}
+}

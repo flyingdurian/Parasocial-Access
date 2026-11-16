@@ -32,41 +32,151 @@ export function bubbleTier(queueIndex,focus=false){
 export function decisionBubbleStyle(index,focus=false){
  return focus?{alpha:1,scale:1}:{alpha:bubbleTier(index),scale:[.93,.87,.83,.58][Math.min(3,Math.max(0,index))]};
 }
-export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome'){
- const {alpha,scale}=decisionBubbleStyle(index);
- if(!content)return;
- const miniature=index>=3;
+// Shared canvas-space layout for stage conversations, ambient bubbles and
+// queued decisions. All coordinates refer to the 384×216 venue, irrespective
+// of the physical resolution chosen by the graphics settings.
+const clampBubble=(v,a,b)=>Math.max(a,Math.min(b,v));
+export const bubbleRectsOverlap=(a,b,gap=2)=>a.x<b.x+b.w+gap&&a.x+a.w+gap>b.x&&a.y<b.y+b.h+gap&&a.y+a.h+gap>b.y;
+export function createBubbleLayout(reserved=[]){
+ const occupied=[];
+ const reserve=rect=>{
+  if(rect&&[rect.x,rect.y,rect.w,rect.h].every(Number.isFinite)&&rect.w>0&&rect.h>0)occupied.push({...rect});
+  return rect;
+ };
+ reserved.forEach(reserve);
+ return {
+  reserve,
+  get occupied(){return occupied.map(rect=>({...rect}));},
+  place(anchorX,anchorY,w,h){
+   if(!(w>0&&h>0&&w<=378&&h<=210))return null;
+   const candidates=[
+    [anchorX-w/2,anchorY-h-9],
+    [anchorX-w-12,anchorY-h/2],
+    [anchorX+12,anchorY-h/2],
+    [anchorX-w/2,anchorY+12],
+    [anchorX-w/2-25,anchorY-h-17],
+    [anchorX-w/2+25,anchorY-h-17],
+    [3,anchorY-h-9],
+    [381-w,anchorY-h-9]
+   ];
+   for(const [cx,cy] of candidates){
+    const rect={x:clampBubble(cx,3,381-w),y:clampBubble(cy,3,213-h),w,h};
+    if(!occupied.some(other=>bubbleRectsOverlap(rect,other))){reserve(rect);return rect;}
+   }
+   return null;
+  }
+ };
+}
+export function reserveCanvasOverlay(layout,canvas,overlay){
+ if(!layout||!canvas||!overlay||overlay.hidden)return null;
+ const c=canvas.getBoundingClientRect(),r=overlay.getBoundingClientRect();
+ if(!c.width||!c.height||!r.width||!r.height)return null;
+ const rect={x:(r.left-c.left)*384/c.width,y:(r.top-c.top)*216/c.height,w:r.width*384/c.width,h:r.height*216/c.height};
+ layout.reserve(rect);
+ return rect;
+}
+export function fitMeasuredText(ctx,value,maxWidth,marker='…'){
+ const text=String(value??'');
+ if(ctx.measureText(text).width<=maxWidth)return text;
+ let fitted='';
+ for(const character of text){
+  if(ctx.measureText(fitted+character+marker).width>maxWidth)break;
+  fitted+=character;
+ }
+ return fitted+marker;
+}
+export function wrapMeasuredText(ctx,value,maxWidth,maxLines=3){
+ const text=String(value??'').replace(/\s+/g,' ').trim();
+ if(!text)return [];
+ const lines=[];let current='';
+ for(const word of text.split(' ')){
+  if(ctx.measureText(word).width>maxWidth){
+   if(current){lines.push(current);current='';}
+   let chunk='';
+   for(const character of word){
+    if(chunk&&ctx.measureText(chunk+character).width>maxWidth){lines.push(chunk);chunk=character;}
+    else chunk+=character;
+   }
+   current=chunk;
+   continue;
+  }
+  const candidate=current?current+' '+word:word;
+  if(current&&ctx.measureText(candidate).width>maxWidth){lines.push(current);current=word;}
+  else current=candidate;
+ }
+ if(current)lines.push(current);
+ if(lines.length>maxLines){
+  const visible=lines.slice(0,maxLines);
+  visible[maxLines-1]=fitMeasuredText(ctx,visible[maxLines-1]+'…',maxWidth);
+  return visible;
+ }
+ return lines;
+}
+export function drawBubblePointer(ctx,box,anchorX,anchorY,color){
+ const {x,y,w,h}=box;ctx.fillStyle=color;ctx.beginPath();
+ if(anchorY>=y+h){
+  const tx=clampBubble(anchorX,x+8,x+w-8);
+  ctx.moveTo(tx-4,y+h-1);ctx.lineTo(tx,Math.min(anchorY,y+h+8));ctx.lineTo(tx+4,y+h-1);
+ }else if(anchorY<=y){
+  const tx=clampBubble(anchorX,x+8,x+w-8);
+  ctx.moveTo(tx-4,y+1);ctx.lineTo(tx,Math.max(anchorY,y-8));ctx.lineTo(tx+4,y+1);
+ }else if(anchorX<x){
+  const ty=clampBubble(anchorY,y+7,y+h-7);
+  ctx.moveTo(x+1,ty-4);ctx.lineTo(Math.max(anchorX,x-8),ty);ctx.lineTo(x+1,ty+4);
+ }else{
+  const ty=clampBubble(anchorY,y+7,y+h-7);
+  ctx.moveTo(x+w-1,ty-4);ctx.lineTo(Math.min(anchorX,x+w+8),ty);ctx.lineTo(x+w-1,ty+4);
+ }
+ ctx.closePath();ctx.fill();
+}
+export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',layout=null){
+ if(!content)return null;
+ const {alpha,scale}=decisionBubbleStyle(index),miniature=index>=3;
  const text=String(content).replace(/\s+/g,' ').trim();
  const width=miniature?92:163;
- const lines=[];
- if(!miniature){
-  let current='';for(const word of text.split(' ')){
-   if(current&&current.length+word.length+1>39){lines.push(current);current=word;}else current+=(current?' ':'')+word;
-  }if(current)lines.push(current);
- }
+ ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
+ ctx.font=miniature?'bold 7px system-ui,sans-serif':'bold 7.2px system-ui,sans-serif';
+ const lines=miniature?[]:wrapMeasuredText(ctx,text,width-12,4);
  const height=miniature?17:12+Math.max(1,lines.length)*8;
- ctx.save();ctx.globalAlpha=alpha;
- const bx=Math.max(4,Math.min(384-width*scale-4,x-width*scale/2));
- const by=Math.max(6,y-(height+12)*scale);
+ const outerW=width*scale,outerH=(height+8)*scale;
+ const placed=layout?layout.place(x,y,outerW,outerH):{
+  x:clampBubble(x-outerW/2,4,380-outerW),
+  y:clampBubble(y-(height+12)*scale,4,212-outerH),w:outerW,h:outerH
+ };
+ if(!placed){ctx.restore();return null;}
+ const bx=placed.x,by=placed.y;ctx.globalAlpha=alpha;
  ctx.translate(bx,by);ctx.scale(scale,scale);
  ctx.fillStyle='rgba(10,12,34,.65)';ctx.fillRect(3,3,width,height);
  const border=index===0?'#7decf2':index===1?'#e2b3f7':index===2?'#ffd18f':'#70647f';
- ctx.fillStyle=miniature?'#312b47':type==='security'?'#fff0e7':'#fff9eb';ctx.fillRect(0,0,width,height);
+ const background=miniature?'#312b47':type==='security'?'#fff0e7':'#fff9eb';
+ ctx.fillStyle=background;ctx.fillRect(0,0,width,height);
  ctx.strokeStyle=border;ctx.lineWidth=2;ctx.strokeRect(.5,.5,width-1,height-1);
- ctx.fillStyle=miniature?'#d9cbea':'#322f49';ctx.font=miniature?'bold 7px system-ui,sans-serif':'bold 7.2px system-ui,sans-serif';
+ ctx.fillStyle=miniature?'#d9cbea':'#322f49';
  if(miniature)ctx.fillText('◷ QUEUED · '+(index+2),6,12,width-12);
- else lines.forEach((line,i)=>ctx.fillText(line,6,11+i*8,width-12));
- // The pointer always touches the owner, even while boxes change tiers.
- const tailX=Math.max(5,Math.min(width-9,(x-bx)/scale));
- ctx.fillStyle=miniature?'#312b47':'#fff9eb';ctx.beginPath();ctx.moveTo(tailX-4,height-1);ctx.lineTo(tailX,height+8);ctx.lineTo(tailX+4,height-1);ctx.fill();
+ else{
+  ctx.beginPath();ctx.rect(4,3,width-8,height-5);ctx.clip();
+  lines.forEach((line,i)=>ctx.fillText(line,6,11+i*8,width-12));
+ }
  ctx.restore();
+ ctx.save();ctx.globalAlpha=alpha;
+ drawBubblePointer(ctx,{x:bx,y:by,w:outerW,h:height*scale},x,y,background);
+ ctx.restore();
+ return placed;
 }
-export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45){
- if(!content||opacity<=0)return;
- ctx.save();ctx.globalAlpha=opacity;ctx.font='bold 5.8px system-ui,sans-serif';
- const text=String(content).slice(0,max),width=Math.min(155,ctx.measureText(text).width+10);
- const bx=Math.max(2,Math.min(382-width,x-width/2)),by=Math.max(7,y-16);
- ctx.fillStyle='#fff9ef';ctx.fillRect(bx,by,width,11);
- ctx.fillStyle='#344052';ctx.fillText(text,bx+5,by+7.5);
- ctx.restore();
+export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null){
+ if(!content||opacity<=0)return null;
+ ctx.save();ctx.globalAlpha=opacity;ctx.textAlign='left';ctx.textBaseline='alphabetic';
+ ctx.font='bold 5.8px system-ui,sans-serif';
+ const text=String(content).slice(0,max).replace(/\s+/g,' ').trim();
+ const width=Math.min(155,ctx.measureText(text).width+10);
+ const placed=layout?layout.place(x,y,width,11):{
+  x:clampBubble(x-width/2,2,382-width),y:clampBubble(y-16,2,203),w:width,h:11
+ };
+ if(!placed){ctx.restore();return null;}
+ const clipped=fitMeasuredText(ctx,text,width-10);
+ ctx.fillStyle='#fff9ef';ctx.fillRect(placed.x,placed.y,width,11);
+ ctx.save();ctx.beginPath();ctx.rect(placed.x+4,placed.y+1,width-8,9);ctx.clip();
+ ctx.fillStyle='#344052';ctx.fillText(clipped,placed.x+5,placed.y+7.5,width-10);
+ ctx.restore();ctx.restore();
+ return placed;
 }

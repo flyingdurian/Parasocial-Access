@@ -116,3 +116,20 @@ To prevent another source loss, the **complete modular source archive including 
 - The supplied previous preview `https://feedfall-rush-hour-4y1ot526m-michaelquach604-8018.vercel.app/` and `/irl-sandbox` were both reachable and still present **v0.8.7** on 2026-11-16. The v0.8.8 hall URL `/assets/irl-hall-open-v088.webp` on that preview remains missing (404). Do not claim this is a v0.8.8 preview or promote an incomplete assets deployment.
 - Project: `feedfall-rush-hour`, ID `prj_r9lPbfPzX5ycBnSQTVRHXSKc3V8J`, team `team_BYqArAIsgLmCDtZatWWg7CFY`. An unrelated recent Vercel READY deployment was found with `/irl-sandbox` = 404; READY alone is insufficient.
 - **Next:** secure an owner-permitted non-base64 binary Git push/deployment path (authenticated shell Git/CLI or direct file UI) or get an explicit hygiene exception for opaque transport encoding; put **all** `assets/*.webp` into GitHub without adding compiled HTML. Then wire/reuse the correct Vercel project, deploy a fresh preview, verify `/`, `/irl-sandbox`, all 5 new art URLs and stage playtest paths, and hand the owner the new exact URLs and steps. Document observed queue/stairs/gate collision discrepancies from hands-on playtest before declaring v0.8.8 released.
+
+
+## Latest checkpoint — 2026-11-16: v0.8.8b Sequence 1 UI containment
+
+This checkpoint supersedes older nested-directory notes above. The active GitHub release branch is release/v0.8.8 with index.html, irl-sandbox.html, src/, assets/, tests/, and vercel.json directly at repository root; Vercel builds from Git automatically. Do not move files back under rush-v08/.
+
+**Sequence 1 changes in this commit:**
+- src/venue-effects-v086.js repairs secondary-screen canvas save/restore state leakage; stage conversations use explicit left alignment, measured wrapping, clipped text and placement avoiding the LED.
+- src/irl-atmosphere-v083.js provides a shared 384×216 bubble placement and overlap reservation utility, measured wrapping and bounded canvas drawing.
+- src/ui.js and src/irl-sandbox-v085.js reserve the physical LED and current DOM guest card before placing stage, ambient and queued speech. Higher-priority queued decisions are placed first. Chatter timing, scoring, event state and saves are unchanged.
+- src/graphics-v082.js resets canvas alignment/baseline at the start of each frame.
+- src/style.css, src/irl-sandbox-v085.css and src/graphics-v082.css harden responsive wrapping and panel bounds.
+- tests/venue_v088b.test.mjs tests canvas-state balancing, measured text fit, reserved bubble collisions and cropped-canvas DOM coordinate mapping.
+
+**QA at checkpoint:** modified JavaScript passed isolated syntax parsing; four focused UI regression checks passed using a mocked Canvas 2D context in an in-memory harness. The complete repository Node suite and final browser/mobile visual acceptance have NOT yet run against the committed revision. Vercel preview status must be checked after the Git branch receives this commit; do not call the patch visually verified until the screenshot scenario is replayed.
+
+**Next:** inspect the automatic Vercel preview for release/v0.8.8; replay Endless Wave 2 with simultaneous stage dialogue, an active live guest and Chaos prompts. Verify no text escapes a box or obscures the TV and the main game and /irl-sandbox agree. Run repository tests in an authorized CI/test runner. Sequence 2 (modular entry gates, stage/TV, booths/stalls and art/navigation alignment) remains separate.

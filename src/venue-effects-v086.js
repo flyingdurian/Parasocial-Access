@@ -1,6 +1,7 @@
 /* Diegetic 384x216 effects over the new empty-gate, blank-LED base art. */
 import {venueStageQueueSpot} from './venue-nav.js';
 import {stageDialogueBeat} from './irl-debates-v088.js';
+import {wrapMeasuredText,drawBubblePointer} from './irl-atmosphere-v083.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const VENUE_LED_SCREEN=Object.freeze({x:241,y:16,w:84,h:30});
 
@@ -85,6 +86,8 @@ export function drawVenueScreens(ctx,event,t,images={}){
  }
  ctx.fillStyle='#ffffff19';ctx.fillRect(x,y,w,1);
  ctx.restore();
+ // Keep the secondary feeds' centered labels local to this drawing pass.
+ ctx.save();
  // The two smaller feeds carry distinct rolling camera/merch content.
  for(const screen of [{x:343,y:134,w:24,h:11,label:'PHOTO'},{x:74,y:68,w:18,h:10,label:'MERCH'}]){
   ctx.fillStyle='#10142a';ctx.fillRect(screen.x-1,screen.y-1,screen.w+2,screen.h+2);
@@ -109,24 +112,32 @@ export function drawStageQueueGuides(ctx,event){
  ctx.restore();
 }
 
-export function drawStageConversation(ctx,event){
+export function drawStageConversation(ctx,event,layout=null){
  const guest=event.departures?.find(g=>g.stageVisit==='exchange');
- const dialogue=stageDialogueBeat(guest);if(!dialogue)return;
+ const dialogue=stageDialogueBeat(guest);if(!dialogue)return null;
  const person=dialogue.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
- const anchorX=person.x+16,anchorY=person.y+1,w=86,h=26;
- const x=clamp(anchorX-w/2,3,384-w-3),y=clamp(anchorY-h-6,2,216-h-3);
- ctx.save();ctx.globalAlpha=.96;
- ctx.fillStyle='#141a34';ctx.fillRect(x+2,y+2,w,h);
- ctx.fillStyle=dialogue.speaker==='destiny'?'#d8f8ff':'#fff4da';ctx.fillRect(x,y,w,h);
+ const anchorX=person.x+16,anchorY=person.y+1,w=98;
+ ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
+ ctx.font='bold 5.3px sans-serif';
+ const lines=wrapMeasuredText(ctx,dialogue.text,w-8,3);
+ const h=13+Math.max(1,lines.length)*7;
+ const placed=layout?layout.place(anchorX,anchorY,w,h):{
+  x:clamp(anchorX-w/2,3,384-w-3),y:clamp(anchorY-h-6,2,216-h-3),w,h
+ };
+ if(!placed){ctx.restore();return null;}
+ const {x,y}=placed,background=dialogue.speaker==='destiny'?'#d8f8ff':'#fff4da';
+ ctx.globalAlpha=.96;ctx.fillStyle='#141a34';ctx.fillRect(x+2,y+2,w,h);
+ ctx.fillStyle=background;ctx.fillRect(x,y,w,h);
  ctx.strokeStyle=dialogue.speaker==='destiny'?'#62cfe1':'#ec9eb6';ctx.lineWidth=1.5;ctx.strokeRect(x+.6,y+.6,w-1.2,h-1.2);
- ctx.fillStyle='#4d396a';ctx.font='bold 4.5px monospace';ctx.fillText(dialogue.speaker==='destiny'?'DESTINY':guest.name.slice(0,16),x+4,y+6);
+ ctx.fillStyle='#4d396a';ctx.font='bold 4.5px monospace';
+ ctx.fillText(dialogue.speaker==='destiny'?'DESTINY':String(guest.name||'GUEST').slice(0,16),x+4,y+6,w-8);
  ctx.fillStyle='#252940';ctx.font='bold 5.3px sans-serif';
- const words=dialogue.text.split(' ');let row='',rows=[];
- for(const word of words){if((row+' '+word).length>27){rows.push(row);row=word;}else row+=(row?' ':'')+word;}
- if(row)rows.push(row);
- for(let i=0;i<Math.min(rows.length,2);i++)ctx.fillText(rows[i],x+4,y+13+i*7,w-8);
- ctx.fillStyle=dialogue.speaker==='destiny'?'#d8f8ff':'#fff4da';ctx.beginPath();ctx.moveTo(clamp(anchorX-4,x+4,x+w-14),y+h-1);ctx.lineTo(anchorX,Math.min(anchorY,y+h+7));ctx.lineTo(clamp(anchorX+4,x+14,x+w-4),y+h-1);ctx.fill();
+ ctx.save();ctx.beginPath();ctx.rect(x+3,y+9,w-6,h-10);ctx.clip();
+ lines.forEach((line,i)=>ctx.fillText(line,x+4,y+13+i*7,w-8));
  ctx.restore();
+ drawBubblePointer(ctx,{x,y,w,h},anchorX,anchorY,background);
+ ctx.restore();
+ return placed;
 }
 
 export function drawVenueRush(ctx,event,t){

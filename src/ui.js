@@ -7,9 +7,9 @@ import {VENUE_OBSTACLES,VENUE_CELL,isVenueWalkable} from './venue-nav.js';
 import {drawVenueCharacter,drawContactShadow,venueSpriteGeometry,stageAction} from './sprite-animation.js';
 import {createGraphicsPanel} from './graphics-panel.js';
 import {avatarPath,avatarError} from './avatars-v083.js';
-import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble} from './irl-atmosphere-v083.js';
+import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay} from './irl-atmosphere-v083.js';
 import {drawDggEmote} from './dgg-emotes-v085.js';
-import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides} from './venue-effects-v086.js';
+import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const fmt=n=>Math.round(n).toLocaleString();
 const avatar=avatarPath;
@@ -180,6 +180,8 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  // Individual walk bobs translate entire rigid sprites by one pixel at most.
  const actors=[...irl.crowd.map(person=>({person,role:'crowd',w:27,h:34})),...irl.arrivals.map(person=>({person,role:'arrival',w:34,h:42})),...irl.departures.map(person=>({person,role:'departure',w:34,h:42})),...irl.guardPositions.map(person=>({person,role:'guard',w:34,h:42})),...irl.staff.map(person=>({person,role:'staff',w:31,h:40})),...irl.visitors.map(person=>({person,role:'guest',w:34,h:42}))];
  actors.sort((a,b)=>(a.person.y+a.h)-(b.person.y+b.h));
+ const bubbleLayout=createBubbleLayout([VENUE_LED_SCREEN]);
+ reserveCanvasOverlay(bubbleLayout,canvas,$('#irl-world-speech'));
  let ambientBubbles=0;
  // An active typewriter line owns the reaction layer for the whole room;
  // other actors' emotes must wait rather than sit on top of the bubble.
@@ -197,7 +199,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
   if(role==='crowd'){
    if(g.speechTime>0&&ambientBubbles===0){
     const visible=g.speech.slice(0,Math.max(0,Math.floor(g.speechProgress||0)));
-    drawAmbientBubble(ctx,visible,g.x+13,g.y,.86);
+    drawAmbientBubble(ctx,visible,g.x+13,g.y,.86,45,bubbleLayout);
     if(!graphics.chatterMuted&&visible.length%3===0&&visible.length!==irlSpeechLastCount&&t-irlSpeechLastTick>120){sound.irlSpeechTick(g.id*53+visible.length);irlSpeechLastTick=t;irlSpeechLastCount=visible.length;}
     ambientBubbles++;
    }else if(!roomIsSpeaking&&g.emoteTime>0&&g.dwell>0&&!drawDggEmote(ctx,irlEmotes,g.emote,Math.round(g.x+6),Math.round(g.y-17),19)){
@@ -213,11 +215,11 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
    else if(g.id===irl.focus){ctx.fillStyle='#fff5ba';ctx.fillRect(cx-4,g.y-13,8,5);ctx.fillStyle='#412d42';ctx.fillRect(cx-1,g.y-12,2,2);}
   }
  }
- drawStageConversation(ctx,irl);
+ drawStageConversation(ctx,irl,bubbleLayout);
  // Decision prompts belong to their owning guests; chatter above is unchanged.
  if(graphics.chaos){
   const waiting=irl.visitors.filter(g=>!g.pending&&g.id!==irl.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);
-  for(let i=waiting.length-1;i>=0;i--)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type);
+  for(let i=0;i<waiting.length;i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout);
  }
  // Phase atmosphere is world-space: booth flashes in signing rush, mic activity
  // during the closing Q&A, rather than a separate reading or mission panel.
