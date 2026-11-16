@@ -1,10 +1,11 @@
+import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 import {drawInlineDggL} from './dgg-emotes-v085.js';
 /* Diegetic 384x216 effects over the new empty-gate, blank-LED base art. */
 import {venueStageQueueSpot} from './venue-nav.js';
 import {stageDialogueBeat} from './irl-debates-v088.js';
 import {wrapMeasuredText,drawBubblePointer} from './irl-atmosphere-v083.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export const VENUE_LED_SCREEN=Object.freeze({x:241,y:16,w:84,h:30});
+export const VENUE_LED_SCREEN=MODULAR_TV_BOUNDS;
 
 export function drawVenueGates(ctx,hall,event){
  // Backward-compatible repair for previously deployed hall art. Sampling uses
@@ -102,9 +103,7 @@ export function drawVenueScreens(ctx,event,t,images={}){
 export function drawStageQueueGuides(ctx,event){
  const waiting=(event.departures||[]).filter(g=>g.stageVisit==='queued');
  if(!waiting.length)return;
- ctx.save();ctx.textAlign='center';ctx.font='bold 5.5px monospace';
- ctx.fillStyle='#fff0b3';ctx.strokeStyle='#1a142bc7';ctx.lineWidth=2;
- ctx.strokeText('MEET LINE',266,91);ctx.fillText('MEET LINE',266,91);
+ ctx.save();ctx.textAlign='center';
  for(let i=0;i<Math.min(waiting.length,7);i++){
   const [x,y]=venueStageQueueSpot(i),feetX=x+17,feetY=y+41;
   ctx.strokeStyle=i===0?'#ffe1a5':'#a6deec88';ctx.lineWidth=i===0?1.6:1;
@@ -119,17 +118,22 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  const person=dialogue.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
  // Stage speech is a dedicated overlay, always within a short pointer distance
  // of its owner. The generic avoidance solver previously sent it to x=3.
- const anchorX=person.x+16,anchorY=person.y+(dialogue.speaker==='destiny'?1:5),w=78;
+ const anchorX=person.x+16,anchorY=person.y+(dialogue.speaker==='destiny'?1:5),w=60;
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
- ctx.font='bold 5.3px sans-serif';
- const lines=wrapMeasuredText(ctx,dialogue.text,w-9,3);
- const h=13+Math.max(1,lines.length)*7;
+ ctx.font='bold 4.6px sans-serif';
+ const lines=wrapMeasuredText(ctx,dialogue.text,w-8,2);
+ const h=11+Math.max(1,lines.length)*6;
  const placed={
   // Use the left-of-TV speech lane. It stays above the speaker but avoids
   // both the live LCD and the heads of stage guests.
-  x:clamp(anchorX-w+8,142,194),
+  x:clamp(anchorX-w+8,140,210),
   y:clamp(anchorY-h-7,2,216-h-3),w,h
  };
+ // A guest on stage stands partly in front of the LCD. Put their speech
+ // above its bezel instead of painting a white card over the broadcast.
+ if(placed.x<MODULAR_TV_BOUNDS.x+MODULAR_TV_BOUNDS.w&&placed.x+placed.w>MODULAR_TV_BOUNDS.x&&placed.y<MODULAR_TV_BOUNDS.y+MODULAR_TV_BOUNDS.h&&placed.y+placed.h>MODULAR_TV_BOUNDS.y){
+  placed.y=Math.max(2,MODULAR_TV_BOUNDS.y-placed.h-2);
+ }
  // Reserve only for later speech, never let TV/ambient overlays displace a speaker.
  layout?.reserve(placed);
  if(!placed){ctx.restore();return null;}
@@ -139,9 +143,9 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  ctx.strokeStyle=dialogue.speaker==='destiny'?'#62cfe1':'#ec9eb6';ctx.lineWidth=1.5;ctx.strokeRect(x+.6,y+.6,w-1.2,h-1.2);
  ctx.fillStyle='#4d396a';ctx.font='bold 4.5px monospace';
  ctx.fillText(dialogue.speaker==='destiny'?'DESTINY':String(guest.name||'GUEST').slice(0,16),x+4,y+6,w-8);
- ctx.fillStyle='#252940';ctx.font='bold 5.3px sans-serif';
+ ctx.fillStyle='#252940';ctx.font='bold 4.6px sans-serif';
  ctx.save();ctx.beginPath();ctx.rect(x+3,y+9,w-6,h-10);ctx.clip();
- lines.forEach((line,i)=>drawInlineDggL(ctx,line,x+4,y+13+i*7,mascot,8));
+ lines.forEach((line,i)=>drawInlineDggL(ctx,line,x+4,y+12+i*6,mascot,7));
  ctx.restore();
  drawBubblePointer(ctx,{x,y,w,h},anchorX,anchorY,background);
  ctx.restore();

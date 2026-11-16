@@ -6,9 +6,9 @@ export const VENUE_W=384;
 export const VENUE_H=216;
 export const VENUE_CELL=8;
 export const VENUE_STATIONS=Object.freeze({
- entrance:[205,138],merch:[55,83],snacks:[142,87],vending:[38,98],photo:[303,119],
- signing:[271,108],line:[239,117],mic:[311,105],help:[112,117],
- quiet:[102,141],exit:[36,140]
+ entrance:[184,139],merch:[55,73],snacks:[133,73],vending:[182,65],photo:[321,83],
+ signing:[248,107],line:[249,119],mic:[313,98],help:[184,116],
+ quiet:[95,143],exit:[43,145]
 });
 // Central opening directly between the railings, below Destiny's stage steps.
 // Sprite coordinates are TOP-LEFT; the visible floor contact is ~33px lower.
@@ -19,22 +19,22 @@ export const VENUE_OBSTACLES=MODULAR_BLOCKERS;
 const C=VENUE_W/VENUE_CELL,R=Math.ceil(232/VENUE_CELL); // entrance paths extend just below the canvas
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export function isVenueWalkable(x,y,gateAccess=false){
- if(!Number.isFinite(x)||!Number.isFinite(y)||x<12||x>356||y<79||y>228)return false;
+ if(!Number.isFinite(x)||!Number.isFinite(y)||x<8||x>358||y<51||y>228)return false;
  // Path anchors are sprite top-left, but obstruction contact happens at feet.
  // Testing top-left alone let characters appear to walk through the desk.
- const feetX=x+13,feetY=y+33;
+ const feetX=x+16,feetY=y+35;
  // A compact, immovable perimeter with two broad 42px scanner lanes and sprite-radius clearance.
  // Feet, not sprite top-lefts, must remain inside a clear authorized lane.
- if(feetY>=184){
-  const inGate=(feetX>=95&&feetX<=123)||(feetX>=260&&feetX<=291);
+ if(feetY>=183){
+  const inGate=(feetX>=80&&feetX<=125)||(feetX>=258&&feetX<=305);
   if(!gateAccess||!inGate)return false;
  }
  // The velvet-rope aisle widens toward the camera; collide with its visible
  // sloping edges, leaving the center free for authorized stage guests.
- if(feetY>=117&&feetY<=169){
-  const approach=(feetY-117)/52;
-  const left=256-18*approach,right=291+18*approach;
-  if(Math.abs(feetX-left)<3.1||Math.abs(feetX-right)<3.1)return false;
+ if(feetY>=99&&feetY<=143){
+  const approach=(feetY-99)/44;
+  const left=246-16*approach,right=275+18*approach;
+  if(Math.abs(feetX-left)<2.7||Math.abs(feetX-right)<2.7)return false;
  }
  // Explicit post/planter solids in MODULAR_BLOCKERS cover the entire prop
  // footprint, including the image's top. No collision-only sliding gates.
@@ -130,10 +130,11 @@ export function moveVenue(actor,targetX,targetY,dt,speed=30){
  return arrived;
 }
 export function venueQueueSpot(index){
- const slots=[[239,131],[218,121],[197,109],[177,111],[152,112],[133,113],[116,125],[101,140]];
- return slots[((index%slots.length)+slots.length)%slots.length];
+ // Eighteen distinct visible crowd positions; avoid wrapping after eight.
+ const slot=((index%18)+18)%18,row=slot%6,col=Math.floor(slot/6);
+ return [237+col*15,94+row*9];
 }
-export function venueStageQueueSpot(index){return [VENUE_STAGE.staging[0],VENUE_STAGE.staging[1]+Math.min(6,Math.max(0,index))*14];}
+export function venueStageQueueSpot(index){const i=Math.min(11,Math.max(0,index));return [VENUE_STAGE.staging[0]+Math.floor(i/6)*20,VENUE_STAGE.staging[1]+(i%6)*10];}
 // Authorized stage guests follow a dedicated, visible corridor through the
 // staircase. This path is never available to general-purpose roaming NPCs.
 export function moveStageActor(actor,targetX,targetY,dt,speed=25){
@@ -167,6 +168,17 @@ function connectedRoamCells(){
  }
  roamCells=result;
  return roamCells;
+}
+export function venueStationApproachPoint(name,id=0,visit=0){
+ const station=VENUE_STATIONS[name];if(!station)return null;
+ if(!['merch','snacks','vending','photo','entrance','help','quiet','mic'].includes(name))return station;
+ const offsets=[[0,0],[-13,0],[13,0],[-23,6],[23,6],[-8,10],[8,10]];
+ const idx=Math.abs((id*13+visit*17)|0)%offsets.length;
+ for(let i=0;i<offsets.length;i++){
+  const [dx,dy]=offsets[(idx+i)%offsets.length];
+  if(isVenueWalkable(station[0]+dx,station[1]+dy))return [station[0]+dx,station[1]+dy];
+ }
+ return station;
 }
 export function venueRoamPoint(seed){
  const cells=connectedRoamCells();if(!cells.length)return [109,155];

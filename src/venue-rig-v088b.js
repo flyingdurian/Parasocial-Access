@@ -1,14 +1,7 @@
-/* Modular saturated indigo/magenta evening-convention renderer. No painted legacy props.
-   Atlas crop boxes are independent sprites in one binary file per prop family. */
-import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_ATLAS} from './venue-geometry-v088b.js';
+/* Single baked v0.8.8g indigo/magenta convention plate plus strictly dynamic TV and gate glass. */
+import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_BLOCKERS} from './venue-geometry-v088b.js';
 
-const FILES=Object.freeze({
- hall:'irl-hall-v088f.webp',
- stage:'irl-stage-shell-v088f.webp',
- entrance:'irl-entrance-v088f.webp',
- ropes:'irl-stage-queue-ropes-v088c.webp',
- booths:'irl-booth-atlas-vibrant-v088b.webp'
-});
+const FILES=Object.freeze({plate:'irl-venue-baked-v088g.webp'});
 export function loadModularVenueAssets(){
  const assets={};
  for(const [key,file] of Object.entries(FILES)){
@@ -25,35 +18,8 @@ const draw=(ctx,image,bounds,source)=>{
  if(source)ctx.drawImage(image,source.x,source.y,source.w,source.h,bounds.x,bounds.y,bounds.w,bounds.h);
  else ctx.drawImage(image,bounds.x,bounds.y,bounds.w,bounds.h);
 };
-// Pre-mask stray legacy crimson pixels baked behind the left rail of the otherwise
-// clean alpha stage. The processed bitmap is cached once per loaded Image.
-const cleanedStageCache=new WeakMap();
-function drawStageShell(ctx,image,bounds){
- if(!image?.naturalWidth)return;
- if(typeof document==='undefined'){draw(ctx,image,bounds);return;}
- let clean=cleanedStageCache.get(image);
- if(!clean){
-  try{
-   const canvas=document.createElement('canvas');
-   canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
-   const c=canvas.getContext('2d',{willReadFrequently:true});
-   c.drawImage(image,0,0);
-   const frame=c.getImageData(0,0,canvas.width,canvas.height);
-   const pixels=frame.data,limitX=Math.floor(canvas.width*.215);
-   for(let y=Math.floor(canvas.height*.34);y<Math.floor(canvas.height*.89);y++){
-    for(let x=0;x<limitX;x++){
-     const i=(y*canvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
-     if(a>0&&r>155&&g<65&&b<95&&r>g*2.3&&r>b*1.8)pixels[i+3]=0;
-    }
-   }
-   c.putImageData(frame,0,0);clean=canvas;
-  }catch{clean=image;}
-  cleanedStageCache.set(image,clean);
- }
- ctx.drawImage(clean,bounds.x,bounds.y,bounds.w,bounds.h);
-}
 // The stage is intentionally fixed; gameplay changes actor poses, not furniture.
-export const MODULAR_CAMERA_SCALE=.93;
+export const MODULAR_CAMERA_SCALE=1;
 export const venueCameraPoint=(x,y)=>({x:192+(x-192)*MODULAR_CAMERA_SCALE,y:108+(y-108)*MODULAR_CAMERA_SCALE});
 export const venueCameraUnproject=(x,y)=>({x:192+(x-192)/MODULAR_CAMERA_SCALE,y:108+(y-108)/MODULAR_CAMERA_SCALE});
 export function applyModularVenueCamera(ctx){ctx.translate(192,108);ctx.scale(MODULAR_CAMERA_SCALE,MODULAR_CAMERA_SCALE);ctx.translate(-192,-108);}
@@ -68,24 +34,23 @@ function openness(event,side){
  return Math.max(0,Math.min(1,4*(event.elapsed-gate.openedAt),3*(gate.openUntil-event.elapsed)));
 }
 function drawGate(ctx,event,side){
- const open=openness(event,side);
- // The scanner pillars, planters and check-in are one static entrance bitmap.
- // Controller state changes ONLY these anchored retractable translucent flaps.
- const center=side==='left'?108:273;
- const y=188,halfLane=20,flapWidth=Math.max(0,halfLane*(1-open));
- ctx.save();
- if(flapWidth>.1){
-  ctx.fillStyle='rgba(187,228,242,.75)';
-  ctx.fillRect(center-halfLane,y,flapWidth,12);
-  ctx.fillRect(center+halfLane-flapWidth,y,flapWidth,12);
-  ctx.fillStyle='rgba(245,254,255,.86)';
-  ctx.fillRect(center-halfLane+flapWidth-.7,y,.7,12);
-  ctx.fillRect(center+halfLane-flapWidth,y,.7,12);
- }
- ctx.fillStyle=open>.35?'#7ef0ac':'#f4d58a';
- ctx.fillRect(center-30,y+1,1.8,2);
- ctx.fillRect(center+28,y+1,1.8,2);
- ctx.restore();
+  const open=openness(event,side),lane=MODULAR_GATES[side].lane;
+  // Static scanner pillars are baked; only two thin glass leaves retract
+  // horizontally INTO their own pillar, never translating the gate structure.
+  const width=(lane.right-lane.left)/2,glass=width*(1-open);
+  ctx.save();
+  if(glass>.15){
+    ctx.fillStyle='rgba(177,235,246,.27)';
+    ctx.fillRect(lane.left,lane.top+8,glass,13);
+    ctx.fillRect(lane.right-glass,lane.top+8,glass,13);
+    ctx.fillStyle='rgba(231,251,253,.62)';
+    ctx.fillRect(lane.left+glass-.6,lane.top+8,.6,13);
+    ctx.fillRect(lane.right-glass,lane.top+8,.6,13);
+  }
+  ctx.fillStyle=open>.55?'#70f3c0':'#f1d38e';
+  ctx.fillRect(lane.left-4,lane.top+2,1.4,2);
+  ctx.fillRect(lane.right+2,lane.top+2,1.4,2);
+  ctx.restore();
 }
 function livePortrait(ctx,asset,x,y,height=31,col=0,row=0,cols=4,rows=2){
  if(!asset?.naturalWidth||!asset?.naturalHeight)return false;
@@ -109,16 +74,16 @@ function liveFanPortrait(ctx,streams,kind,x,y){
 }
 function drawBoothActivity(ctx,event){
  // Tiny contextual receipts that read as rewards; no unlabeled circles or notes.
- const anchors={merch:[59,88],snacks:[144,91],vending:[20,113],photo:[358,131]};
+ const anchors={merch:[57,103],snacks:[133,100],vending:[178,95],photo:[350,105]};
  const labels={merch:'+1 MERCH',snacks:'+1 SNACK',vending:'+1 DRINK',photo:'+1 PHOTO'};
  for(const fx of event?.effects||[]){
   if(fx.kind!=='booth')continue;
   const point=anchors[fx.station];if(!point)continue;
   const age=1-Math.max(0,Math.min(1,fx.ttl/(fx.maxTtl||1.15)));
-  const y=point[1]-5-age*6,alpha=Math.min(.85,fx.ttl*1.8);
+  const y=point[1]-6-age*4,alpha=Math.min(.63,fx.ttl*1.35);
   const label=labels[fx.station];
   ctx.save();ctx.globalAlpha=alpha;
-  ctx.font='bold 5.4px ui-monospace,monospace';ctx.textAlign='center';
+  ctx.font='bold 4.5px ui-monospace,monospace';ctx.textAlign='center';
   const width=Math.ceil(ctx.measureText(label).width+7);
   ctx.fillStyle='rgba(24,20,46,.78)';ctx.fillRect(point[0]-width/2,y-7,width,10);
   ctx.fillStyle='#dfb66f';ctx.fillRect(point[0]-width/2,y-7,width,1);
@@ -176,27 +141,26 @@ export function drawModularTV(ctx,event,t,streams={}){
  ctx.restore();
 }
 export function drawModularVenue(ctx,assets,event,t,streams={}){
- if(!modularVenueReady(assets))return false;
- ctx.save();
- // Overscan plate compensates for the deliberately pulled-back 0.93x camera,
- // preserving edge-to-edge wall and floor imagery without black letterboxing.
- draw(ctx,assets.hall,{x:-14,y:-8,w:412,h:232});
- // The new stage includes its own floor-touching riser and contact shadow;
- // a detached ellipse below the platform would recreate the shelf illusion.
- drawStageShell(ctx,assets.stage,MODULAR_PROPS.stage);
- // Back-wall fixtures share a common floor plane and render back-to-front.
- for(const name of ['vending','merch','food','photo']){
-  drawContactShadow(ctx,MODULAR_PROPS[name],.22);
-  draw(ctx,assets.booths,MODULAR_PROPS[name],MODULAR_ATLAS[name]);
- }
- draw(ctx,assets.ropes,MODULAR_PROPS.queueRopes);
- // One physically continuous entrance layer ensures the pillars never wander.
- draw(ctx,assets.entrance,MODULAR_PROPS.entrance);
- for(const side of ['left','right'])drawGate(ctx,event,side);
- drawBoothActivity(ctx,event);
- drawModularTV(ctx,event,t,streams);
- // The stage remains empty pending later dedicated furniture design.
- ctx.restore();
- return true;
+  if(!modularVenueReady(assets))return false;
+  ctx.save();
+  // ONE baked perspective: no stage/booth/entrance sprites, no overscan,
+  // no layered prop offsets. Gameplay lives in the plate's 384x216 UV map.
+  draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
+  for(const side of ['left','right'])drawGate(ctx,event,side);
+  drawBoothActivity(ctx,event);
+  drawModularTV(ctx,event,t,streams);
+  ctx.restore();
+  return true;
+}
+export function drawBakedForegroundOccluders(ctx,assets){
+  if(!modularVenueReady(assets))return;
+  // Reuse pixels from the SAME baked image for foreground depth masking.
+  // This makes people pass behind the counter/posts without separate art.
+  for(const block of MODULAR_BLOCKERS){
+    if(!(block.name==='checkin'||block.name.startsWith('entrance')||block.name.includes('scanner')))continue;
+    ctx.save();ctx.beginPath();ctx.rect(block.x,block.y,block.w,block.h);ctx.clip();
+    draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
+    ctx.restore();
+  }
 }
 export {FILES as MODULAR_VENUE_FILES};

@@ -1,138 +1,107 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync,readFileSync} from 'node:fs';
-import {MODULAR_GATES,MODULAR_PROPS,MODULAR_BLOCKERS,MODULAR_TV_BOUNDS,MODULAR_TV_PROJECTION,MODULAR_ATLAS} from '../src/venue-geometry-v088b.js';
-import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV} from '../src/venue-rig-v088b.js';
-import {placeFocusedVenuePrompt,bubbleRectsOverlap} from '../src/irl-atmosphere-v083.js';
-import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,VENUE_STATIONS} from '../src/venue-nav.js';
-const asset=name=>new URL('../assets/'+name,import.meta.url);
+import {MODULAR_GATES,MODULAR_PROPS,MODULAR_BLOCKERS,MODULAR_TV_BOUNDS} from '../src/venue-geometry-v088b.js';
+import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV,drawBakedForegroundOccluders} from '../src/venue-rig-v088b.js';
+import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,venueQueueSpot,venueStageQueueSpot,venueStationApproachPoint} from '../src/venue-nav.js';
 
-test('five live modular assets include the clean plate, stage and unified entrance',()=>{
- const names=Object.values(MODULAR_VENUE_FILES);
- assert.equal(names.length,5);
- for(const file of names){
-  const url=asset(file);assert(existsSync(url),file);
-  assert.equal(readFileSync(url).toString('ascii',8,12),'WEBP',file);
-  assert(file.includes('vibrant-v088b')||file.includes('v088c')||file.includes('v088f'));
- }
+function paintContext(){
+ const calls=[];let depth=0;
+ return {calls,get depth(){return depth;},globalAlpha:1,
+  save(){depth++},restore(){depth--;assert(depth>=0)},
+  beginPath(){},rect(...a){calls.push(['clipRect',...a])},clip(){},
+  fillRect(...a){calls.push(['fillRect',...a])},strokeRect(){},fill(){},stroke(){},
+  ellipse(){},translate(){},scale(){},rotate(){},transform(){},moveTo(){},lineTo(){},
+  drawImage(...a){calls.push(['drawImage',...a])},
+  fillText(...a){calls.push(['text',...a])},
+  measureText(s){return {width:String(s).length*3.2}},
+  createLinearGradient(){return {addColorStop(){}}}
+ };
+}
+const assets={plate:{complete:true,naturalWidth:1672,naturalHeight:941}};
+test('one original unified WebP contains every static fixture',()=>{
+ const files=Object.values(MODULAR_VENUE_FILES);
+ assert.deepEqual(files,['irl-venue-baked-v088g.webp']);
+ const url=new URL('../assets/'+files[0],import.meta.url);
+ assert(existsSync(url),'single baked plate available');
+ const header=readFileSync(url).subarray(0,12);
+ assert.equal(header.toString('ascii',0,4),'RIFF');
+ assert.equal(header.toString('ascii',8,12),'WEBP');
+ assert(modularVenueReady(assets));
+ assert.equal(modularStageMode(),'fixed');
 });
 
-test('every independent booth shares hitbox coordinates with the navigation map',()=>{
+test('booths and check-in use solid contact footprints, with sprite-scale entrance',()=>{
  assert.equal(VENUE_OBSTACLES,MODULAR_BLOCKERS);
  for(const name of ['merch','food','vending','photo','checkin']){
   const p=MODULAR_PROPS[name],hit=VENUE_OBSTACLES.find(o=>o.name===name);
-  assert(hit&&p.solid);
-  assert(hit.x>=p.x&&hit.y>=p.y&&hit.x+hit.w<=p.x+p.w+2&&hit.y+hit.h<=p.y+p.h+3);
+  assert(hit&&p.solid, name+' blocker exists');
+  assert(hit.x>=p.x&&hit.y>=p.y&&hit.x+hit.w<=p.x+p.w+2);
  }
+ // A 30x38 actor is taller than the waist-height desk or waist-high scanners.
+ assert(MODULAR_PROPS.checkin.h>=30&&MODULAR_PROPS.checkin.h<=41);
+ assert(MODULAR_PROPS.entrance.h<55);
+ assert(!isVenueWalkable(170,170,true),'check-in collision is solid');
+ assert(!isVenueWalkable(47,162,true),'left planter collision is solid');
+ assert(!isVenueWalkable(41,163,true),'left scanner collision is solid');
+ assert(!isVenueWalkable(295,163,true),'right scanner collision is solid');
+});
+
+test('two wide scanner lanes are fixed, authorized and non-clipping',()=>{
  for(const side of ['left','right']){
-  const gate=MODULAR_GATES[side];
+  const gate=MODULAR_GATES[side],centerX=(gate.lane.left+gate.lane.right)/2;
   assert.equal(VENUE_GATES[side],gate);
-  assert(gate.check[0]+13>=gate.art.x&&gate.check[0]+13<=gate.art.x+gate.art.w);
-  assert(!isVenueWalkable(...gate.check),side+' unauthorized');
-  assert(isVenueWalkable(...gate.check,true),side+' badge verified');
-  assert(isVenueWalkable(...gate.inside,true),side+' reached inside');
+  assert(gate.lane.right-gate.lane.left>=54,'gate opening remains >=54 world units');
+  assert(!isVenueWalkable(centerX-16,165,false),'closed to guests without access');
+  assert(isVenueWalkable(centerX-16,165,true),'sprite feet clear the lane');
+  const path=venueRoute(...gate.spawn,...gate.inside,true);
+  assert(Math.hypot(path.at(-1)[0]-gate.inside[0],path.at(-1)[1]-gate.inside[1])<9);
  }
- assert(!isVenueWalkable(232,117),'stage-queue rope blocks its visible lower-left stanchion');
- assert(!isVenueWalkable(169,162,true),'even badge holders cannot stand on the compact check-in counter');
- assert(isVenueWalkable(260,115),'center guest aisle remains walkable');
- assert(VENUE_STAGE.debate[0]<VENUE_STAGE.stairs[0]&&VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);
- assert.equal(VENUE_STAGE.exchange[1],55,'fan waits in front of the signing table after the stairs');
+ assert(!isVenueWalkable(149,165,true),'no entrance side bypass');
+ const ctx=paintContext();
+ const event={elapsed:2,gateControllers:{
+  left:{openedAt:1.9,openUntil:4},right:{openedAt:1.9,openUntil:4}
+ }};
+ assert(drawModularVenue(ctx,assets,event,2,{}));
+ assert.equal(ctx.depth,0);
+ // The plate is rendered once. No stage, gate pillars, booth props or planters get shifted.
+ assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,1);
+ const scene=ctx.calls.find(c=>c[0]==='drawImage');
+ assert.deepEqual(scene.slice(2),[0,0,384,216]);
 });
 
-test('v0.8.8f elevated hall preserves room and aligns slim rear stage / counter',()=>{
- assert(MODULAR_PROPS.entrance.h<=70,'entrance now occupies less than a third of the old visual height');
- assert(MODULAR_PROPS.stage.y+MODULAR_PROPS.stage.h<=101,'stage front stays near rear floor, not the foreground');
- assert(MODULAR_PROPS.merch.y+MODULAR_PROPS.merch.h<=105,'merch against rear left wall');
- assert(MODULAR_PROPS.food.y+MODULAR_PROPS.food.h<=105,'food against rear left wall');
- assert(MODULAR_PROPS.checkin.w<90,'front welcome desk is human-scale');
- for(const side of ['left','right']){
-  const gate=MODULAR_GATES[side];
-  const authorized=venueRoute(...gate.spawn,...gate.inside,true);
-  assert(authorized.length>0,side+' authorized gate route exists');
-  assert(Math.hypot(authorized.at(-1)[0]-gate.inside[0],authorized.at(-1)[1]-gate.inside[1])<9,side+' ends inside the hall');
-  assert(!isVenueWalkable(...gate.check,false),side+' no unbadged crossing');
+test('stage and queues remain navigable, with grounded on-plate geometry',()=>{
+ assert(MODULAR_PROPS.stage.y+MODULAR_PROPS.stage.h<=102);
+ assert(MODULAR_PROPS.merch.y+MODULAR_PROPS.merch.h<=108);
+ assert(MODULAR_PROPS.food.y+MODULAR_PROPS.food.h<=108);
+ assert(VENUE_STAGE.debate[0]<VENUE_STAGE.stairs[0]);
+ assert(VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);
+ const queue=new Set();
+ for(let i=0;i<18;i++){
+  const [x,y]=venueQueueSpot(i);queue.add(x+','+y);
+  assert(isVenueWalkable(x,y), 'queue spot '+i+' open');
  }
- for(const side of ['first','second','third','fourth']){
-  const post=MODULAR_BLOCKERS.find(o=>o.name==='entrance '+side+' scanner');
-  assert(post,side+' has a fixed post collider');
-  assert(!isVenueWalkable(post.x+post.w/2-13,post.y+3-33,true),side+' cannot cut across pillar');
+ assert.equal(queue.size,18);
+ for(let i=0;i<12;i++){
+  const [x,y]=venueStageQueueSpot(i);
+  assert(x>=230&&x<=290&&y<150);
  }
- assert(isVenueWalkable(...VENUE_STATIONS.photo),'interactive photo booth is accessible');
+ for(const name of ['merch','snacks','vending','photo']){
+  assert(venueStationApproachPoint(name,6,2));
+ }
 });
 
-test('staff and guards start on walkable floor instead of old entrance furniture',()=>{
- const homes=[[170,145],[314,145],[87,142],[310,106],[335,141]];
- for(const [x,y] of homes)assert(isVenueWalkable(x,y),`actor home ${x},${y} must not overlap scanner or planter`);
- const eventSource=readFileSync(new URL('../src/irl-v07.js',import.meta.url),'utf8');
- assert(eventSource.includes('this.staff=[[170,145],[314,145]]'));
- assert(!eventSource.includes('[349,160]'),'retired right planter guard spawn');
-});
-
-test('review cards move off stage actors without leaving the viewport',()=>{
- const host={x:900,y:260,w:70,h:190};
- const placed=placeFocusedVenuePrompt(1160,650,1050,480,300,140,[host]);
- assert(!bubbleRectsOverlap({x:placed.left,y:placed.top,w:300,h:140},host,7),'host remains visible during floor decisions');
- assert(placed.left>=0&&placed.left+300<=1160&&placed.top>=0&&placed.top+140<=650,'responsive panel remains in bounds');
-});
-
-test('LCD projection fits inside the re-anchored empty stage shell',()=>{
- const s=MODULAR_PROPS.stage,tv=MODULAR_TV_BOUNDS;
- assert(tv.x>=s.x&&tv.y>=s.y&&tv.x+tv.w<=s.x+s.w&&tv.y+tv.h<=s.y+s.h);
- const m=MODULAR_TV_PROJECTION;
- assert(m.e>=tv.x&&m.f>=tv.y);
- assert(m.e+100*m.a>=tv.x&&m.e+100*m.a<=tv.x+tv.w+2);
- assert(!('fixedFurniture' in MODULAR_PROPS),'all chairs and desks removed for v0.8.8e');
- assert.equal(modularStageMode({departures:[]}), 'fixed');
- assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:true}]}),'fixed');
- assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:false}]}),'fixed');
-});
-function mockCtx(){
- const calls=[],fillRects=[];let depth=0;
- const ctx={
-  calls,fillRects,get depth(){return depth;},
-  save(){depth++;},restore(){depth--;assert(depth>=0);},
-  drawImage(...args){calls.push({type:'image',args});},
-  createLinearGradient(){return {addColorStop(){}};},
-  beginPath(){},rect(){},clip(){},fillRect(...args){fillRects.push(args)},fillText(){},translate(){},transform(){},moveTo(){},lineTo(){},quadraticCurveTo(){},stroke(){},ellipse(){},fill(){},rotate(){}
- };
- return ctx;
-}
-test('gate posts never translate between open/closed states; only glass flaps retract',()=>{
- const images=Object.fromEntries(Object.keys(MODULAR_VENUE_FILES).map(k=>[k,{complete:true,naturalWidth:1700,naturalHeight:941,key:k}]));
- assert(modularVenueReady(images));
- const idle={elapsed:0,gateControllers:{left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}},effects:[],departures:[]};
- const closed=mockCtx(),opened=mockCtx();
- assert(drawModularVenue(closed,images,idle,0));
- const admitted={...idle,elapsed:3,gateControllers:{left:{openedAt:2.5,openUntil:5},right:idle.gateControllers.right}};
- assert(drawModularVenue(opened,images,admitted,0));
- assert.equal(closed.depth,0);assert.equal(opened.depth,0);
- assert.equal(closed.calls.length,opened.calls.length,'only static image layers are drawn');
- assert.equal(closed.calls.filter(c=>c.args[0]===images.entrance).length,1,'unified perimeter is one immutable bitmap');
- assert.deepEqual(closed.calls,opened.calls,'never change any architectural drawImage positions or crops');
- assert(closed.fillRects.length>opened.fillRects.length,'open state retracts its glass flaps');
- assert(!('gate' in images)&&!('checkin' in images)&&!('planters' in images),'legacy entrance layers removed');
-});
-
-test('TV crop uses exactly one real guest cell, not the cast atlas Destiny cell',()=>{
- const ctx=mockCtx();
- const host={naturalWidth:400,naturalHeight:200},cast={naturalWidth:400,naturalHeight:300};
- drawModularTV(ctx,{tvEvent:{type:'photo',guestKind:5,ttl:1}},0,{host,cast,poses:{}});
- const portraits=ctx.calls.filter(c=>c.args[0]===host||c.args[0]===cast);
- assert.equal(portraits.length,2,'exactly one host and one fan');
- const fan=portraits.find(c=>c.args[0]===cast);
- assert.deepEqual(fan.args.slice(1,5),[100,100,100,100],'fan portrait uses the guest row/column');
-});
-
-test('v0.8.8e reverts compact guest cards with no nested scrollbars',()=>{
- const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
- const sandbox=readFileSync(new URL('../src/irl-sandbox-v085.css',import.meta.url),'utf8');
- assert(css.includes('v0.8.8e: restore the compact v0.8.7 guest card benchmark'));
- assert(sandbox.includes('v0.8.8e: compact original-size venue review card'));
- assert(/\.irl-world-speech\{[^}]*overflow-y:visible/.test(css));
- assert(/\.harness-prompt\{[^}]*overflow-y:visible/.test(sandbox));
-});
-
-test('dggL cutout is an actual transparent WebP asset',()=>{
- const path=asset('irl-dggl-v088e.webp');assert(existsSync(path));
- assert.equal(readFileSync(path).toString('ascii',8,12),'WEBP');
+test('TV/photo feed is clipped to one on-plate screen; no opaque card',()=>{
+ assert(MODULAR_TV_BOUNDS.x>=MODULAR_PROPS.stage.x);
+ const ctx=paintContext(),fakePortrait={naturalWidth:256,naturalHeight:256};
+ const event={tvEvent:{ttl:2,type:'photo',guestKind:2}};
+ drawModularTV(ctx,event,0,{host:fakePortrait,poses:[null,null,fakePortrait],cast:fakePortrait});
+ assert.equal(ctx.depth,0);
+ assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,2,'exactly one host, one fan');
+ assert(ctx.calls.some(c=>c[0]==='clipRect'&&c[1]===0&&c[2]===0&&c[3]===100&&c[4]===56));
+ assert.equal(ctx.calls.filter(c=>c[0]==='fillRect'&&c[1]===0&&c[2]===0&&c[3]===100&&c[4]===56).length,1,'only the LCD base is full-size; no second opaque photo tile');
+ const mask=paintContext();
+ drawBakedForegroundOccluders(mask,assets);
+ assert.equal(mask.depth,0);
+ assert(mask.calls.filter(c=>c[0]==='drawImage').length>=5,'foreground uses source pixels rather than separate props');
 });

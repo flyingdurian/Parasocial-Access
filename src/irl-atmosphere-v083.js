@@ -31,7 +31,7 @@ export function bubbleTier(queueIndex,focus=false){
 // Chaos Mode applies to QUEUED DECISION prompts only. It must never change
 // ambient speech bubbles, their frequency, or their typewriter sound timing.
 export function decisionBubbleStyle(index,focus=false){
- return focus?{alpha:1,scale:1}:{alpha:bubbleTier(index),scale:[.93,.87,.83,.58][Math.min(3,Math.max(0,index))]};
+ return focus?{alpha:1,scale:1}:{alpha:bubbleTier(index),scale:[.77,.69,.62,.58][Math.min(3,Math.max(0,index))]};
 }
 // Shared canvas-space layout for stage conversations, ambient bubbles and
 // queued decisions. All coordinates refer to the 384×216 venue, irrespective
@@ -44,12 +44,11 @@ export const bubbleRectsOverlap=(a,b,gap=2)=>a.x<b.x+b.w+gap&&a.x+a.w+gap>b.x&&a
 export function placeFocusedVenuePrompt(width,height,anchorX,anchorY,boxW,boxH,reserved=[]){
  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
  const placements=[
-  [anchorX-boxW*.48,anchorY-boxH-12],
-  [anchorX-boxW-24,anchorY-boxH-12],
-  [anchorX-boxW*1.65,anchorY-boxH-12],
-  [anchorX+24,anchorY-boxH-12],
-  [8,8],[width-boxW-8,8],
-  [anchorX-boxW*.48,anchorY+18]
+  [anchorX-boxW*.48,anchorY-boxH-15],
+  [anchorX-boxW*.80,anchorY-boxH-15],
+  [anchorX-boxW-16,anchorY-boxH*.58],
+  [anchorX+16,anchorY-boxH*.58],
+  [anchorX-boxW*.48,anchorY+16]
  ];
  let fallback=null,fallbackOverlaps=Infinity;
  for(const [cx,cy] of placements){
@@ -161,11 +160,11 @@ export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',la
  if(!content)return null;
  const {alpha,scale}=decisionBubbleStyle(index),miniature=index>=3;
  const text=String(content).replace(/\s+/g,' ').trim();
- const width=miniature?92:163;
+ const width=miniature?65:94;
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
- ctx.font=miniature?'bold 7px system-ui,sans-serif':'bold 7.2px system-ui,sans-serif';
- const lines=miniature?[]:wrapMeasuredText(ctx,text,width-12,4);
- const height=miniature?17:12+Math.max(1,lines.length)*8;
+ ctx.font=miniature?'bold 6px system-ui,sans-serif':'bold 6.2px system-ui,sans-serif';
+ const lines=miniature?[]:wrapMeasuredText(ctx,text,width-12,2);
+ const height=miniature?16:10+Math.max(1,lines.length)*7;
  const outerW=width*scale,outerH=(height+8)*scale;
  const placed=layout?layout.place(x,y,outerW,outerH):{
   x:clampBubble(x-outerW/2,4,380-outerW),
@@ -183,7 +182,7 @@ export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',la
  if(miniature)ctx.fillText('◷ QUEUED · '+(index+2),6,12,width-12);
  else{
   ctx.beginPath();ctx.rect(4,3,width-8,height-5);ctx.clip();
-  lines.forEach((line,i)=>drawInlineDggL(ctx,line,6,11+i*8,mascot,9));
+  lines.forEach((line,i)=>drawInlineDggL(ctx,line,6,10+i*7,mascot,8));
  }
  ctx.restore();
  ctx.save();ctx.globalAlpha=alpha;
@@ -195,8 +194,8 @@ export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null,m
  if(!content||opacity<=0)return null;
  ctx.save();ctx.globalAlpha=opacity;ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.font='bold 5.8px system-ui,sans-serif';
- const text=String(content).slice(0,max).replace(/\s+/g,' ').trim();
- const width=Math.min(155,measureInlineDggL(ctx,text,mascot,8)+10);
+ const text=String(content).slice(0,Math.min(max,28)).replace(/\s+/g,' ').trim();
+ const width=Math.min(58,measureInlineDggL(ctx,text,mascot,8)+10);
  const placed=layout?layout.place(x,y,width,11):{
   x:clampBubble(x-width/2,2,382-width),y:clampBubble(y-16,2,203),w:width,h:11
  };

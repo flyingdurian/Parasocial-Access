@@ -21,7 +21,7 @@ export function walkCycleFrame(distance=0){return ((Math.floor(Math.max(0,distan
 export function venueSpriteGeometry(x,y,w,h,motion=null){
  const footX=x+w/2,footY=y+h;
  const t=Math.max(0,Math.min(1,(footY-74)/144));
- const scale=Math.max(.84,Math.min(1.14,.85+.28*t));
+ const scale=Math.max(.91,Math.min(1.05,.91+.14*t));
  const gait=motion?.walking&&Number.isFinite(motion.stepDistance)?Math.max(0,Math.sin(motion.stepDistance/VENUE_STRIDE*Math.PI/2)):0;
  // Near-zero gait variation: no visible 'moon bounce' or floating feet.
  const bob=gait*.14;
