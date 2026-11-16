@@ -117,7 +117,7 @@ function update(){
   el.replaceChildren(fragment);
  };
  set('#h-session',event.session==='endless'?'SURVIVAL':'LEVEL '+(event.levelIndex+1));
- set('#h-time',Math.floor(event.clock/60)+':'+String(Math.floor(event.clock%60)).padStart(2,'0'));
+ set('#h-time',Math.floor(Math.max(0,event.clock)/60)+':'+String(Math.floor(Math.max(0,event.clock)%60)).padStart(2,'0'));
  set('#h-guests',(event.finished.length+event.lost)+' / '+(event.session==='endless'?'∞':event.cards.length));
  set('#h-vibe',event.vibe+'%');set('#h-score',event.score);set('#h-wave',event.session==='endless'?event.wave:event.phase);
  set('#h-caption',event.message);set('#h-pause',event.paused?'▶ Resume':'Ⅱ Pause');
