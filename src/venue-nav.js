@@ -179,7 +179,7 @@ function connectedRoamCells(){
  const queue=[start],seen=new Set(queue),result=[];
  for(let i=0;i<queue.length;i++){
   const k=queue[i],[col,row]=decode(k),[x,y]=center([col,row]);
-  if(y<180&&x>=17&&x<=349)result.push([x,y]);
+  if(y<180&&x>=17&&x<=349&&!(x>160&&x<312&&y>92&&y<162))result.push([x,y]);
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
    const nc=col+dx,nr=row+dy,next=key(nc,nr);
    if(!seen.has(next)&&passCell(nc,nr)){seen.add(next);queue.push(next);}
@@ -190,6 +190,8 @@ function connectedRoamCells(){
 }
 export function venueStationApproachPoint(name,id=0,visit=0){
  const station=VENUE_STATIONS[name];if(!station)return null;
+ // Photo visitors stop immediately beside the booth entrance before stepping inside.
+ if(name==='photo')return snapVenue(330+(id%2)*3,64+(visit%3)*2);
  if(!['merch','claw','snacks','photo','entrance','help','quiet','mic'].includes(name))return station;
  const offsets=[[0,0],[-13,0],[13,0],[-23,6],[23,6],[-8,10],[8,10]];
  const idx=Math.abs((id*13+visit*17)|0)%offsets.length;
@@ -200,7 +202,7 @@ export function venueStationApproachPoint(name,id=0,visit=0){
  return station;
 }
 // A floor-level semicircular ring around the stage, avoiding the real rope and stairs.
-const DEBATE_AUDIENCE_SPOTS=Object.freeze([[158,102],[172,112],[185,125],[201,136],[219,139],[239,142],[260,142],[280,139],[300,134],[316,125],[328,113],[339,101],[181,101],[308,105],[194,117],[321,137]]);
+const DEBATE_AUDIENCE_SPOTS=Object.freeze([[157,102],[168,114],[182,129],[197,139],[214,146],[230,151],[246,154],[263,153],[279,149],[295,144],[311,135],[325,121],[337,111],[341,98],[178,116],[317,111]]);
 export function venueDebateAudienceSpot(index){
  const point=DEBATE_AUDIENCE_SPOTS[((index%DEBATE_AUDIENCE_SPOTS.length)+DEBATE_AUDIENCE_SPOTS.length)%DEBATE_AUDIENCE_SPOTS.length];
  return isVenueWalkable(...point)?[...point]:snapVenue(...point);

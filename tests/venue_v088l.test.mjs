@@ -56,7 +56,8 @@ test('every physical booth completes a visible transaction; vending is absent',(
  assert.equal(event.boothTransactions.drinks,event.boothTransactions.snacks,'food counter serves drinks');
  assert(event.clawMachine.activeUntil>event.elapsed,'grapple animation triggered');
  assert(event.clawMachine.plays>0,'prize mechanic triggered');
- assert(event.cameraFlashes.length>0,'photo booth takes a photo');
+ assert(event.crowd[0].photoPoseUntil>event.elapsed,'photo guest poses inside the booth before flash');
+ assert(!event.stationActivity.photo.flashed,'camera waits until the subject is inside');
 });
 
 test('gate monitor patrols entry lanes while dedicated clerk remains at desk',()=>{

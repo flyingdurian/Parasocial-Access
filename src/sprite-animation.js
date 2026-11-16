@@ -111,8 +111,8 @@ export function stagePosition(action,seconds=0,meeting=false){
  // The baked stage's LCD spans x233..303 and its legend occupies the right
  // third. Destiny stays on the LEFT performance zone; the visiting guest
  // uses the right exchange spot. No five-stop pacing across the display.
- if(meeting)return {x:204,y:44};
- if(action==='mic')return {x:211,y:44};
- const route=[{x:204,y:44},{x:208,y:44},{x:212,y:44},{x:206,y:44}];
+ if(meeting)return {x:198,y:32};
+ if(action==='mic')return {x:203,y:32};
+ const route=[{x:198,y:32},{x:202,y:32},{x:206,y:32},{x:200,y:32}];
  return route[Math.floor(seconds/5)%route.length];
 }

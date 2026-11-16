@@ -206,7 +206,11 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
   const action=role==='crowd'?(g.walking?'walk':g.animation):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='departure'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='guard'?(g.task?.phase==='escort'?'point':g.walking?'walk':'idle'):role==='staff'?(g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):g.pending?'talk':g.type==='redirect'?'heckle':g.type==='security'?'argue':g.type==='check'?'point':'idle';
   const toss=role==='departure'&&g.tossTime>0?-Math.sin((.65-g.tossTime)/.65*Math.PI)*12:0;
   const stageSpeaker=role==='departure'&&g.stageVisit==='exchange';
-  sprite(g.kind??(role==='guard'?3:7),g.x+(stageSpeaker?2.5:0),g.y+toss+(stageSpeaker?5:0)-(role==='crowd'?(g.hypeJump||0):0),stageSpeaker?29:w,stageSpeaker?37:h,action,g);
+  const boothRemain=role==='crowd'?Math.max(0,(g.photoPoseUntil||0)-irl.elapsed):0;
+  const photoMix=boothRemain>0?Math.max(0,Math.min(1,(2.4-boothRemain)/.5,boothRemain/.45)):0;
+  const drawX=g.x+(role==='crowd'?(344-g.x)*photoMix:0);
+  const drawY=g.y+(role==='crowd'?(57-g.y)*photoMix:0);
+  sprite(g.kind??(role==='guard'?3:7),drawX+(stageSpeaker?2.5:0),drawY+toss-(role==='crowd'?(g.hypeJump||0):0),stageSpeaker?29:w,stageSpeaker?37:h,action,g);
   if(role==='crowd'){
    if(g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){
     if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;

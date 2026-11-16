@@ -1,11 +1,20 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8l functional-venue and live-audience polish on the v0.8.8k code baseline.  
+**Current candidate:** v0.8.8m stage-and-venue interaction polish on the verified v0.8.8l baseline.  
 **Working branch:** `recovery/v088i-arcade-debates` (continuing the v0.8.8h unified-plate baseline).  
 **Baseline:** `release/v0.8.8`, commit `bcbb27de6df8bb8f395cd3bbfe392315be7360b6`.  
-**Status:** Exact user-provided hall PNG and transparent dggL mascot are now committed under `assets/`; v0.8.8l integrates those files. Feature tests and browser smoke verification are required before owner visual acceptance. No production promotion approved.
+**Status:** The exact hall and mascot assets are live in the recovery branch. v0.8.8l passed 26/26 focused Node checks and deployed an HTTP 200 preview; owner playtest found lingering audience placement, stage composition, booth and gate visual issues. v0.8.8m addresses these and awaits tests/visual approval. Production release is unchanged.
 
-## v0.8.8l — source of truth and visual acceptance
+## v0.8.8m — visual-correction pass after owner's annotated screenshot
+
+- **Quiet stage queue until countdown:** Ambient roam selection excludes the stage waiting corridor (x160–312, y92–162) and normal crowds stop choosing the signing/mic/queue targets. Once a challenger approaches or climbs the stairs, non-ticketed spectators sprint toward a stage semicircle (63 px/s initially) and animate cheers, jumps, arguments, and actual world-space DGG lore shouts every ~0.68s. They disperse again after the round.
+- **Stage duel:** Destiny's home performance moves to x198–206, y32, well onto stage left. Challenger climbs to x285, y32 on stage right, faces left toward Destiny; removed an extra 5px downward draw offset that previously left them visually on the steps.
+- **TV:** A visible "DEBATE IS ABOUT TO BEGIN..." broadcast slate plays during challenger approach, then a camera director changes every ~1.55s between dramatic *solo zooms* of Destiny/challenger, two-shot and a close audience cam. Lore/meme text stays on the actual spectators, never on LCD.
+- **Live attractions:** Photo guests walk to booth threshold and visibly move inside (display pose at x344,y57) before a delayed shutter flash; no empty-room photo flashes. Claw uses the **actual transparent dggL sprite** (the same already uploaded PNG) as the collectible plush: grapple descends, grips, lifts, carries and deposits the illustrated toy in the cabinet's prize chute. Merch/food guests continue to approach and face their physical counters.
+- **Entry cohesion:** Sliding slotted gates now mount flush to scanner edges with permanent crossrails aligned y183–210. Authorized gate clearance remains 39/43px. Check-in clerk has subtle four-keyframe nod/scan motions; idle support staff use existing directional walk animation while pacing nearby.
+- **Approval:** Do not promote to production until owner confirms visible performer separation, crowd prelude/quiet normal queue, occupied photo booth, real plush pickup, gate alignment, and mobile performance.
+
+## v0.8.8l — prior accepted preview
 
 **Asset wiring:** The only hall backdrop is `assets/Neon Convention Hall Claw Machine.png` (1672×941). Walking dggL is a separate alpha sprite `assets/Adorable blue mascot clutching a red heart.png` (1220×1289), independently depth-sorted, reacting with decorative hearts and no player rewards. The clerk continues to use `irl-ticket-clerk-v088h.webp`.
 

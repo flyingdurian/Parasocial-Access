@@ -35,23 +35,30 @@ function openness(event,side){
 }
 function drawGate(ctx,event,side){
  const open=openness(event,side),lane=MODULAR_GATES[side].lane;
- const span=lane.right-lane.left,leaf=(span/2-.4)*(1-open),top=lane.top+7;
- // The rail and fixed scanner posts stay in place; two slotted steel/glass
- // shutters telescope into their posts. Open clearance equals the full lane.
+ const span=lane.right-lane.left,top=lane.top+1,base=lane.bottom-6;
+ const leaf=(span/2+.7)*(1-open);
+ // Frame is attached flush to the inner scanner posts. Narrow lateral plates
+ // and permanent top/bottom rails hide the seam even when the leaves retract.
  ctx.save();
- ctx.fillStyle='rgba(22,36,54,.64)';ctx.fillRect(lane.left-1,top+14,span+2,2);
- ctx.fillStyle='rgba(173,200,214,.72)';ctx.fillRect(lane.left,top+14,span,.7);
- if(leaf>.15){
+ ctx.fillStyle='rgba(34,45,76,.9)';
+ ctx.fillRect(lane.left-2,top-2,2.8,base-top+4);
+ ctx.fillRect(lane.right-.8,top-2,2.8,base-top+4);
+ ctx.fillStyle='#8dd8ec';ctx.fillRect(lane.left-2,top-2,span+4,.9);
+ ctx.fillStyle='rgba(101,140,175,.95)';ctx.fillRect(lane.left-1,base,span+2,2);
+ ctx.fillStyle='rgba(14,21,48,.55)';ctx.fillRect(lane.left-1,base+2,span+2,1.5);
+ if(leaf>.1){
   for(const sideIndex of [0,1]){
    const x=sideIndex===0?lane.left:lane.right-leaf;
-   ctx.fillStyle='rgba(45,67,86,.78)';ctx.fillRect(x,top,leaf,14);
-   ctx.fillStyle='rgba(171,226,243,.37)';ctx.fillRect(x+.8,top+1,Math.max(0,leaf-1.6),12);
-   ctx.fillStyle='rgba(222,239,238,.82)';
-   for(let j=0;j<3;j++)ctx.fillRect(x,top+2+j*4,leaf,.8);
-   ctx.fillStyle='rgba(38,53,71,.85)';
-   for(let j=0;j<2;j++)ctx.fillRect(x+2+j*6,top+2,1.2,10);
-   ctx.fillStyle='#e5f7ff';
-   ctx.fillRect(sideIndex===0?x+leaf-.8:x,top,.8,14);
+   ctx.fillStyle='rgba(48,68,87,.84)';ctx.fillRect(x,top,leaf,base-top);
+   ctx.fillStyle='rgba(166,214,231,.36)';ctx.fillRect(x+.5,top+1,Math.max(0,leaf-1),base-top-2);
+   // Real horizontal security slats; their continuous spacing aligns across
+   // both leaves instead of floating lower than the illustrated scanners.
+   for(let y=top+3;y<base-1;y+=4.3){
+    ctx.fillStyle='#b1d5e2';ctx.fillRect(x,y,leaf,.85);
+    ctx.fillStyle='rgba(27,45,68,.7)';ctx.fillRect(x,y+1,leaf,.55);
+   }
+   ctx.fillStyle='#eaf8fc';
+   ctx.fillRect(sideIndex===0?x+leaf-.9:x,top,.9,base-top);
   }
  }
  const pulse=.65+.25*Math.sin((event?.elapsed||0)*9);
@@ -65,11 +72,22 @@ function drawGate(ctx,event,side){
 export function drawTicketClerk(ctx,assets,event){
  if(!assets?.clerk?.naturalWidth||!event?.ticketClerk)return;
  const worker=event.ticketClerk;
- ctx.save();ctx.drawImage(assets.clerk,worker.x,worker.y,29,36);
- const scanned=(event.elapsed-worker.lastScanAt)<.55;
+ const t=event.elapsed||0,frame=Math.floor(t*3)%4;
+ const scanned=t-worker.lastScanAt<.6;
+ ctx.save();
+ // Four subtle counter-service keyframes: check screen, scan pass, look up,
+ // rest. The desk remains a fixed collision object.
+ const bob=frame===2?-.8:frame===3?-.25:0;
+ const dx=frame===1?.55:0;
+ ctx.drawImage(assets.clerk,worker.x+dx,worker.y+bob,29,36);
  if(scanned){
-  ctx.globalAlpha=Math.max(0,1-(event.elapsed-worker.lastScanAt)/.55)*.66;
-  ctx.fillStyle='#b8fff2';ctx.fillRect(worker.x+19,worker.y+19,3,2);
+  const strength=Math.max(0,1-(t-worker.lastScanAt)/.6);
+  ctx.globalAlpha=strength*.80;ctx.fillStyle='#b8fff2';
+  ctx.fillRect(worker.x+18+frame%2,worker.y+20,4,2);
+  ctx.fillRect(worker.x+20,worker.y+17,1.4,3);
+ }else if(frame===1){
+  ctx.globalAlpha=.55;ctx.fillStyle='#dff4fc';
+  ctx.fillRect(worker.x+20,worker.y+20,2,1.5);
  }
  ctx.restore();
 }
@@ -178,32 +196,33 @@ export function drawStageDebateUplight(ctx,event,t){
  if(debater.hostAuraActive)drawFighterAura(ctx,(event.hostX??204)+16,(event.hostY??44)+19,t,true);
  if(debater.challengerAuraActive)drawFighterAura(ctx,debater.x+16,debater.y+20,t,false);
 }
-function livePortrait(ctx,asset,x,y,height=31,col=0,row=0,cols=4,rows=2){
+function livePortrait(ctx,asset,x,y,height=31,col=0,row=0,cols=4,rows=2,maxWidth=22){
  if(!asset?.naturalWidth||!asset?.naturalHeight)return false;
  const sw=asset.naturalWidth/cols,sh=asset.naturalHeight/rows;
- const aspect=sw/sh,dw=Math.min(22,height*aspect);
+ const aspect=sw/sh,dw=Math.min(maxWidth,height*aspect);
  ctx.drawImage(asset,col*sw,row*sh,sw,sh,x-dw/2,y,dw,height);
  return true;
 }
-function liveFanPortrait(ctx,streams,kind,x,y){
+function liveFanPortrait(ctx,streams,kind,x,y,height=31,maxWidth=22){
  // A cast-atlas fallback must crop the REAL guest cell; the top-left cell is Destiny.
  if(kind>=12&&kind<=29){
   const group=Math.floor((kind-12)/6),sheet=streams.extra?.[group];
-  if(sheet?.naturalWidth)return livePortrait(ctx,sheet,x,y,31,(kind-12)%6,0,6,2);
+  if(sheet?.naturalWidth)return livePortrait(ctx,sheet,x,y,height,(kind-12)%6,0,6,2,maxWidth);
  }
  if(kind>=1&&kind<12){
   const pose=streams.poses?.[kind];
-  if(pose?.naturalWidth&&pose!==streams.host)return livePortrait(ctx,pose,x,y);
+  if(pose?.naturalWidth&&pose!==streams.host)return livePortrait(ctx,pose,x,y,height,0,0,4,2,maxWidth);
  }
  const safeKind=Number.isInteger(kind)&&kind>=1&&kind<12?kind:2;
- return livePortrait(ctx,streams.cast,x,y,31,safeKind%4,Math.floor(safeKind/4),4,3);
+ return livePortrait(ctx,streams.cast,x,y,height,safeKind%4,Math.floor(safeKind/4),4,3,maxWidth);
 }
-function drawBoothActivity(ctx,event){
+function drawBoothActivity(ctx,event,assets){
  // Tiny contextual receipts that read as rewards; no unlabeled circles or notes.
- const anchors={merch:[57,86],claw:[180,72],snacks:[132,88],photo:[351,92]};
+ const anchors={merch:[57,86],claw:[181,104],snacks:[132,88],photo:[353,103]};
  const labels={merch:'MERCH SOLD',claw:'PRIZE WON',snacks:'FOOD + DRINK',photo:'PHOTO TAKEN'};
  for(const fx of event?.effects||[]){
   if(fx.kind!=='booth')continue;
+  if(fx.station==='claw'&&(event?.clawMachine?.activeUntil||0)>(event?.elapsed||0)+.6)continue;
   const point=anchors[fx.station];if(!point)continue;
   const age=1-Math.max(0,Math.min(1,fx.ttl/(fx.maxTtl||1.15)));
   const y=point[1]-6-age*4,alpha=Math.min(.63,fx.ttl*1.35);
@@ -236,36 +255,49 @@ function drawBoothActivity(ctx,event){
    ctx.fillStyle='#7cf5df';ctx.fillRect(140,74,3,7);
    ctx.fillStyle='#e8ffff';ctx.fillRect(141,72,1,3);
   }else if(name==='photo'){
-   if((Math.floor(event.elapsed*7)%5)===0){
-    ctx.globalAlpha=.43;ctx.fillStyle='#f9f9ff';ctx.fillRect(344,60,31,30);
+   if(activity.flashed&&age<1.22&&age>.92){
+    ctx.globalAlpha=.42;ctx.fillStyle='#f9f9ff';ctx.fillRect(342,56,35,35);
    }
    ctx.fillStyle='#e3e9ff';ctx.fillRect(368,83,6,5);
    ctx.fillStyle='#d6a4fe';ctx.fillRect(369,80,4,2);
   }
   ctx.restore();
  }
- // The transparent glass shows a working grapple and prize drop only while
- // a visitor is at the left-aisle cabinet; no duplicate machine sprite.
+ // A complete real-toy pickup: travel above the DGG plush, descend,
+ // close two fingers around its body, lift it, carry it to the chute, release.
+ // Every animated pixel is bound to the ONE pictured cabinet's glass UV.
  if((event?.clawMachine?.activeUntil||0)>(event?.elapsed||0)){
-  // Moving pieces are physically clipped to the cabinet glass:
-  // no standalone floating claw prop can bleed into the scene.
   const cabinet=MODULAR_PROPS.claw;
-  const glass={x:cabinet.x+2,y:cabinet.y+9,w:cabinet.w-4,h:22}; // pictured glass below marquee
-  const progress=Math.max(0,Math.min(1,1-(event.clawMachine.activeUntil-event.elapsed)/2.3));
-  const swing=Math.round(glass.x+glass.w/2+Math.sin(progress*7)*glass.w*.17);
-  const drop=progress<.5?progress*glass.h*.72:(1-progress)*glass.h*.72;
+  const glass={x:cabinet.x+2,y:cabinet.y+9,w:cabinet.w-4,h:22};
+  const p=Math.max(0,Math.min(1,1-(event.clawMachine.activeUntil-event.elapsed)/2.3));
+  const pickupX=glass.x+glass.w*.47;
+  const headX=pickupX+(p>.73?Math.min(1,(p-.73)/.20)*(glass.w*.28):0);
+  const headY=p<.30?glass.y+3:p<.47?glass.y+3+(p-.30)/.17*12:p<.72?glass.y+15-(p-.47)/.25*12:glass.y+3;
+  const hasToy=p>=.47&&p<.92;
   ctx.save();ctx.beginPath();ctx.rect(glass.x,glass.y,glass.w,glass.h);ctx.clip();
-  ctx.fillStyle='rgba(146,251,255,.14)';ctx.fillRect(glass.x+1,glass.y+1,glass.w-2,glass.h-2);
-  ctx.fillStyle='#d8f6ff';ctx.fillRect(swing,glass.y,1.2,3+drop);
-  ctx.fillStyle='#f5d79c';ctx.fillRect(swing-2,glass.y+4+drop,2.2,2.2);ctx.fillRect(swing+1,glass.y+4+drop,2.2,2.2);
-  if(progress>.65){ctx.fillStyle='#ffc7ec';ctx.fillRect(swing-2,glass.y+glass.h-5-(progress-.65)*glass.h*.7,5,4);}
+  ctx.fillStyle='rgba(147,251,255,.12)';ctx.fillRect(glass.x+1,glass.y+1,glass.w-2,glass.h-2);
+  const toyY=hasToy?headY+4:glass.y+glass.h-7;
+  const toyX=hasToy?headX-3:pickupX-3;
+  if(assets?.mascot?.naturalWidth)ctx.drawImage(assets.mascot,toyX,toyY,6.4,7);
+  const left=headX-3.4,right=headX+2.1,grip=hasToy?1.6:3.1;
+  ctx.fillStyle='#ccf3ff';ctx.fillRect(headX-.6,glass.y,1.2,Math.max(1,headY-glass.y));
+  ctx.fillStyle='#e6f7ff';ctx.fillRect(headX-2.5,headY,5,2.5);
+  ctx.fillStyle='#efcf93';ctx.fillRect(left+grip*.38,headY+2,1.2,2.8);
+  ctx.fillRect(right-grip*.38,headY+2,1.2,2.8);
   ctx.restore();
+  if(p>=.92&&assets?.mascot?.naturalWidth){
+   // Physical prize-delivery chute below the glass, inside the same cabinet.
+   ctx.save();ctx.beginPath();ctx.rect(cabinet.x+6,cabinet.y+34,cabinet.w-9,12);ctx.clip();
+   ctx.drawImage(assets.mascot,cabinet.x+17,cabinet.y+34+(p-.92)*43,6.4,7);
+   ctx.restore();
+  }
  }
 }
 export function drawModularTV(ctx,event,t,streams={}){
  const projection=MODULAR_TV_PROJECTION;
  const feed=event?.tvEvent?.ttl>0?event.tvEvent:null;
  const debate=event?.departures?.find(g=>g.debater&&g.stageVisit==='exchange');
+ const prelude=event?.departures?.find(g=>g.debater&&['approach','climbStairs'].includes(g.stageVisit));
  ctx.save();
  ctx.transform(projection.a,projection.b,projection.c,projection.d,projection.e,projection.f);
  ctx.beginPath();ctx.rect(0,0,100,56);ctx.clip();
@@ -278,34 +310,50 @@ export function drawModularTV(ctx,event,t,streams={}){
  ctx.beginPath();ctx.rect(3,7,94,46);ctx.clip(); // no drawing across the top bezel
  ctx.textBaseline='alphabetic';ctx.textAlign='center';
  if(debate){
-  // Broadcast close-ups: fighters or the actual cheering crowd.
-  // Meme/reaction lines are world-space speech, never LCD text.
   const audience=(event.crowd||[]).filter(p=>p.debateWatching);
-  const crowdCam=audience.length>=2&&Math.floor(t/2900)%3===2;
-  ctx.fillStyle='rgba(7,10,35,.85)';ctx.fillRect(4,9,92,43);
-  ctx.fillStyle='#f2d692';ctx.font='bold 5px ui-monospace,monospace';
-  ctx.fillText(crowdCam?'CROWD CAM':'DEBATE CAM',50,14,65);
-  ctx.fillStyle='#ee557f';ctx.fillRect(7,10,2.6,2);
+  // Camera director: genuinely different crops/zooms, not the same two-shot
+  // with a changing label. Solo Destiny, solo critic, split-screen, crowd.
+  const shot=Math.floor(t/1550)%5,crowdCam=shot===3&&audience.length>0;
+  ctx.fillStyle='rgba(7,10,35,.88)';ctx.fillRect(4,9,92,43);
+  ctx.fillStyle='#ffc98f';ctx.font='bold 5.2px ui-monospace,monospace';
+  const label=crowdCam?'AUDIENCE CLOSE-UP':shot===0||shot===4?'DESTINY CLOSE-UP':shot===1?'CHALLENGER CLOSE-UP':'BLOODSPORTS LIVE';
+  ctx.fillText(label,50,15,87);
+  ctx.fillStyle='#ff637b';ctx.fillRect(7,10,2.6,2);
+  ctx.save();ctx.beginPath();ctx.rect(6,17,88,29);ctx.clip();
   if(crowdCam){
-   ctx.save();ctx.beginPath();ctx.rect(6,16,88,30);ctx.clip();
-   for(let i=0;i<3;i++){
-    const person=audience[(Math.floor(t/2900)*3+i)%audience.length];
-    liveFanPortrait(ctx,streams,person.kind,23+i*29,15);
+   const chosen=audience[Math.floor(t/1550)%audience.length];
+   liveFanPortrait(ctx,streams,chosen.kind,50,15,48,45);
+   if(audience.length>2){
+    liveFanPortrait(ctx,streams,audience[(audience.indexOf(chosen)+1)%audience.length].kind,17,26,25,22);
+    liveFanPortrait(ctx,streams,audience[(audience.indexOf(chosen)+2)%audience.length].kind,83,26,25,22);
    }
-   ctx.restore();
-   ctx.fillStyle='#dcffd6';ctx.font='bold 5.5px ui-monospace,monospace';
-   ctx.fillText('LIVE AUDIENCE',50,51,82);
+  }else if(shot===0||shot===4){
+   const cell=[6,5,6,4][Math.floor(t/300)%4];
+   livePortrait(ctx,streams.host,50+Math.sin(t/360)*2,11,49,cell%4,Math.floor(cell/4),4,2,44);
+  }else if(shot===1){
+   liveFanPortrait(ctx,streams,debate.kind,50+Math.sin(t/340)*2,11,49,44);
   }else{
-   ctx.save();ctx.beginPath();ctx.rect(7,16,86,30);ctx.clip();
-   const hostFrame=[6,5,6][Math.floor(t/310)%3];
-   livePortrait(ctx,streams.host,29,15,31,hostFrame%4,Math.floor(hostFrame/4));
-   liveFanPortrait(ctx,streams,debate.kind,69,15);
-   ctx.restore();
-   ctx.fillStyle='#9de5ff';ctx.font='bold 5px ui-monospace,monospace';ctx.fillText('DESTINY',25,49,40);
-   ctx.fillStyle='#ffb3db';ctx.fillText('CHALLENGER',74,49,44);
+   const cell=[6,5,6][Math.floor(t/270)%3];
+   livePortrait(ctx,streams.host,28,15,36,cell%4,Math.floor(cell/4),4,2,29);
+   liveFanPortrait(ctx,streams,debate.kind,71,15,36,29);
   }
+  ctx.restore();
+  ctx.fillStyle='#f0f4ff';ctx.font='bold 5.2px ui-monospace,monospace';
+  ctx.fillText(crowdCam?'CROWD IS LOSING IT':shot===0||shot===4?'FINAL BOSS':shot===1?'THE CHALLENGER':'FACE TO FACE',50,51,83);
   ctx.fillStyle='#f4f7ff';ctx.font='bold 6px ui-monospace,monospace';
   ctx.fillText(String(Math.max(0,Math.ceil(debate.exchangeClock)))+'s',91,15,13);
+ }else if(prelude){
+  const pulse=.5+.5*Math.sin(t/190);
+  ctx.fillStyle='rgba(10,13,34,.85)';ctx.fillRect(4,9,92,43);
+  ctx.fillStyle='#ffb86f';ctx.font='bold 6px ui-monospace,monospace';
+  ctx.fillText('DEBATE IS ABOUT TO BEGIN...',50,21,86);
+  ctx.fillStyle='rgba(125,185,255,'+(.22+.36*pulse)+')';ctx.fillRect(11,25,78,1);
+  ctx.save();ctx.beginPath();ctx.rect(7,28,86,18);ctx.clip();
+  livePortrait(ctx,streams.host,29,24,25,5%4,Math.floor(5/4));
+  liveFanPortrait(ctx,streams,prelude.kind,72,24,25);
+  ctx.restore();
+  ctx.fillStyle='#f4da9e';ctx.font='bold 5px ui-monospace,monospace';
+  ctx.fillText('THE CROWD IS GATHERING',50,51,87);
  }else if(feed?.type==='photo'){
   // Translucent broadcast-glass wash instead of an opaque white photo card.
   ctx.save();ctx.beginPath();ctx.rect(6,8,56,38);ctx.clip();
@@ -365,7 +413,7 @@ export function drawModularVenue(ctx,assets,event,t,streams={}){
   drawVenueDustMotes(ctx,t);
   drawStageDebateUplight(ctx,event,t);
   for(const side of ['left','right'])drawGate(ctx,event,side);
-  drawBoothActivity(ctx,event);
+  drawBoothActivity(ctx,event,assets);
   drawModularTV(ctx,event,t,streams);
   ctx.restore();
   return true;

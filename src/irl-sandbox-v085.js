@@ -90,7 +90,11 @@ function draw(t){
   const kind=role==='guard'?3:role==='staff'?7:g.kind;
   const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?'talk':g.type==='security'?'argue':g.type==='check'?'point':'idle'):role==='staff'?(g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):g.walking?'walk':'idle';
   const stageSpeaker=role==='depart'&&g.stageVisit==='exchange';
-  sprite(kind,g.x+(stageSpeaker?2.5:0),g.y+(stageSpeaker?5:0)-(role==='crowd'?(g.hypeJump||0):0),stageSpeaker?29:w,stageSpeaker?37:h,state,g);
+  const boothRemain=role==='crowd'?Math.max(0,(g.photoPoseUntil||0)-event.elapsed):0;
+  const photoMix=boothRemain>0?Math.max(0,Math.min(1,(2.4-boothRemain)/.5,boothRemain/.45)):0;
+  const drawX=g.x+(role==='crowd'?(344-g.x)*photoMix:0);
+  const drawY=g.y+(role==='crowd'?(57-g.y)*photoMix:0);
+  sprite(kind,drawX+(stageSpeaker?2.5:0),drawY-(role==='crowd'?(g.hypeJump||0):0),stageSpeaker?29:w,stageSpeaker?37:h,state,g);
   if(role==='crowd'&&g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){
    if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;
   }

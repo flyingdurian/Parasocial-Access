@@ -53,7 +53,7 @@ test('third six-person roster has idle, four-step walk, north walk and four reac
 test('stage is centered at the stair opening with orderly, separate fan/debate sides',()=>{
  assert.deepEqual(venueStageQueueSpot(0),VENUE_STAGE.staging);
  for(let i=1;i<6;i++)assert(venueStageQueueSpot(i)[1]>venueStageQueueSpot(i-1)[1]);
- assert(VENUE_STAGE.debate[0]<VENUE_STAGE.stairs[0]);
+ assert(VENUE_STAGE.debate[0]>VENUE_STAGE.stairs[0]);
  assert(VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);
  const photo=simulateStage(['welcome','Snapshot Fan','Please take a picture!','A fan patiently requests a photograph.','Valid pass.'],'welcome');
  assert(photo.shown&&photo.flashed&&photo.spoke);
