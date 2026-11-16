@@ -1,3 +1,5 @@
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue} from './venue-rig-v088b.js';
+import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 import {engine,UPGRADES,WORLD_DEFS,GENERATOR_STATS,SURFACES,CONTRACTS,OPERATOR_UPGRADES,CREATORS,NETWORK_CREATORS,CREATOR_EVENTS,CREATOR_UPGRADES} from './engine.js';
 import {sound} from './audio.js';
 import {IRLEvent} from './irl-v07.js';
@@ -21,6 +23,7 @@ let graphics=loadGraphics(),graphicsVisible=false;
 let irlSpeed=1;
 try{const saved=Number(localStorage.getItem('feedfall-destiny-speed'));if([1,1.5,2].includes(saved))irlSpeed=saved;}catch{}
 const irlImages={hall:new Image(),cast:new Image()};
+const modularVenue=loadModularVenueAssets();
 irlImages.hall.src=globalThis.__IRL_HALL||'assets/irl-hall-open-v088.webp';
 irlImages.hall.onerror=()=>{irlImages.hall.onerror=()=>{irlImages.hall.onerror=null;irlImages.hall.src='assets/irl-hall.webp';};irlImages.hall.src='assets/irl-hall-open-v087.webp';};
 irlImages.cast.src=globalThis.__IRL_CAST||'assets/irl-cast.webp';
@@ -156,9 +159,10 @@ function irlPage(){const r=irl?.result||null;return `<div class="page irl-page">
  <div class="irl-disclaimer">Fan-made fictional depiction · no affiliation with, endorsement by, or actual participation by Destiny · all attendees and threats invented</div>
  </main>${footer()}</div>`.replace('Guide twenty guests through the convention.',irl.session==='endless'?'Survive endless waves of guests and protect the venue.':'Guide '+irl.config.guests+' guests through '+irl.config.title+'.').replace('One guest at a time, even when the venue is busy.','The highlighted guest stays prominent; Chaos Mode can show incoming prompts simultaneously.').replace('the four actions below','the five actions below').replace('Welcome</b> fans and peaceful critics.','Welcome</b> fans. <b>Invite to Debate</b> peaceful critics.').replace('1 · FAN / CRITIC','1 · FAN');}
 function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-canvas');if(!canvas)return;const ctx=setupGraphicsCanvas(canvas,graphics);if(!ctx)return;
- if(irlImages.hall.complete&&irlImages.hall.naturalWidth)ctx.drawImage(irlImages.hall,0,0,384,216);else{ctx.fillStyle='#28243e';ctx.fillRect(0,0,384,216);}
- drawStageAtmosphere(ctx,t,irl.phase);
- drawVenueRush(ctx,irl,t);drawVenueScreens(ctx,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});drawVenueGates(ctx,irlImages.hall,irl);drawStageQueueGuides(ctx,irl);
+ const modern=drawModularVenue(ctx,modularVenue,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});
+ if(!modern){if(irlImages.hall.complete&&irlImages.hall.naturalWidth)ctx.drawImage(irlImages.hall,0,0,384,216);else{ctx.fillStyle='#e8edf0';ctx.fillRect(0,0,384,216);}
+  drawStageAtmosphere(ctx,t,irl.phase);drawVenueRush(ctx,irl,t);drawVenueScreens(ctx,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});drawVenueGates(ctx,irlImages.hall,irl);}
+ drawStageQueueGuides(ctx,irl);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);
   ctx.fillStyle='#91f9b868';for(let y=84;y<184;y+=VENUE_CELL)for(let x=12;x<357;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}
  if(!irlImages.cast.complete||!irlImages.cast.naturalWidth)return;
@@ -180,7 +184,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  // Individual walk bobs translate entire rigid sprites by one pixel at most.
  const actors=[...irl.crowd.map(person=>({person,role:'crowd',w:27,h:34})),...irl.arrivals.map(person=>({person,role:'arrival',w:34,h:42})),...irl.departures.map(person=>({person,role:'departure',w:34,h:42})),...irl.guardPositions.map(person=>({person,role:'guard',w:34,h:42})),...irl.staff.map(person=>({person,role:'staff',w:31,h:40})),...irl.visitors.map(person=>({person,role:'guest',w:34,h:42}))];
  actors.sort((a,b)=>(a.person.y+a.h)-(b.person.y+b.h));
- const bubbleLayout=createBubbleLayout([VENUE_LED_SCREEN]);
+ const bubbleLayout=createBubbleLayout([modularVenueReady(modularVenue)?MODULAR_TV_BOUNDS:VENUE_LED_SCREEN]);
  reserveCanvasOverlay(bubbleLayout,canvas,$('#irl-world-speech'));
  let ambientBubbles=0;
  // An active typewriter line owns the reaction layer for the whole room;

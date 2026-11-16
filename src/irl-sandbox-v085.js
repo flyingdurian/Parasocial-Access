@@ -1,3 +1,5 @@
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue} from './venue-rig-v088b.js';
+import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 /* Fast isolated IRL harness: imports no main game engine, world art or UI.
    This is an additive dev route; it does not alter production save keys. */
 import {IRLEvent} from './irl-v07.js';
@@ -24,6 +26,7 @@ let graphics=loadGraphics();
 let speed=Math.min(8,Math.max(1,Number(params.get('speed'))||1));
 
 const assets={};
+const modularVenue=loadModularVenueAssets();
 for(const [id,path] of Object.entries({hall:'irl-hall',cast:'irl-cast',walk:'irl-cast-walk',pose0:'irl-host-poses',pose1:'irl-photographer-poses',pose3:'irl-security-poses',additionalA:'irl-cast-set-a',additionalB:'irl-cast-set-b',additionalC:'irl-cast-set-c',walkA:'irl-cast-set-a-walk4',walkB:'irl-cast-set-b-walk4',walkC:'irl-cast-set-c-walk4',backA:'irl-cast-set-a-back4',backB:'irl-cast-set-b-back4',backC:'irl-cast-set-c-back4',stageA:'irl-cast-stage-a',stageB:'irl-cast-stage-b',reactionA:'irl-cast-set-a-react4',reactionB:'irl-cast-set-b-react4',reactionC:'irl-cast-set-c-react4',originalWalkA:'irl-cast-original-a-walk4',originalWalkB:'irl-cast-original-b-walk4',originalBackA:'irl-cast-original-a-back4',originalBackB:'irl-cast-original-b-back4',emotes:'irl-dgg-emotes6'})){
  const img=new Image();img.src='/assets/'+path+'.webp';assets[id]=img;
 }
@@ -68,15 +71,16 @@ document.addEventListener('keydown',e=>{
 function draw(t){
  const canvas=q('#h-canvas'),ctx=setupGraphicsCanvas(canvas,graphics);
  if(!ctx)return;
- if(assets.hall.complete&&assets.hall.naturalWidth)ctx.drawImage(assets.hall,0,0,384,216);else{ctx.fillStyle='#312b4a';ctx.fillRect(0,0,384,216);}
- drawStageAtmosphere(ctx,t,event.phase);
- drawVenueRush(ctx,event,t);drawVenueScreens(ctx,event,t,{host:assets.pose0,cast:assets.cast,extra});drawVenueGates(ctx,assets.hall,event);drawStageQueueGuides(ctx,event);
+ const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,cast:assets.cast,extra});
+ if(!modern){if(assets.hall.complete&&assets.hall.naturalWidth)ctx.drawImage(assets.hall,0,0,384,216);else{ctx.fillStyle='#e8edf0';ctx.fillRect(0,0,384,216);}
+  drawStageAtmosphere(ctx,t,event.phase);drawVenueRush(ctx,event,t);drawVenueScreens(ctx,event,t,{host:assets.pose0,cast:assets.cast,extra});drawVenueGates(ctx,assets.hall,event);}
+ drawStageQueueGuides(ctx,event);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#91f9b868';for(let y=84;y<230;y+=VENUE_CELL)for(let x=12;x<357;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}
  const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box);drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack);};
  const mood=stageAction(event.phase,event.elapsed,event.visitors.length,event.elapsed<event.hostUntil?event.hostMood:'idle');
  sprite(0,event.hostX,event.hostY,31,39,event.hostWalking&&!event.departures.some(g=>g.stageVisit==='exchange')?'walk':mood);
  const actors=[...event.crowd.map(g=>({g,role:'crowd',w:27,h:34})),...event.arrivals.map(g=>({g,role:'arrival',w:34,h:42})),...event.visitors.map(g=>({g,role:'visitor',w:34,h:42})),...event.departures.map(g=>({g,role:'depart',w:34,h:42})),...event.staff.map(g=>({g,role:'staff',w:31,h:40})),...event.guardPositions.map(g=>({g,role:'guard',w:34,h:42}))].sort((a,b)=>a.g.y+a.h-(b.g.y+b.h));
- const bubbleLayout=createBubbleLayout([VENUE_LED_SCREEN]);
+ const bubbleLayout=createBubbleLayout([modularVenueReady(modularVenue)?MODULAR_TV_BOUNDS:VENUE_LED_SCREEN]);
  reserveCanvasOverlay(bubbleLayout,canvas,q('#h-speech'));
  let ambient=0;
  const roomIsSpeaking=event.crowd.some(g=>g.speechTime>0);

@@ -1,3 +1,4 @@
+import {MODULAR_STAGE,MODULAR_GATES,MODULAR_BLOCKERS} from './venue-geometry-v088b.js';
 /* Convention hall navigation, measured in 384 x 216 illustration coordinates.
    Positions are the top-left of a 27-34px character; obstacles are padded so
    feet and shadows do not cross stage faces, booth counters or turnstiles. */
@@ -12,21 +13,9 @@ export const VENUE_STATIONS=Object.freeze({
 // Central opening directly between the railings, below Destiny's stage steps.
 // Sprite coordinates are TOP-LEFT; the visible floor contact is ~33px lower.
 // The central front-of-line contact point is just below the painted stairs.
-export const VENUE_STAGE=Object.freeze({staging:[252,72],stairs:[252,61],exchange:[285,40],debate:[219,40],floor:[252,112]});
-export const VENUE_GATES=Object.freeze({
- left:Object.freeze({id:'left',spawn:[85,225],check:[85,183],inside:[85,144],crossing:[85,191],panel:[86,188]}),
- right:Object.freeze({id:'right',spawn:[237,225],check:[237,183],inside:[237,144],crossing:[237,191],panel:[240,188]})
-});
-export const VENUE_OBSTACLES=Object.freeze([
- {name:'north wall and merchandise',x:0,y:0,w:201,h:82},
- {name:'stage and raised platform padded for sprite feet',x:207,y:0,w:177,h:98},
- {name:'stage stairs and crowd barricade',x:233,y:98,w:49,h:21},
- {name:'stage barricade right',x:320,y:98,w:30,h:38},
- {name:'photo backdrop',x:331,y:130,w:53,h:37},
- {name:'entrance check-in counter',x:142,y:150,w:85,h:66},
- {name:'entrance left planters',x:0,y:185,w:23,h:31},
- {name:'entrance right planters',x:360,y:185,w:24,h:31}
-]);
+export const VENUE_STAGE=MODULAR_STAGE;
+export const VENUE_GATES=MODULAR_GATES;
+export const VENUE_OBSTACLES=MODULAR_BLOCKERS;
 const C=VENUE_W/VENUE_CELL,R=Math.ceil(232/VENUE_CELL); // entrance paths extend just below the canvas
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export function isVenueWalkable(x,y,gateAccess=false){
