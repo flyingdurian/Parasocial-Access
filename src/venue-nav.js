@@ -96,6 +96,9 @@ export function moveVenue(actor,targetX,targetY,dt,speed=30){
  const oldX=actor.x,oldY=actor.y;
  const gateAccess=!!actor.gateAccess;
  const endpoint=snapVenue(targetX,targetY,gateAccess),destination=endpoint.map(v=>Math.round(v*2)/2).join(':')+':'+Number(gateAccess);
+  // Stationary spectators and workers must not rebuild an entire BFS route
+  // 10 times per second while already standing on their destination.
+  if(Math.hypot(actor.x-endpoint[0],actor.y-endpoint[1])<1.5){actor.route=[];actor.routeTo=destination;actor.routeBlocked=false;actor.walking=false;actor.stepDistance=0;return true;}
  if(actor.routeTo!==destination||!actor.route?.length){
   actor.route=venueRoute(actor.x,actor.y,...endpoint,gateAccess);
   actor.routeTo=destination;
