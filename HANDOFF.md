@@ -3,7 +3,7 @@
 **Current candidate:** v0.8.8m stage-and-venue interaction polish on the verified v0.8.8l baseline.  
 **Working branch:** `recovery/v088i-arcade-debates` (continuing the v0.8.8h unified-plate baseline).  
 **Baseline:** `release/v0.8.8`, commit `bcbb27de6df8bb8f395cd3bbfe392315be7360b6`.  
-**Status:** The exact hall and mascot assets are live in the recovery branch. v0.8.8l passed 26/26 focused Node checks and deployed an HTTP 200 preview; owner playtest found lingering audience placement, stage composition, booth and gate visual issues. v0.8.8m addresses these and awaits tests/visual approval. Production release is unchanged.
+**Status:** The exact hall and mascot assets are live in the recovery branch. v0.8.8l passed 26/26 focused Node checks and deployed an HTTP 200 preview; owner playtest found lingering audience placement, stage composition, booth and gate visual issues. v0.8.8m addresses these; 34/34 focused venue/debate checks passed, with the Vercel sandbox route serving HTTP 200 and both exact PNG assets HTTP 200. Larger legacy IRL suite did not complete within its runner timeout, so it is not represented as passing. Owner visual approval is still pending; production release is unchanged.
 
 ## v0.8.8m — visual-correction pass after owner's annotated screenshot
 
@@ -12,7 +12,7 @@
 - **TV:** A visible "DEBATE IS ABOUT TO BEGIN..." broadcast slate plays during challenger approach, then a camera director changes every ~1.55s between dramatic *solo zooms* of Destiny/challenger, two-shot and a close audience cam. Lore/meme text stays on the actual spectators, never on LCD.
 - **Live attractions:** Photo guests walk to booth threshold and visibly move inside (display pose at x344,y57) before a delayed shutter flash; no empty-room photo flashes. Claw uses the **actual transparent dggL sprite** (the same already uploaded PNG) as the collectible plush: grapple descends, grips, lifts, carries and deposits the illustrated toy in the cabinet's prize chute. Merch/food guests continue to approach and face their physical counters.
 - **Entry cohesion:** Sliding slotted gates now mount flush to scanner edges with permanent crossrails aligned y183–210. Authorized gate clearance remains 39/43px. Check-in clerk has subtle four-keyframe nod/scan motions; idle support staff use existing directional walk animation while pacing nearby.
-- **Approval:** Do not promote to production until owner confirms visible performer separation, crowd prelude/quiet normal queue, occupied photo booth, real plush pickup, gate alignment, and mobile performance.
+- **QA:** 34/34 focused Node assertions passing across v088, v088b, v088k, v088l, v088m; current preview `/irl-sandbox` READY; image assets both 200. Legacy six-suite run exceeded the temporary runner time budget, outcome unknown.\n- **Approval:** Do not promote to production until owner confirms visible performer separation, crowd prelude/quiet normal queue, occupied photo booth, real plush pickup, gate alignment, and mobile performance.
 
 ## v0.8.8l — prior accepted preview
 
