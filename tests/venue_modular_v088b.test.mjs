@@ -4,8 +4,9 @@ import {existsSync,readFileSync} from 'node:fs';
 import {MODULAR_GATES,MODULAR_PROPS,MODULAR_BLOCKERS,MODULAR_TV_BOUNDS} from '../src/venue-geometry-v088b.js';
 import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV,drawBakedForegroundOccluders,drawTicketClerk} from '../src/venue-rig-v088b.js';
 import {stagePosition} from '../src/sprite-animation.js';
-import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,venueQueueSpot,venueStageQueueSpot,venueStationApproachPoint,VENUE_STAGE_SERPENTINE,VENUE_STAGE_QUEUE_LENGTH,venueStagePoint,moveVenueSerpentineQueue} from '../src/venue-nav.js';
+import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,venueQueueSpot,venueStageQueueSpot,venueStationApproachPoint,venueDebateAudienceSpot,VENUE_STAGE_SERPENTINE,VENUE_STAGE_QUEUE_LENGTH,venueStagePoint,moveVenueSerpentineQueue} from '../src/venue-nav.js';
 import {IRLEvent} from '../src/irl-v07.js';
+import {DEBATE_CHAT_LINES,debateExchangeDuration} from '../src/irl-debates-v088.js';
 import {issueVenueTicket,hasVenueTicket,processVenueTicket} from '../src/venue-tickets-v088h.js';
 
 function paintContext(){
@@ -38,7 +39,7 @@ test('new unified WebP and transparent staff stay modular under one perspective'
 
 test('booths and check-in use solid contact footprints, with sprite-scale entrance',()=>{
  assert.equal(VENUE_OBSTACLES,MODULAR_BLOCKERS);
- for(const name of ['merch','food','vending','photo','checkin']){
+ for(const name of ['merch','claw','food','vending','photo','checkin']){
   const p=MODULAR_PROPS[name],hit=VENUE_OBSTACLES.find(o=>o.name===name);
   assert(hit&&p.solid, name+' blocker exists');
   assert(hit.x>=p.x&&hit.y>=p.y&&hit.x+hit.w<=p.x+p.w+2);
@@ -59,6 +60,8 @@ test('both gated lanes remain proportional and enforce physical admission',()=>{
   assert(gate.lane.right-gate.lane.left>=37&&gate.lane.right-gate.lane.left<=44,'visual opening remains close to full sprite plus clearance');
   assert(!isVenueWalkable(centerX-16,165,false),'closed to guests without access');
   assert(isVenueWalkable(centerX-16,165,true),'sprite feet clear the lane');
+   assert(gate.check[1]+35>gate.lane.top+14,'ticket inspection stays on the exterior side of retracting shutters');
+   assert(gate.inside[1]+35<gate.lane.top,'ticket is consumed only beyond the interior threshold');
   const path=venueRoute(...gate.spawn,...gate.inside,true);
   assert(Math.hypot(path.at(-1)[0]-gate.inside[0],path.at(-1)[1]-gate.inside[1])<9);
  }
@@ -106,7 +109,7 @@ test('stage and queues remain navigable, with grounded on-plate geometry',()=>{
  }
  assert(Math.hypot(actor.x-venueStagePoint(VENUE_STAGE_QUEUE_LENGTH)[0],actor.y-venueStagePoint(VENUE_STAGE_QUEUE_LENGTH)[1])<2);
  assert(turns>=4,'guest visibly switches directions at the rope ends');
- for(const name of ['merch','snacks','vending','photo']){
+ for(const name of ['merch','claw','snacks','vending','photo']){
   assert(venueStationApproachPoint(name,6,2));
  }
 });
@@ -186,4 +189,66 @@ test('photo guests traverse the serpentine line and face a stage tripod snapshot
  assert(sawTripodFlash,'snapshot triggered by physical stage tripod');
  assert(sawPhotoTv,'dynamic TV receives the single-fan photo result');
  assert(event.stageCompleted>0,'stage line completes without deadlock');
+});
+
+test('gate patrol returns to the ticket desk without entering fixture solids',()=>{
+ const event=new IRLEvent({progress:{irlRecords:{destinyMeet:{attempts:0}}}},{level:0});
+ event.begin();event.nextArrival=999;event.clock=500;
+ const worker=event.staff[0];const home=[worker.homeX,worker.homeY];
+ let away=false,returned=false;
+ for(let i=0;i<650;i++){
+  event.tick(.1);
+  const distance=Math.hypot(worker.x-home[0],worker.y-home[1]);
+  away||=distance>28;
+  returned||=away&&distance<4;
+  assert(isVenueWalkable(worker.x,worker.y),'patrol stays in navigable floor');
+ }
+ assert(away,'greeter reaches a gated approach');
+ assert(returned,'greeter returns to the desk between sweeps');
+ assert.equal(event.ticketClerk.processed,0,'desk clerk remains dedicated to tickets');
+});
+
+test('left aisle claw machine awards prizes and booth loops stay physical',()=>{
+ const event=new IRLEvent({progress:{irlRecords:{destinyMeet:{attempts:0}}}},{level:0});
+ const actor=event.crowd[0];
+ [actor.x,actor.y]=venueStationApproachPoint('claw',actor.id,1);
+ actor.station='wander';actor.target='claw';actor.dwell=0;
+ event.crowdTick(.1);
+ assert.equal(event.boothTransactions.claw,1);
+ assert.equal(event.clawMachine.plays,1);
+ assert(event.clawMachine.activeUntil>event.elapsed);
+ assert(event.effects.some(fx=>fx.kind==='booth'&&fx.station==='claw'));
+});
+
+test('arcade bloodsports run 6–12 seconds, convene spectators and show live close-ups',()=>{
+ const engine={progress:{irlRecords:{destinyMeet:{attempts:0}}}};
+ const event=new IRLEvent(engine,{level:0});event.begin();event.nextArrival=999;event.clock=500;
+ event.add({throughGate:false});
+ const guest=event.visitors[0];event.resolve(guest,true,'debate');
+ const challenger=event.departures.at(-1);
+ assert.equal(challenger.debater,true);
+ assert(debateExchangeDuration(challenger,0)>=6&&debateExchangeDuration(challenger,0)<=12);
+ assert(DEBATE_CHAT_LINES.includes("Where's the fact-check?!"));
+ let visited=false,watchers=false,chat=false,result=false;
+ for(let i=0;i<750;i++){
+  event.tick(.1);
+  if(challenger.stageVisit==='exchange'){
+   visited=true;
+   assert(challenger.exchangeDuration>=6&&challenger.exchangeDuration<=12);
+   watchers||=event.crowd.some(g=>g.debateWatching);
+   chat||=event.debateChat.length>0;
+  }
+  result||=event.tvEvent?.type==='debate';
+  if(result)break;
+ }
+ assert(visited,'guest reaches the final-boss stage');
+ assert(watchers,'ambient audience gathers on clear stage flanks');
+ assert(chat,'fictional DGG reactions cycle during the round');
+ assert(result,'round resolves to the arcade TV');
+ for(let i=0;i<10;i++)assert(isVenueWalkable(...venueDebateAudienceSpot(i)),'audience spot respects floor collision');
+ const ctx=paintContext(),portrait={naturalWidth:256,naturalHeight:256};
+ const live={departures:[{debater:true,stageVisit:'exchange',kind:2,name:'Challenger',exchangeClock:7}],debateChat:[{text:'COPIUM'}]};
+ drawModularTV(ctx,live,1,{host:portrait,cast:portrait});
+ assert.equal(ctx.depth,0);
+ assert.equal(ctx.calls.filter(call=>call[0]==='drawImage').length,2,'live broadcast has exactly two combatants');
 });

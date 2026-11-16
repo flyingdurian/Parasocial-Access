@@ -1,4 +1,4 @@
-import {VENUE_STATIONS,VENUE_STAGE,VENUE_GATES,isVenueWalkable,snapVenue,moveVenue,moveStageActor,moveVenueSerpentineQueue,venueQueueSpot,venueStageQueueSpot,venueRoamPoint,venueStationApproachPoint} from './venue-nav.js';
+import {VENUE_STATIONS,VENUE_STAGE,VENUE_GATES,isVenueWalkable,snapVenue,moveVenue,moveStageActor,moveVenueSerpentineQueue,venueQueueSpot,venueStageQueueSpot,venueRoamPoint,venueStationApproachPoint,venueDebateAudienceSpot} from './venue-nav.js';
 import {issueVenueTicket,hasVenueTicket,processVenueTicket} from './venue-tickets-v088h.js';
 import {IRL_LEVELS,IRL_ENDLESS,irlClampLevel,endlessWaveGuests,endlessArrivalInterval} from './irl-progression-v085.js';
 import {DESTINY_IRL_SCENARIOS,ambientLine} from './irl-lore-v082.js';
@@ -6,7 +6,7 @@ import {DESTINY_LORE_CARDS,loreAmbientLine,loreStageLine} from './irl-lore-v084.
 import {stageAction,stagePosition} from './sprite-animation.js';
 import {ambientEmote} from './irl-atmosphere-v083.js';
 import {dggEmoteFor} from './dgg-emotes-v085.js';
-import {selectDebateTopic,judgeStageDebate,fanInteractionKind} from './irl-debates-v088.js';
+import {selectDebateTopic,judgeStageDebate,fanInteractionKind,debateExchangeDuration,debateChatLine} from './irl-debates-v088.js';
 /* OFF THE FEED v0.8 — world-first living convention simulator.
    Real-world names identify a parody setting; every attendee and incident is invented.
    Unsafe conduct is resolved through trained event security, not player violence. */
@@ -92,16 +92,16 @@ function arrange(run){const groups={};for(const raw of IRL_SCENARIOS){const s=is
   s[0],w[3],w[4],r[3],c[2],d[2],w[5],r[4],c[3],s[1]
  ];}
 export class IRLEvent {
- constructor(engine,options={}){this.engine=engine;this.session=options.mode==='endless'?'endless':'standard';this.levelIndex=irlClampLevel(options.level??0);this.config=IRL_LEVELS[this.levelIndex];this.wave=0;this.breakRemaining=0;this.congestionClock=0;this.safetyStrikes=0;this.highestWave=0;this.serial=0;this.mode='intro';this.elapsed=0;this.clock=this.session==='endless'?0:this.config.seconds;this.phase=1;this.score=0;this.vibe=76;this.errors=0;this.correct=0;this.lost=0;this.visitors=[];this.arrivals=[];this.finished=[];this.departures=[];this.stageCompleted=0;this.effects=[];this.focus=null;this.focusGrace=0;this.dispatchQueue=[];this.staff=[[170,145],[314,145]].map(([x,y])=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null};});this.guardPositions=[[87,142],[310,106],[335,141]].map(([x,y],i)=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null,cooldown:0,patrolIndex:i,patrolDwell:i*.6};});this.nextArrival=1.2;this.paused=false;this.message='CONVENTION OPENING · Destiny is preparing for fans.';this.log=[];this.failure='';this.result=null;this.run=(engine.progress.irlRecords?.destinyMeet?.attempts||0);const deck=arrange(this.run+this.levelIndex*37);this.cards=this.session==='endless'?[]:Array.from({length:this.config.guests},(_,i)=>i<deck.length?deck[i]:arrange(this.run+this.levelIndex*37+Math.floor(i/deck.length))[i%deck.length]);this.next=0;this.hostMood='idle';this.hostUntil=0;this.hostX=204;this.hostY=44;this.hostWalking=false;this.incidentFade=0;this.arcadeFlash=0;this.lastVerdict=null;this.gateControllers={left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}};this.cameraFlashes=[];this.tvEvent=null;this.speechQuietUntil=7;
+ constructor(engine,options={}){this.engine=engine;this.session=options.mode==='endless'?'endless':'standard';this.levelIndex=irlClampLevel(options.level??0);this.config=IRL_LEVELS[this.levelIndex];this.wave=0;this.breakRemaining=0;this.congestionClock=0;this.safetyStrikes=0;this.highestWave=0;this.serial=0;this.mode='intro';this.elapsed=0;this.clock=this.session==='endless'?0:this.config.seconds;this.phase=1;this.score=0;this.vibe=76;this.errors=0;this.correct=0;this.lost=0;this.visitors=[];this.arrivals=[];this.finished=[];this.departures=[];this.stageCompleted=0;this.effects=[];this.focus=null;this.focusGrace=0;this.dispatchQueue=[];this.staff=[[170,145],[314,145]].map(([x,y])=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null};});this.guardPositions=[[87,142],[310,106],[335,141]].map(([x,y],i)=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null,cooldown:0,patrolIndex:i,patrolDwell:i*.6};});this.nextArrival=1.2;this.paused=false;this.message='CONVENTION OPENING · Destiny is preparing for fans.';this.log=[];this.failure='';this.result=null;this.run=(engine.progress.irlRecords?.destinyMeet?.attempts||0);const deck=arrange(this.run+this.levelIndex*37);this.cards=this.session==='endless'?[]:Array.from({length:this.config.guests},(_,i)=>i<deck.length?deck[i]:arrange(this.run+this.levelIndex*37+Math.floor(i/deck.length))[i%deck.length]);this.next=0;this.hostMood='idle';this.hostUntil=0;this.hostX=204;this.hostY=44;this.hostWalking=false;this.incidentFade=0;this.arcadeFlash=0;this.lastVerdict=null;this.gateControllers={left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}};this.cameraFlashes=[];this.tvEvent=null;this.debateChat=[];this.speechQuietUntil=7;
   this.debateHistory=[];
   // Dedicated stationary ticket operator, not part of the roaming staff pool.
   this.ticketClerk={id:'checkin-clerk',name:'Ticket Clerk',x:179,y:153,processed:0,lastScanAt:-20,lastTicket:null};
   this.crowd=Array.from({length:13},(_,i)=>{const seed=irlHash(this.run*4919+i*811+17);return {id:i,kind:[1,2,4,5,6,8,9,10,11][i%9],x:171+(seed%31)-15,y:169+(seed%13),station:'entrance',target:'entrance',dwell:i*.22,visits:0,walking:false,facing:1,emote:'',emoteTime:0};});
   const startingSpots=[[29,106],[74,119],[118,103],[167,107],[217,118],[285,117],[317,127],[343,123],[211,141],[109,138],[46,145],[198,103],[345,104]];
   this.crowd.forEach((person,i)=>{[person.x,person.y]=snapVenue(...startingSpots[i]);person.station='wander';person.target='wander';person.animation='idle';person.actionClock=0;person.speech='';});
-  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=i?[304,137]:[184,137];worker.homeX=worker.x;worker.homeY=worker.y;});
+  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=i?[304,137]:[184,137];worker.homeX=worker.x;worker.homeY=worker.y;worker.patrolIndex=0;worker.patrolDwell=1.2;});
   this.guardPositions.forEach((worker,i)=>{[worker.x,worker.y]=[[72,138],[311,116],[343,137]][i];worker.homeX=worker.x;worker.homeY=worker.y;});
-  this.crowdMoments=0;this.boothTransactions={merch:0,snacks:0,vending:0,photo:0};this.recovery=0;this.mistakeStreak=0;
+  this.crowdMoments=0;this.boothTransactions={merch:0,claw:0,snacks:0,vending:0,photo:0};this.clawMachine={activeUntil:0,plays:0,lastPrize:null};this.recovery=0;this.mistakeStreak=0;
  }
  addCrowdSet(set){
   for(let n=0;n<6;n++){
@@ -143,18 +143,35 @@ export class IRLEvent {
  }
  // Reproducible, independent activity that does not create new player tasks.
  // Nearby pairs sometimes stop to talk; stage and booth crowds change by phase.
- crowdTick(dt){const stageBusy=this.departures.some(g=>['queued','approach','climbStairs','exchange','leaveStairs'].includes(g.stageVisit));for(const person of this.crowd){
+ crowdTick(dt){const stageBusy=this.departures.some(g=>['queued','approach','climbStairs','exchange','leaveStairs'].includes(g.stageVisit));
+   const liveDebate=this.departures.find(g=>g.debater&&g.stageVisit==='exchange');
+   for(const person of this.crowd){
    person.emoteTime=Math.max(0,person.emoteTime-dt);
    person.speechTime=Math.max(0,(person.speechTime||0)-dt);
    if(person.entryPhase){
     if(person.entryDelay>0){person.entryDelay-=dt;person.walking=false;continue;}
     if(person.entryPhase==='enter'&&moveVenue(person,...person.gate.check,dt,25)){person.entryPhase='ticket';person.walking=false;person.animation='point';}
     else if(person.entryPhase==='ticket'){person.ticketClock-=dt;person.walking=false;person.animation='point';if(person.ticketClock<=0&&hasVenueTicket(person)){person.entryPhase='inside';this.openGate(person.gate,2.1);}}
-    else if(person.entryPhase==='inside'&&moveVenue(person,...person.gate.inside,dt,27)){
-     if(processVenueTicket(person,this.ticketClerk,this.elapsed)){person.entryPhase=null;person.gateAccess=false;person.dwell=.25;person.animation='idle';}
+    else if(person.entryPhase==='inside'){
+     const controller=this.gateControllers[person.gate.id];
+     controller.openUntil=Math.max(controller.openUntil,this.elapsed+.7);
+     if(moveVenue(person,...person.gate.inside,dt,27)&&processVenueTicket(person,this.ticketClerk,this.elapsed)){
+      person.entryPhase=null;person.gateAccess=false;person.dwell=.25;person.animation='idle';
+     }
     }
     continue;
    }
+   // Spectators converge on both flanks, keeping the stage ropes clear.
+   if(liveDebate&&person.id%4!==0){
+    if(!person.debateWatching){person.debateWatching=true;person.target='debate';person.dwell=0;}
+    const [tx,ty]=venueDebateAudienceSpot(person.id);
+    const arrived=moveVenue(person,tx,ty,dt,22);
+    person.animation=arrived?(Math.floor(this.elapsed*2+person.id)%3===0?'cheer':'point'):'walk';
+    person.station=arrived?'debate':person.station;
+    if(arrived&&Math.floor(this.elapsed*3+person.id)%8===0){person.emote='♥';person.emoteTime=Math.max(person.emoteTime,.35);}
+    continue;
+   }
+   if(person.debateWatching){person.debateWatching=false;person.station='wander';person.target='roam';person.roamTo=venueRoamPoint(this.run*541+person.id*127+person.visits*37);person.dwell=0;}
    // Stage guests have priority through the staircase, not an invisible wall.
    // Rerouting idle wanderers avoids the earlier hard-blocking deadlock.
    if(stageBusy&&person.x>264&&person.x<327&&person.y>94&&person.y<158&&['mic','signing','photo'].includes(person.target)){
@@ -162,7 +179,7 @@ export class IRLEvent {
    }
    if(person.dwell>0){person.dwell-=dt;person.walking=false;if(person.animation==='walk')person.animation='idle';continue;}
    if(person.target===person.station){const seed=irlHash(this.run*3001+person.id*751+person.visits*283+this.phase*109),index=seed%IRL_STATION_NAMES.length;
-    const favored=this.phase===1?['entrance','merch','snacks','vending','photo','line']:this.phase===2?['merch','photo','vending','signing','snacks']:['mic','line','snacks','merch','vending','photo'];
+    const favored=this.phase===1?['entrance','merch','claw','snacks','vending','photo','line']:this.phase===2?['merch','claw','photo','vending','signing','snacks']:['mic','line','snacks','merch','claw','vending','photo'];
     // Every second destination is an actual booth: venue activity must be visible.
     person.target=person.visits%2===0?favored[(index+person.id*2+person.visits*3)%favored.length]:'roam';
     if(person.target==='roam')person.roamTo=venueRoamPoint(seed*31+person.id*541);
@@ -173,17 +190,18 @@ export class IRLEvent {
    person.animation=person.walking?'walk':person.animation==='walk'?'idle':person.animation;
    if(arrived){person.station=person.target;person.dwell=1.0+(irlHash(person.visits*149+person.id*13)%42)/12;
     const activity=person.station;
-    person.boothActivity=['merch','snacks','vending','photo'].includes(activity)?activity:null;
+    person.boothActivity=['merch','claw','snacks','vending','photo'].includes(activity)?activity:null;
     if(person.boothActivity){
      this.boothTransactions[activity]=(this.boothTransactions[activity]||0)+1;
-     person.animation=activity==='photo'?'point':activity==='vending'?'point':activity==='snacks'?'cheer':'talk';
+     person.animation=activity==='photo'||activity==='claw'||activity==='vending'?'point':activity==='snacks'?'cheer':'talk';
      person.dwell=Math.max(2.1,person.dwell);
      this.effects.push({kind:'booth',station:activity,seed:person.id,x:person.x,y:person.y-7,ttl:1.15,maxTtl:1.15});
      if(activity==='photo')this.cameraFlashes.push({x:person.x+15,y:person.y+5,ttl:.28});
+     if(activity==='claw'){this.clawMachine.plays++;this.clawMachine.activeUntil=this.elapsed+2.3;this.clawMachine.lastPrize=(person.id+person.visits)%5;person.dwell=Math.max(person.dwell,2.3);}
     }
     const poses=['talk','laugh','cheer','point','argue','heckle','impatient','idle'];
     if(!person.boothActivity)person.animation=poses[(person.visits+person.id+this.phase)%poses.length];
-    const marks=person.station==='merch'?['♥','★','!']:person.station==='snacks'?['♪','♥']:person.station==='vending'?['♫','★']:person.station==='mic'?['?','✦']:['♥','✦','…'];
+    const marks=person.station==='merch'?['♥','★','!']:person.station==='claw'?['★','♥','!']:person.station==='snacks'?['♪','♥']:person.station==='vending'?['♫','★']:person.station==='mic'?['?','✦']:['♥','✦','…'];
     person.emote=(person.visits+person.id)%3===0?dggEmoteFor(person.visits*13+person.id):marks[(person.visits+person.id)%marks.length];person.emoteTime=1.1;
     const seed=this.run*37+person.visits*19+person.id;
     person.speech=ambientEmote(seed%2?ambientLine(person.station,seed):loreAmbientLine(person.station,seed,this.phase),seed);
@@ -257,6 +275,7 @@ export class IRLEvent {
   this.spreadCrowd();
   for(const person of this.crowd)if(person.speechTime>0)person.speechProgress=Math.min(person.speech.length,(person.speechProgress||0)+dt*13);
   for(const flash of this.cameraFlashes)flash.ttl-=dt;this.cameraFlashes=this.cameraFlashes.filter(flash=>flash.ttl>0);
+  for(const line of this.debateChat)line.ttl-=dt;this.debateChat=this.debateChat.filter(line=>line.ttl>0);
   if(this.tvEvent){this.tvEvent.ttl-=dt;if(this.tvEvent.ttl<=0)this.tvEvent=null;}
   for(const effect of this.effects){effect.ttl-=dt;if(effect.kind!=='booth')effect.y-=dt*6;}this.effects=this.effects.filter(e=>e.ttl>0);
   if(!this.breatherActive)this.nextArrival-=dt;
@@ -270,6 +289,7 @@ export class IRLEvent {
     g.ticketClock-=dt;g.walking=false;g.animation='point';
     if(g.ticketClock<=0&&hasVenueTicket(g)){g.entryPhase='inside';this.openGate(g.gate,2.1);}
    }else if(g.entryPhase==='inside'){
+    const controller=this.gateControllers[g.gate.id];controller.openUntil=Math.max(controller.openUntil,this.elapsed+.7);
     if(moveVenue(g,...g.gate.inside,dt,31)&&processVenueTicket(g,this.ticketClerk,this.elapsed)){g.entryPhase='floor';g.animation='idle';}
    }else if(g.entryPhase==='floor'&&moveVenue(g,g.toX,g.toY,dt,33)){
     g.entryPhase=null;g.gateAccess=false;g.walking=false;this.arrivals=this.arrivals.filter(x=>x!==g);this.visitors.push(g);
@@ -302,13 +322,22 @@ export class IRLEvent {
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,24))g.stageVisit='climbStairs';
    }else if(g.stageVisit==='climbStairs'){
     if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:g.fanKind==='photo'?VENUE_STAGE.photoGuest:VENUE_STAGE.exchange),dt,23)){
-     g.stageVisit='exchange';g.exchangeClock=g.debater?3.8:3.1;g.exchangeDuration=g.exchangeClock;g.walking=false;g.facing=g.debater?1:-1;
+     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):3.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.45;g.walking=false;g.facing=g.debater?1:-1;
      this.hostMood=g.debater?'point':'talk';this.hostUntil=this.elapsed+g.exchangeClock;
      this.effects.push({x:217,y:78,text:g.debater?'LIVE DEBATE!':g.fanKind==='autograph'?'✦ AUTOGRAPH!':'♥ PHOTO OP!',color:'#ffeaa5',ttl:1.5});
      this.effects.push({x:200,y:93,text:loreStageLine(g,0),color:'#ffedb4',ttl:1.7});
     }
    }else if(g.stageVisit==='exchange'){
     g.walking=false;g.exchangeClock-=dt;
+    if(g.debater){
+     g.hypeClock-=dt;
+     if(g.hypeClock<=0){
+      const line=debateChatLine(g,g.hypeBeat++);
+      this.debateChat.push({text:line,ttl:2.4,maxTtl:2.4});this.debateChat=this.debateChat.slice(-3);
+      g.hypeClock=1.15+(g.hypeBeat%3)*.2;
+      if(g.hypeBeat%3===0)this.cameraFlashes.push({x:295,y:63,ttl:.16});
+     }
+    }
     const beat=1-g.exchangeClock/g.exchangeDuration;
     g.exchangeAction=g.debater?(beat<.36?'point':beat<.72?'talk':'argue'):(beat<.32?'cheer':beat<.7?'talk':'laugh');
     this.hostMood=g.debater?(beat<.4?'talk':beat<.8?'point':'nod'):(beat<.3?'cheer':beat<.78?'talk':'nod');this.hostUntil=this.elapsed+.3;
@@ -318,9 +347,9 @@ export class IRLEvent {
     if(g.exchangeClock<=0){
      g.stageVisit='leaveStage';g.exchangeAction='idle';g.toX=VENUE_STAGE.floor[0];g.toY=VENUE_STAGE.floor[1];g.ttl=25;this.hostMood='nod';this.hostUntil=this.elapsed+1;
      this.effects.push({x:202,y:93,text:loreStageLine(g,1),color:'#fff5c4',ttl:1.35});
-     if(g.debater){const verdict=judgeStageDebate(this,g);g.debateOutcome=verdict;this.debateHistory.push({...verdict,guest:g.name});this.tvEvent={type:'debate',won:verdict.won,topicTitle:g.debateTopic.title,score:verdict.score,ttl:1.9};
+     if(g.debater){const verdict=judgeStageDebate(this,g);g.debateOutcome=verdict;this.debateHistory.push({...verdict,guest:g.name});this.tvEvent={type:'debate',won:verdict.won,topicTitle:g.debateTopic.title,score:verdict.score,ttl:2.4,maxTtl:2.4};
       this.effects.push({x:217,y:89,text:verdict.won?'⚔ DEBATE WON!':'⚔ DEBATE LOST!',color:verdict.won?'#adffe4':'#ffb1d8',ttl:2.2});
-     }else this.tvEvent={type:g.fanKind==='autograph'?'autograph':'photo',guestKind:g.kind,ttl:1.9};
+     }else this.tvEvent={type:g.fanKind==='autograph'?'autograph':'photo',guestKind:g.kind,ttl:1.9,maxTtl:1.9};
     }
    }else if(g.stageVisit==='leaveStage'){
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,25))g.stageVisit='leaveStairs';
@@ -363,6 +392,16 @@ export class IRLEvent {
     if(worker.patrolDwell<=0){
      const [tx,ty]=route[worker.patrolIndex%route.length];
      if(moveVenue(worker,tx,ty,dt,24)){worker.patrolIndex=(worker.patrolIndex+3)%route.length;worker.patrolDwell=.6;}
+    }else worker.walking=false;
+   }else if(worker===this.staff[0]){
+    // The greeter patrols both gated approaches and returns to the desk.
+    const stops=[[135,137],[184,137],[237,137],[184,137]];
+    worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
+    if(worker.patrolDwell<=0){
+     if(moveVenue(worker,...stops[worker.patrolIndex%stops.length],dt,30)){
+      worker.patrolIndex=(worker.patrolIndex+1)%stops.length;
+      worker.patrolDwell=worker.patrolIndex%2===0?.6:1.5;
+     }
     }else worker.walking=false;
    }else{moveVenue(worker,worker.homeX,worker.homeY,dt,55);}
   }

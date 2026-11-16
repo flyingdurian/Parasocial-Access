@@ -29,6 +29,24 @@ export function judgeStageDebate(event,guest){
  const won=score>=50;
  return {won,score:clamp(score,0,100),topic:topic.id,reason:won?'GOOD CROWD CONTROL':'CROWD PRESSURE'};
 }
+// Fictional community reactions; these are game dialogue, not real quotations.
+export const DEBATE_CHAT_LINES=Object.freeze([
+ "Where's the fact-check?!","He's stalling!","He's cooked","Let him cook!",
+ "Let Foodshop debate!","ShrimpleAs","AngelThump","Abathur","COPIUM",
+ "Hi DGG chat!","Absolute cinema.","Bro is delusional.","REFUTE THE TIMELINE.",
+ "SHOW THE CLIP!","YEE NEVA LOSE","PEPE WINS","WHAT'S THE PREMISE?",
+ "Define your terms.","Run the VOD back!","Source? SOURCE?!",
+ "The chat is moving too fast!","HE'S GOT A SPREADSHEET","o7",
+ "That rebuttal had frames.","Make the steelman!"
+]);
+export function debateExchangeDuration(guest,level=0){
+ const difficulty=guest?.debateTopic?.difficulty||2;
+ return clamp(6.2+difficulty*.8+((guest?.serial||0)%4)*.65+Math.min(1,level*.2),6,11.8);
+}
+export function debateChatLine(guest,beat){
+ const offset=((guest?.serial||0)*3+DEBATE_CHAT_LINES.length)%DEBATE_CHAT_LINES.length;
+ return DEBATE_CHAT_LINES[(offset+beat)%DEBATE_CHAT_LINES.length];
+}
 export function stageDialogueBeat(guest){
  if(guest?.stageVisit!=='exchange')return null;
  const beat=clamp(Math.floor((1-guest.exchangeClock/guest.exchangeDuration)*4),0,3);

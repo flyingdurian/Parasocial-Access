@@ -7,8 +7,8 @@ export const MODULAR_STAGE=Object.freeze({
  staging:[253,78],stairs:[249,61],exchange:[253,44],debate:[239,44],photoGuest:[247,44],photoHost:[214,44],floor:[185,120],tripod:[300,61]
 });
 export const MODULAR_GATES=Object.freeze({
- left:Object.freeze({id:'left',spawn:[92,225],check:[92,162],inside:[92,137],crossing:[92,178],panel:[92,196],art:{x:71,y:180,w:68,h:36},lane:{left:85,right:124,top:183,bottom:216}}),
- right:Object.freeze({id:'right',spawn:[266,225],check:[266,162],inside:[266,137],crossing:[266,178],panel:[266,196],art:{x:240,y:180,w:70,h:36},lane:{left:254,right:297,top:183,bottom:216}})
+ left:Object.freeze({id:'left',spawn:[92,225],check:[92,176],inside:[92,137],crossing:[92,178],panel:[92,196],art:{x:71,y:180,w:68,h:36},lane:{left:85,right:124,top:183,bottom:216}}),
+ right:Object.freeze({id:'right',spawn:[266,225],check:[266,176],inside:[266,137],crossing:[266,178],panel:[266,196],art:{x:240,y:180,w:70,h:36},lane:{left:254,right:297,top:183,bottom:216}})
 });
 // Inside the single baked LCD bezel (screen pixels x1010..1320,y136..284).
 export const MODULAR_TV_BOUNDS=Object.freeze({x:233,y:32,w:70,h:32});
@@ -16,6 +16,8 @@ export const MODULAR_TV_PROJECTION=Object.freeze({a:.70,b:0,c:0,d:.57,e:233,f:32
 export const MODULAR_PROPS=Object.freeze({
  stage:Object.freeze({x:188,y:19,w:150,h:76}),
  merch:Object.freeze({x:18,y:45,w:75,h:53,solid:{x:20,y:79,w:74,h:19}}),
+  // The claw cabinet is baked into the left aisle of the unified plate.
+  claw:Object.freeze({x:21,y:106,w:29,h:40,solid:{x:22,y:128,w:27,h:18}}),
  food:Object.freeze({x:94,y:44,w:71,h:53,solid:{x:95,y:80,w:70,h:17}}),
  vending:Object.freeze({x:165,y:57,w:17,h:28,solid:{x:165,y:64,w:16,h:22}}),
  photo:Object.freeze({x:338,y:46,w:46,h:51,solid:{x:338,y:75,w:46,h:22}}),
@@ -29,7 +31,7 @@ export const MODULAR_BLOCKERS=Object.freeze([
  {name:'stage truss and screen',x:188,y:0,w:150,h:72},
  {name:'solid stage riser',x:188,y:72,w:150,h:23},
  {name:'solid stage stairs',x:240,y:75,w:48,h:23},
- ...['merch','food','vending','photo','checkin'].map(name=>({name,...MODULAR_PROPS[name].solid})),
+ ...['merch','claw','food','vending','photo','checkin'].map(name=>({name,...MODULAR_PROPS[name].solid})),
  // Entrance is one image; scan posts and side planters remain true solids.
  {name:'entrance left planter',x:0,y:185,w:70,h:31},
  {name:'left scanner outer',x:71,y:182,w:14,h:34},

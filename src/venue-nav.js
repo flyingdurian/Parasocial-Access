@@ -6,7 +6,7 @@ export const VENUE_W=384;
 export const VENUE_H=216;
 export const VENUE_CELL=8;
 export const VENUE_STATIONS=Object.freeze({
- entrance:[184,139],merch:[55,73],snacks:[133,73],vending:[182,65],photo:[321,83],
+ entrance:[184,139],merch:[55,73],claw:[49,115],snacks:[133,73],vending:[182,65],photo:[321,83],
  signing:[248,107],line:[249,119],mic:[313,98],help:[184,116],
  quiet:[95,143],exit:[43,145]
 });
@@ -198,7 +198,7 @@ function connectedRoamCells(){
 }
 export function venueStationApproachPoint(name,id=0,visit=0){
  const station=VENUE_STATIONS[name];if(!station)return null;
- if(!['merch','snacks','vending','photo','entrance','help','quiet','mic'].includes(name))return station;
+ if(!['merch','claw','snacks','vending','photo','entrance','help','quiet','mic'].includes(name))return station;
  const offsets=[[0,0],[-13,0],[13,0],[-23,6],[23,6],[-8,10],[8,10]];
  const idx=Math.abs((id*13+visit*17)|0)%offsets.length;
  for(let i=0;i<offsets.length;i++){
@@ -206,6 +206,12 @@ export function venueStationApproachPoint(name,id=0,visit=0){
   if(isVenueWalkable(station[0]+dx,station[1]+dy))return [station[0]+dx,station[1]+dy];
  }
  return station;
+}
+// Audience gathers on both flanks; stage/rope/desk solids remain respected.
+const DEBATE_AUDIENCE_SPOTS=Object.freeze([[164,104],[177,115],[186,135],[154,131],[303,96],[313,111],[317,128],[335,114],[191,109],[328,141]]);
+export function venueDebateAudienceSpot(index){
+ const point=DEBATE_AUDIENCE_SPOTS[((index%DEBATE_AUDIENCE_SPOTS.length)+DEBATE_AUDIENCE_SPOTS.length)%DEBATE_AUDIENCE_SPOTS.length];
+ return isVenueWalkable(...point)?[...point]:snapVenue(...point);
 }
 export function venueRoamPoint(seed){
  const cells=connectedRoamCells();if(!cells.length)return [109,155];
