@@ -21,7 +21,7 @@ export const MODULAR_PROPS=Object.freeze({
  photo:Object.freeze({x:321,y:109,w:61,h:62,solid:{x:331,y:132,w:52,h:39}}),
  checkin:Object.freeze({x:137,y:160,w:91,h:53,solid:{x:142,y:160,w:85,h:56}}),
  debateFurniture:Object.freeze({x:205,y:48,w:90,h:31}),
- signingFurniture:Object.freeze({x:234,y:48,w:88,h:27})
+ signingFurniture:Object.freeze({x:297,y:57,w:76,h:30})
 });
 export const MODULAR_BLOCKERS=Object.freeze([
  {name:'north wall',x:0,y:0,w:196,h:76},
