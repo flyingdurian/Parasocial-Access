@@ -30,18 +30,25 @@ const draw=(ctx,image,bounds,source)=>{
 // The stage is intentionally fixed; gameplay changes actor poses, not furniture.
 export function modularStageMode(){return 'fixed';}
 function drawStageQueueRopes(ctx){
- // A walkable central aisle connects the front-of-line to the stairs.
+ // Two visible short violet velvet ropes guide stage guests to the central stairs;
+ // slim gold stanchions sit on the floor, outside the walkable guest lane.
  ctx.save();
  for(const side of [0,1]){
-  const x=side?298:236;
-  const points=[[x,118],[x+(side?2:-2),137],[x+(side?5:-5),158]];
-  ctx.lineWidth=1.1;ctx.strokeStyle='#d2a2da';ctx.beginPath();
-  points.forEach(([px,py],i)=>i?ctx.lineTo(px,py-7):ctx.moveTo(px,py-7));ctx.stroke();
+  const x=side?300:235;
+  const points=[[x,118],[x+(side?2:-2),138],[x+(side?4:-4),158]];
+  for(let i=0;i<points.length-1;i++){
+   const [x1,y1]=points[i],[x2,y2]=points[i+1];
+   const curve=()=>{ctx.beginPath();ctx.moveTo(x1,y1-8);ctx.quadraticCurveTo((x1+x2)/2,(y1+y2)/2-2,x2,y2-8);};
+   curve();ctx.lineWidth=2.8;ctx.strokeStyle='#211935';ctx.stroke();
+   curve();ctx.lineWidth=1.55;ctx.strokeStyle='#e15cbb';ctx.stroke();
+   curve();ctx.lineWidth=.5;ctx.strokeStyle='#ffc6df';ctx.stroke();
+  }
   for(const [px,py] of points){
-   ctx.fillStyle='rgba(11,8,33,.38)';ctx.fillRect(px-2,py+1,5,2);
-   ctx.fillStyle='#523a68';ctx.fillRect(px-1.3,py-9,2.6,11);
-   ctx.fillStyle='#f7cc8a';ctx.fillRect(px-1.5,py-10,3,2);
-   ctx.fillStyle='#a76ec3';ctx.fillRect(px-1.2,py-6,2.4,1);
+   ctx.fillStyle='rgba(12,9,35,.44)';ctx.fillRect(px-3,py+1,7,2);
+   ctx.fillStyle='#433356';ctx.fillRect(px-1.5,py-11,3,12);
+   ctx.fillStyle='#f0ae6d';ctx.fillRect(px-1,py-10,1,11);
+   ctx.fillStyle='#dfad70';ctx.fillRect(px-3,py,6,1.5);
+   ctx.fillStyle='#ffdf9d';ctx.fillRect(px-2,py-12,4,3);
   }
  }
  ctx.restore();

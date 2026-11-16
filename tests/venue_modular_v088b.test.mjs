@@ -57,7 +57,7 @@ function mockCtx(){
   save(){depth++;},restore(){depth--;assert(depth>=0);},
   drawImage(...args){calls.push({type:'image',args});},
   createLinearGradient(){return {addColorStop(){}};},
-  beginPath(){},rect(){},clip(){},fillRect(){},fillText(){},translate(){},transform(){},moveTo(){},lineTo(){},stroke(){},ellipse(){},fill(){},rotate(){}{}
+  beginPath(){},rect(){},clip(){},fillRect(){},fillText(){},translate(){},transform(){},moveTo(){},lineTo(){},quadraticCurveTo(){},stroke(){},ellipse(){},fill(){},rotate(){}{}
  };
  return ctx;
 }

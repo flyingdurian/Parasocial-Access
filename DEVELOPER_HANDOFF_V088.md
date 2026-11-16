@@ -179,3 +179,5 @@ Owner-approved focus: restore the vibrant evening indigo/magenta convention lang
 3. Confirm two-person PHOTO OP TV with Destiny's signing overlay for fan encounters; debate win/loss TV remains legible.
 4. Observe merch, food, relocated wall-side vending, photo booth: crowd must visit, pause, pose and trigger effects, without blocking stage queue or gate lane.
 5. Mobile Safari/desktop test for clipping, scenery scale, dialogue, speed controls <=2x and no regression to the primary game loop. If artwork placement needs adjustment, change only the single geometry map before regenerating art.
+
+- Final v0.8.8c preview polish: stronger magenta velvet stage-lane ropes with gold floor stanchions; visible version strings updated in both the main game and isolated sandbox HTML/JS to distinguish browser builds.
