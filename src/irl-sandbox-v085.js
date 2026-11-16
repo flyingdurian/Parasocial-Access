@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 /* Fast isolated IRL harness: imports no main game engine, world art or UI.
    This is an additive dev route; it does not alter production save keys. */
@@ -94,7 +94,7 @@ function draw(t){
   else if(role==='crowd'&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0)drawDggEmote(ctx,assets.emotes,g.emote,g.x+9,g.y-15,13,assets.dggl);
   if(role==='visitor'&&g.pending){ctx.fillStyle='#77ffe2';ctx.fillRect(g.x+9,g.y-4,16,7);}
  }
- if(modern)drawBakedForegroundOccluders(ctx,modularVenue);
+ if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue);}
  drawStageConversation(ctx,event,bubbleLayout,assets.dggl);
  if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<Math.min(2,waiting.length);i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout,assets.dggl);}
  drawVenueFeedback(ctx,event.effects,assets.dggl);

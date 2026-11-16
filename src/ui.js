@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 import {engine,UPGRADES,WORLD_DEFS,GENERATOR_STATS,SURFACES,CONTRACTS,OPERATOR_UPGRADES,CREATORS,NETWORK_CREATORS,CREATOR_EVENTS,CREATOR_UPGRADES} from './engine.js';
 import {sound} from './audio.js';
@@ -226,7 +226,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
    else if(g.id===irl.focus){ctx.fillStyle='#fff5ba';ctx.fillRect(cx-4,g.y-13,8,5);ctx.fillStyle='#412d42';ctx.fillRect(cx-1,g.y-12,2,2);}
   }
  }
- if(modern)drawBakedForegroundOccluders(ctx,modularVenue);
+ if(modern){drawTicketClerk(ctx,modularVenue,irl);drawBakedForegroundOccluders(ctx,modularVenue);}
  drawStageConversation(ctx,irl,bubbleLayout,irlDggl);
  // Decision prompts belong to their owning guests; chatter above is unchanged.
  if(graphics.chaos){

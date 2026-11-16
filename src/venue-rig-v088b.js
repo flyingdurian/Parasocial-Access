@@ -189,7 +189,6 @@ export function drawModularVenue(ctx,assets,event,t,streams={}){
   draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
   drawVenueDustMotes(ctx,t);
   drawStageDebateUplight(ctx,event,t);
-  drawTicketClerk(ctx,assets,event);
   for(const side of ['left','right'])drawGate(ctx,event,side);
   drawBoothActivity(ctx,event);
   drawModularTV(ctx,event,t,streams);

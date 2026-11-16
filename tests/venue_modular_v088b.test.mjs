@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync,readFileSync} from 'node:fs';
 import {MODULAR_GATES,MODULAR_PROPS,MODULAR_BLOCKERS,MODULAR_TV_BOUNDS} from '../src/venue-geometry-v088b.js';
-import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV,drawBakedForegroundOccluders} from '../src/venue-rig-v088b.js';
+import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV,drawBakedForegroundOccluders,drawTicketClerk} from '../src/venue-rig-v088b.js';
 import {stagePosition} from '../src/sprite-animation.js';
 import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,venueQueueSpot,venueStageQueueSpot,venueStationApproachPoint,VENUE_STAGE_SERPENTINE,VENUE_STAGE_QUEUE_LENGTH,venueStagePoint,moveVenueSerpentineQueue} from '../src/venue-nav.js';
 import {IRLEvent} from '../src/irl-v07.js';
@@ -69,11 +69,13 @@ test('both gated lanes remain proportional and enforce physical admission',()=>{
  }};
  assert(drawModularVenue(ctx,assets,event,2,{}));
  assert.equal(ctx.depth,0);
- // The unified environment plate is rendered once; the *only* other image is
- // the independent ticket clerk, no duplicated stage/prop layers.
- assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,2);
+ // The unified environment plate is rendered once; the worker is intentionally
+ // depth-sorted after crowd actors but before the counter's baked occlusion.
+ assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,1);
  const scene=ctx.calls.find(c=>c[0]==='drawImage');
  assert.deepEqual(scene.slice(2),[0,0,384,216]);
+ drawTicketClerk(ctx,assets,event);
+ assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,2);
 });
 
 test('stage and queues remain navigable, with grounded on-plate geometry',()=>{
