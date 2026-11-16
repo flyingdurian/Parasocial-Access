@@ -92,6 +92,8 @@ export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w
  return false;
 }
 export function stageAction(phase,seconds,queuePressure=0,mood='idle'){
+ // During bloodsports do not override the final boss with queue-pressure idle talk.
+ if(mood==='argue'||mood==='heckle')return mood;
  if(mood==='surge'||queuePressure>=3)return 'point';
  if(mood==='nod')return 'cheer';
  if(mood==='concern')return 'think';

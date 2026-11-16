@@ -30,14 +30,37 @@ export function judgeStageDebate(event,guest){
  return {won,score:clamp(score,0,100),topic:topic.id,reason:won?'GOOD CROWD CONTROL':'CROWD PRESSURE'};
 }
 // Fictional community reactions; these are game dialogue, not real quotations.
+// Fictional in-game chat, not purported real comments or historical quotes.
+// A long deterministic rotation avoids cycling through the same handful of memes
+// during consecutive 6–12s arena battles.
 export const DEBATE_CHAT_LINES=Object.freeze([
  "Where's the fact-check?!","He's stalling!","He's cooked","Let him cook!",
- "Let Foodshop debate!","ShrimpleAs","AngelThump","Abathur","COPIUM",
+ "Let Foodshop's debate!","ShrimpleAs","AngelThump","Abathur","COPIUM",
  "Hi DGG chat!","Absolute cinema.","Bro is delusional.","REFUTE THE TIMELINE.",
- "SHOW THE CLIP!","YEE NEVA LOSE","PEPE WINS","WHAT'S THE PREMISE?",
- "Define your terms.","Run the VOD back!","Source? SOURCE?!",
- "The chat is moving too fast!","HE'S GOT A SPREADSHEET","o7",
- "That rebuttal had frames.","Make the steelman!"
+ "Classic bridge burning","Vegas stream when?","Any gifters?","BINGO!",
+ "Mr. Redacted inbound","SHOW THE CLIP!","YEE NEVA LOSE","PEPE WINS",
+ "WHAT'S THE PREMISE?","Define your terms.","Run the VOD back!",
+ "Source? SOURCE?!","HE'S GOT A SPREADSHEET","o7","Make the steelman!",
+ "That rebuttal had frames.","Open the damn link!","Clip chimp detected.",
+ "Context? That changes everything.","WHO ASKED? THE AUDIENCE DID.",
+ "STRONGEST ARGUMENT FIRST.","Pause. Roll the timestamp.","That's a pivot!",
+ "I NEED A SOURCE, CHAT.","He brought receipts.","This is why we timestamp.",
+ "THE COUNTEREXAMPLE!","COOKING OR GETTING COOKED?","not the hypotheticals",
+ "StarCraft micro in a debate","OBS CAMERA TWO!","Chat, can you hear this?",
+ "A PREMISE HAS APPEARED","The debate boss music starts.",
+ "Steelman speedrun any%","That spreadsheet is sentient.",
+ "Nobody interrupt the cooking.","THE CLIP IS OUT OF CONTEXT",
+ "YOUTUBE CHAT WHAT IS UP","NODDERS","OMEGALUL","PEPELAUGH",
+ "DGG IS THE COMMENTARY TRACK","PIVOT DETECTED","IT'S NOT OVER!",
+ "The answer is in the footnotes.","WE HAVE A LIVE ONE.",
+ "What about the base rate?","That sounded convincing. Check it.",
+ "CALM DOWN, READ THE CHART.","RUN THE CLIP AGAIN!",
+ "Not another trolley problem.","CHAT IS IN FULL BLOODSPORTS MODE",
+ "CONTROVERSIAL BUT SOURCE-PILLED","CITE YOUR CLAIMS",
+ "NAHHH HE DIDN'T JUST SAY THAT","PRODUCTION CUT TO CAMERA TWO!",
+ "CAN WE GET THE FULL CONTEXT?","HE'S READING THE ENTIRE DOCUMENT",
+ "KEEP THE TIMELINE STRAIGHT!","He is NOT letting that slide.",
+ "THE PREMISE IS DOING BACKFLIPS"
 ]);
 export function debateExchangeDuration(guest,level=0){
  const difficulty=guest?.debateTopic?.difficulty||2;

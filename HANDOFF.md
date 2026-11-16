@@ -1,10 +1,20 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8j, interactive arcade debates / gate shutters / claw machine on the v0.8.8h unified plate.  
+**Current candidate:** v0.8.8k code-polish candidate (asset swap pending), built on the v0.8.8j gated-venue baseline.  
 **Working branch:** `recovery/v088i-arcade-debates` (continuing the v0.8.8h unified-plate baseline).  
 **Baseline:** `release/v0.8.8`, commit `bcbb27de6df8bb8f395cd3bbfe392315be7360b6`.  
-**Status:** v0.8.8j focused Node tests passed in the remote runner; Vercel branch preview is READY. Desktop/iPhone visual verification is still required before release approval. Do not silently replace an accepted release.
+**Status:** v0.8.8k animation/audio regression changes are under verification. The new plate and independent mascot named below are NOT in this branch or the accessible generated-asset collection. Keep the v088h plate until the exact PNGs are supplied and reviewed. No production promotion is approved.
 
+## v0.8.8k partial polish — asset handoff required
+
+- **Boss FX:** blue/gold final-boss and crimson/purple challenger glow built from three additive halos, stepped flame tongues, jagged electric arcs and capped rising particles. All animation timebase values normalize browser milliseconds to seconds; TV switches Destiny's live close-up between authored combat pose cells.
+- **Combat animation:** no neutral talk/nod/idle while a debate runs. Challenger and Destiny alternate authored argue, point and heckle stances every ~0.57s, including during high queue pressure.
+- **Chat & audio:** 75+ deterministic fictional community chat lines including the exact owner-requested phrases; ~0.72–0.89s interval, up to three recent chat items. New original synthesized clash intro, beat impacts and win/loss stingers play once per scripted event on both main convention route and /irl-sandbox, honoring the global SFX toggle.
+- **Ghost claw containment:** the existing machine animates only when occupied, and grapple/prize pixels are strictly clipped to a glass rectangle computed from the *same* cabinet bounds used by navigation. No independent machine texture is introduced. The glass coordinates **must be visually recalibrated** after the new image is mounted.
+- **Gate/check-in:** v0.8.8j's 39–43px traversal width, shutters, clerical operator and roaming greeter are unchanged.
+- **Required asset inputs (BLOCKER):** exact `Neon Convention Hall Claw Machine.png` unified plate, and exact `Adorable blue mascot clutching a red heart.png` dggL cutout. Neither filename appears in connected saved assets or the current GitHub branch. The current `assets/irl-venue-baked-v088h.webp` stays active, and no independent walking mascot is yet rendered. Once supplied: inspect dimensions/transparency; convert to optimized WebP; wire scene and independent sprite; realign claw/glass/colliders; add mascot crowd reaction route; visual regression + iPhone QA.
+- **Verification:** `tests/venue_v088k.test.mjs` covers cabinet containment, live aura draw calls, frequent banter/aggressive host and challenger poses, and debounce of debate audio. Execute Node suite before marking the code pass stable; Vercel preview is not a visual acceptance.
+  
 ## Purpose
 
 The v0.8.8b–f hall rebuilds introduced prop-scale drift, floating stage pieces, undersized gates, crowded paths, and bulky overlays. v0.8.8g replaced detached prop layers with a **single coherent 384×216 pixel-projected plate**. v0.8.8h preserves that architecture, rerenders the same view with brighter woven purple carpet, only two ceiling ambient fixtures, localized booth/photo lights, integrated stage-floor uplights, physical tripod, enlarged asymmetrical plants and a three-row serpentine velvet rope queue. A dedicated stationary ticket clerk and two dynamic glass-panel gates remain interactive overlays. Keep the evening indigo/purple/magenta/amber palette, fictional comet convention branding and dggL banners; no Twitch or rainbow-striping branding.

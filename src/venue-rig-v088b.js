@@ -81,9 +81,9 @@ export function drawVenueDustMotes(ctx,t){
  for(let l=0;l<lights.length;l++){
   const [cx,cy,rx,ry]=lights[l];
   for(let i=0;i<5;i++){
-   const seed=l*31+i*71;const drift=t*(.37+(seed%7)*.09);
+   const seed=l*31+i*71;const drift=(t/1000)*(.37+(seed%7)*.09);
    const x=cx+Math.sin(seed*1.57+drift)*rx,y=cy+Math.cos(seed*.71+drift*.6)*ry-(drift*1.4)%3;
-   const glow=.08+.12*(.5+.5*Math.sin(t*.9+seed));
+   const glow=.08+.12*(.5+.5*Math.sin(t*.0009+seed));
    ctx.globalAlpha=glow;ctx.fillStyle=l>=4?'#f5caac':'#fee6c3';
    ctx.fillRect(Math.round(x),Math.round(y),i%4===0?1.2:.7,i%3===0?1.1:.6);
   }
@@ -91,25 +91,55 @@ export function drawVenueDustMotes(ctx,t){
  ctx.restore();
 }
 function drawFighterAura(ctx,x,y,t,boss=false){
- const primary=boss?'89,210,255':'236,110,255',core=boss?'255,214,126':'250,180,255';
- const pulse=.72+.22*Math.sin(t*7+(boss?0:2));
+ // Three glowing layers, stepped flame tongues, lightning and rising sparks.
+ // Deterministic animation and fixed particle budget keep iPhone FPS stable.
+ const outer=boss?'74,181,255':'214,47,105';
+ const inner=boss?'255,211,92':'175,81,255';
+ const highlight=boss?'234,249,255':'255,195,238';
+ const sec=t/1000,phase=sec*(boss?7.6:9.4),pulse=.78+.22*Math.sin(phase);
  ctx.save();ctx.globalCompositeOperation='screen';
- const halo=ctx.createRadialGradient(x,y+3,3,x,y,30);
- halo.addColorStop(0,'rgba('+primary+','+(.29*pulse)+')');
- halo.addColorStop(1,'rgba('+primary+',0)');
- ctx.fillStyle=halo;ctx.beginPath();ctx.ellipse(x,y,19,27,0,0,Math.PI*2);ctx.fill();
- // Hard-edged stepped energy flames retain the pixel-art look.
- for(let j=0;j<14;j++){
-  const angle=j*2.39996+t*.43,rad=12+Math.sin(j*9+t*6)*4;
-  const px=Math.round(x+Math.cos(angle)*rad),py=Math.round(y+Math.sin(angle)*rad*1.45);
-  ctx.fillStyle='rgba('+primary+','+(.45+.4*pulse)+')';
-  ctx.fillRect(px,py,1.6+(j%3),2+(j%4));
+ for(let layer=0;layer<3;layer++){
+  const rx=15+layer*4+pulse*2,ry=22+layer*4+pulse*3;
+  const glow=ctx.createRadialGradient(x,y+3,2,x,y,ry);
+  const color=layer===0?inner:outer;
+  glow.addColorStop(0,'rgba('+color+','+(.34-.07*layer)*pulse+')');
+  glow.addColorStop(.62,'rgba('+color+','+(.20-.04*layer)*pulse+')');
+  glow.addColorStop(1,'rgba('+color+',0)');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
  }
  for(const side of [-1,1]){
-  ctx.fillStyle='rgba('+core+','+(.72*pulse)+')';
-  const sway=Math.sin(t*6+side*2)*3;
-  ctx.fillRect(Math.round(x+side*13+sway),Math.round(y-18),2,9);
-  ctx.fillRect(Math.round(x+side*10+sway),Math.round(y-24),2,5);
+  for(let tongue=0;tongue<7;tongue++){
+   const rise=tongue*5.5,sway=Math.sin(phase*.58+tongue*1.73+side*2.3)*3.2;
+   const edge=x+side*(11+tongue*.36)+sway,top=y+15-rise;
+   ctx.fillStyle='rgba('+outer+','+(.46+(tongue%3)*.08)*pulse+')';
+   ctx.fillRect(Math.round(edge),Math.round(top),tongue%3===0?3:2,8+(tongue%2)*3);
+   ctx.fillStyle='rgba('+inner+','+(.34+.12*pulse)+')';
+   ctx.fillRect(Math.round(edge-side*3),Math.round(top+3),1.4,5);
+   if(tongue%2===0){
+    ctx.fillStyle='rgba('+highlight+','+(.55+.30*pulse)+')';
+    ctx.fillRect(Math.round(edge+side),Math.round(top-4),1.2,3.2);
+   }
+  }
+ }
+ // Electric shoulders, with distinct bright inner rim for the final boss.
+ for(let bolt=0;bolt<3;bolt++){
+  const side=bolt%2?-1:1,seed=phase*.37+bolt*3.7;
+  const sx=Math.round(x+side*(13+bolt*2)),sy=Math.round(y-17+bolt*10);
+  ctx.beginPath();ctx.moveTo(sx,sy);
+  for(let segment=1;segment<=4;segment++){
+   ctx.lineTo(Math.round(sx+side*(segment*2+Math.sin(seed+segment*2.8)*2)),
+    Math.round(sy+segment*3.6));
+  }
+  ctx.lineWidth=bolt===1?1.1:.7;
+  ctx.strokeStyle='rgba('+highlight+','+(.47+.39*pulse)+')';ctx.stroke();
+ }
+ for(let spark=0;spark<26;spark++){
+  const seed=spark*17.71+(boss?3:19),climb=(sec*(9+(spark%5)*3)+seed*3)%45;
+  const drift=Math.sin(seed+sec*(1.3+(spark%4)*.3));
+  const px=Math.round(x+drift*(11+(spark%3)*5)),py=Math.round(y+20-climb);
+  ctx.globalAlpha=(.30+.60*(1-climb/45))*pulse;
+  ctx.fillStyle=spark%4===0?'rgb('+highlight+')':spark%2?'rgb('+outer+')':'rgb('+inner+')';
+  ctx.fillRect(px,py,spark%6===0?2:1,spark%7===0?3:1.4);
  }
  ctx.restore();
 }
@@ -120,7 +150,7 @@ export function drawStageDebateUplight(ctx,event,t){
  for(const [x,y] of [[235,74],[268,74],[296,74]]){
   const grad=ctx.createRadialGradient(x,y,1,x,y-7,19);
   grad.addColorStop(0,'rgba(246,166,255,.22)');grad.addColorStop(1,'rgba(128,88,215,0)');
-  ctx.globalAlpha=.70+.25*Math.sin(t*3+x);ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(x,y-8,10,20,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.70+.25*Math.sin(t*.003+x);ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(x,y-8,10,20,0,0,Math.PI*2);ctx.fill();
  }
  ctx.restore();
  // Glows are behind the actual sprites; the clipped television paints above.
@@ -172,13 +202,18 @@ function drawBoothActivity(ctx,event){
  // The transparent glass shows a working grapple and prize drop only while
  // a visitor is at the left-aisle cabinet; no duplicate machine sprite.
  if((event?.clawMachine?.activeUntil||0)>(event?.elapsed||0)){
-  const progress=1-(event.clawMachine.activeUntil-event.elapsed)/2.3;
-  const swing=Math.round(31+Math.sin(progress*7)*5),drop=progress<.5?progress*15:(1-progress)*15;
-  ctx.save();ctx.beginPath();ctx.rect(23,109,25,19);ctx.clip();
-  ctx.fillStyle='rgba(146,251,255,.2)';ctx.fillRect(24,110,23,17);
-  ctx.fillStyle='#d8f6ff';ctx.fillRect(swing,109,1.2,4+drop);
-  ctx.fillStyle='#f5d79c';ctx.fillRect(swing-2,113+drop,2.2,2.2);ctx.fillRect(swing+1,113+drop,2.2,2.2);
-  if(progress>.65){ctx.fillStyle='#ffc7ec';ctx.fillRect(swing-2,120-(progress-.65)*14,5,4);}
+  // Moving pieces are physically clipped to the cabinet glass:
+  // no standalone floating claw prop can bleed into the scene.
+  const cabinet=MODULAR_PROPS.claw;
+  const glass={x:cabinet.x+2,y:cabinet.y+3,w:cabinet.w-4,h:cabinet.solid.y-cabinet.y-5};
+  const progress=Math.max(0,Math.min(1,1-(event.clawMachine.activeUntil-event.elapsed)/2.3));
+  const swing=Math.round(glass.x+glass.w/2+Math.sin(progress*7)*glass.w*.17);
+  const drop=progress<.5?progress*glass.h*.72:(1-progress)*glass.h*.72;
+  ctx.save();ctx.beginPath();ctx.rect(glass.x,glass.y,glass.w,glass.h);ctx.clip();
+  ctx.fillStyle='rgba(146,251,255,.14)';ctx.fillRect(glass.x+1,glass.y+1,glass.w-2,glass.h-2);
+  ctx.fillStyle='#d8f6ff';ctx.fillRect(swing,glass.y,1.2,3+drop);
+  ctx.fillStyle='#f5d79c';ctx.fillRect(swing-2,glass.y+4+drop,2.2,2.2);ctx.fillRect(swing+1,glass.y+4+drop,2.2,2.2);
+  if(progress>.65){ctx.fillStyle='#ffc7ec';ctx.fillRect(swing-2,glass.y+glass.h-5-(progress-.65)*glass.h*.7,5,4);}
   ctx.restore();
  }
 }
@@ -208,7 +243,9 @@ export function drawModularTV(ctx,event,t,streams={}){
   ctx.fillStyle='#fa9dfe';ctx.fillRect(53,4,42,2.4);
   ctx.fillStyle='#bdefff';ctx.font='900 7px monospace';ctx.fillText('VS',50,21);
   ctx.save();ctx.beginPath();ctx.rect(6,10,53,36);ctx.clip();
-  livePortrait(ctx,streams.host,22,12,36);
+  // The camera cuts to aggressive, authored Destiny action frames.
+  const hostFrame=[6,5,6][Math.floor(t/310)%3];
+  livePortrait(ctx,streams.host,22,12,36,hostFrame%4,Math.floor(hostFrame/4));
   liveFanPortrait(ctx,streams,debate.kind,47,12);
   ctx.restore();
   ctx.font='900 5px ui-monospace,monospace';ctx.fillStyle='#b7f8ff';ctx.fillText('DESTINY',77,23,38);

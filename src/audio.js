@@ -55,6 +55,38 @@ export class RushAudio{
   this.noise(now,.32,phase===2?790:610,.013,'music');
   if(phase===3)this.playAt(76,now+.19,.11,'sine',.012,'music');
  }
+ // Synthesized clashes, keyed to story beats so there is no 60fps audio spam.
+ // Existing global SFX toggle gates every osc(), and no recordings are used.
+ irlDebateClash(beat=0){
+  const pitch=50+(beat%5)*2;
+  this.osc(pitch,.09,0,'sawtooth',.055,'sfx',pitch-10);
+  this.osc(pitch+19,.13,.07,'triangle',.065,'sfx',pitch+10);
+  if(beat%3===0)this.osc(83,.11,.095,'sine',.042);
+ }
+ irlDebateIntro(){
+  this.osc(43,.22,0,'sawtooth',.085,'sfx',36);
+  this.osc(55,.19,.11,'triangle',.068);
+  this.osc(67,.22,.23,'square',.038);
+ }
+ irlDebateOutro(won){
+  const notes=won?[62,69,74,81]:[67,60,54,47];
+  for(let i=0;i<notes.length;i++)this.osc(notes[i],.15,i*.083,'triangle',.077);
+ }
+ irlDebateTick(event){
+  if(!event||event.paused)return;
+  if(this._debateSession!==event){this._debateSession=event;this._debateActor=null;this._debateBeat=-1;}
+  const live=event.departures?.find(g=>g.debater&&g.stageVisit==='exchange');
+  if(live){
+   const key=String(live.serial)+':'+String(live.id);
+   if(this._debateActor!==key){this._debateActor=key;this._debateBeat=live.hypeBeat||0;this.irlDebateIntro();}
+   else if((live.hypeBeat||0)>this._debateBeat){
+    this._debateBeat=live.hypeBeat;this.irlDebateClash(this._debateBeat);
+   }
+  }else if(this._debateActor!==null&&this._debateActor!==undefined){
+   if(event.tvEvent?.type==='debate')this.irlDebateOutro(!!event.tvEvent.won);
+   this._debateActor=null;this._debateBeat=-1;
+  }
+ }
  irlDispatch(action){if(action==='security'){this.osc(53,.12,0,'triangle',.13);this.osc(65,.15,.09,'sine',.095);}
   else if(action==='debate'){this.osc(57,.08,0,'sawtooth',.075);this.osc(69,.09,.065,'triangle',.11);this.osc(81,.13,.14,'sine',.13);}
   else if(action==='check'){this.osc(82,.05,0,'sine',.095);this.osc(86,.06,.11,'sine',.09);}

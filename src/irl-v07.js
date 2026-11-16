@@ -322,8 +322,8 @@ export class IRLEvent {
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,24))g.stageVisit='climbStairs';
    }else if(g.stageVisit==='climbStairs'){
     if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:g.fanKind==='photo'?VENUE_STAGE.photoGuest:VENUE_STAGE.exchange),dt,23)){
-     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):3.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.45;g.walking=false;g.facing=g.debater?1:-1;
-     this.hostMood=g.debater?'point':'talk';this.hostUntil=this.elapsed+g.exchangeClock;
+     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):3.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.38;g.exchangeAction=g.debater?'argue':'cheer';g.walking=false;g.facing=g.debater?1:-1;
+     this.hostMood=g.debater?'argue':'talk';this.hostUntil=this.elapsed+g.exchangeClock;
      this.effects.push({x:217,y:78,text:g.debater?'LIVE DEBATE!':g.fanKind==='autograph'?'✦ AUTOGRAPH!':'♥ PHOTO OP!',color:'#ffeaa5',ttl:1.5});
      this.effects.push({x:200,y:93,text:loreStageLine(g,0),color:'#ffedb4',ttl:1.7});
     }
@@ -333,14 +333,17 @@ export class IRLEvent {
      g.hypeClock-=dt;
      if(g.hypeClock<=0){
       const line=debateChatLine(g,g.hypeBeat++);
-      this.debateChat.push({text:line,ttl:2.4,maxTtl:2.4});this.debateChat=this.debateChat.slice(-3);
-      g.hypeClock=1.15+(g.hypeBeat%3)*.2;
+      this.debateChat.push({text:line,ttl:1.95,maxTtl:1.95});this.debateChat=this.debateChat.slice(-3);
+      g.hypeClock=.72+(g.hypeBeat%3)*.085;
       if(g.hypeBeat%3===0)this.cameraFlashes.push({x:295,y:63,ttl:.16});
      }
     }
     const beat=1-g.exchangeClock/g.exchangeDuration;
-    g.exchangeAction=g.debater?(beat<.36?'point':beat<.72?'talk':'argue'):(beat<.32?'cheer':beat<.7?'talk':'laugh');
-    this.hostMood=g.debater?(beat<.4?'talk':beat<.8?'point':'nod'):(beat<.3?'cheer':beat<.78?'talk':'nod');this.hostUntil=this.elapsed+.3;
+    // The active 6–12s battle NEVER drops into neutral talk/nod/idle poses.
+    // Authored argument, heckle and point poses alternate out of phase.
+    const clash=Math.floor((g.exchangeDuration-g.exchangeClock)/.57);
+    g.exchangeAction=g.debater?['argue','point','heckle'][clash%3]:(beat<.32?'cheer':beat<.7?'talk':'laugh');
+    this.hostMood=g.debater?['point','argue','heckle'][clash%3]:(beat<.3?'cheer':beat<.78?'talk':'nod');this.hostUntil=this.elapsed+.3;
     if(!g.debater&&g.fanKind==='photo'&&beat>.68&&!g.photoTaken){
      g.photoTaken=true;this.cameraFlashes.push({x:VENUE_STAGE.tripod[0]+14,y:VENUE_STAGE.tripod[1]+8,ttl:.34},{x:g.x+14,y:g.y+5,ttl:.22});
     }

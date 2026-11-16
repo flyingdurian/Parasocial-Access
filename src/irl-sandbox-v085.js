@@ -144,6 +144,7 @@ function update(){
 let last=0,lastSpeechId=-1,lastSpeechCount=-1,lastSpeechAt=0;
 function loop(now){const dt=Math.min(.09,last?(now-last)/1000:0);last=now;
  if(event.mode==='playing'&&!event.paused)for(let i=0;i<speed;i++)event.tick(dt);
+ sound.irlDebateTick(event);
  if(event.mode==='playing'&&!event.paused){
   sound.setMode(event.phase===2?'convention-peak':event.phase===3?'convention-qa':'convention');sound.tick();
   const speaker=event.crowd.find(g=>g.speechTime>0);
