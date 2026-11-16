@@ -38,6 +38,33 @@ export function decisionBubbleStyle(index,focus=false){
 // of the physical resolution chosen by the graphics settings.
 const clampBubble=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const bubbleRectsOverlap=(a,b,gap=2)=>a.x<b.x+b.w+gap&&a.x+a.w+gap>b.x&&a.y<b.y+b.h+gap&&a.y+a.h+gap>b.y;
+/* A focused review card may track a floor guest without covering Destiny's
+   live stage animation. Prefer a nearby head anchor, then shift into vacant
+   space if the host/TV occupies that area. All values are CSS pixels. */
+export function placeFocusedVenuePrompt(width,height,anchorX,anchorY,boxW,boxH,reserved=[]){
+ const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+ const placements=[
+  [anchorX-boxW*.48,anchorY-boxH-12],
+  [anchorX-boxW-24,anchorY-boxH-12],
+  [anchorX-boxW*1.65,anchorY-boxH-12],
+  [anchorX+24,anchorY-boxH-12],
+  [8,8],[width-boxW-8,8],
+  [anchorX-boxW*.48,anchorY+18]
+ ];
+ let fallback=null,fallbackOverlaps=Infinity;
+ for(const [cx,cy] of placements){
+  const left=clamp(cx,4,Math.max(4,width-boxW-4));
+  const top=clamp(cy,4,Math.max(4,height-boxH-4));
+  const box={x:left,y:top,w:boxW,h:boxH};
+  const overlaps=reserved.filter(r=>bubbleRectsOverlap(box,r,7)).length;
+  const tail=clamp(anchorX-left,12,Math.max(12,boxW-18));
+  const result={left,top,tail,attached:Math.abs(anchorX-(left+tail))<45};
+  if(!overlaps)return result;
+  if(overlaps<fallbackOverlaps){fallback=result;fallbackOverlaps=overlaps;}
+ }
+ return fallback??{left:4,top:4,tail:12,attached:false};
+}
+
 export function createBubbleLayout(reserved=[]){
  const occupied=[];
  const reserve=rect=>{

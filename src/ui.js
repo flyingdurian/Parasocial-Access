@@ -9,7 +9,7 @@ import {VENUE_OBSTACLES,VENUE_CELL,isVenueWalkable} from './venue-nav.js';
 import {drawVenueCharacter,drawContactShadow,venueSpriteGeometry,stageAction} from './sprite-animation.js';
 import {createGraphicsPanel} from './graphics-panel.js';
 import {avatarPath,avatarError} from './avatars-v083.js';
-import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay} from './irl-atmosphere-v083.js';
+import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay,placeFocusedVenuePrompt} from './irl-atmosphere-v083.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,drawStageQueueGuides,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -284,13 +284,17 @@ function irlRefresh(force=false){if(engine.mode!=='irl'||!irl)return;const set=(
    const point=useSceneCameraPoint(g.x+16,g.y-2,modularVenueReady(modularVenue));
    const sx=offset+point.x/384*renderWidth,sy=point.y/216*scene.clientHeight;
    const bw=bubble.offsetWidth,bh=bubble.offsetHeight;
-   const normalLeft=Math.max(6,Math.min(scene.clientWidth-bw-6,sx-bw*.48));
-   const normalTop=Math.max(6,Math.min(scene.clientHeight-bh-6,sy-bh-14));
-   // Stage guests never displace the live decision's bubble. Coordinates
-   // derive only from the decision owner, including while the camera pans.
-   const left=normalLeft;
-   bubble.style.left=left+'px';bubble.style.setProperty('--speech-tail',Math.max(12,Math.min(bw-18,sx-left))+'px');
-   bubble.style.top=normalTop+'px';
+   const scale=modularVenueReady(modularVenue)?MODULAR_CAMERA_SCALE:1;
+   const unitX=scale*renderWidth/384,unitY=scale*scene.clientHeight/216;
+   const projected=(wx,wy)=>{const p=useSceneCameraPoint(wx,wy,modularVenueReady(modularVenue));return {x:offset+p.x/384*renderWidth,y:p.y/216*scene.clientHeight};};
+   const actorRect=(person)=>{const p=projected(person.x-5,person.y-8);return {x:p.x,y:p.y,w:44*unitX,h:53*unitY};};
+   const tv=projected(MODULAR_TV_BOUNDS.x,MODULAR_TV_BOUNDS.y);
+   const avoid=[actorRect({x:irl.hostX,y:irl.hostY}),actorRect(g),{x:tv.x,y:tv.y,w:MODULAR_TV_BOUNDS.w*unitX,h:MODULAR_TV_BOUNDS.h*unitY}];
+   const stageGuest=irl.departures.find(person=>person.stageVisit==='exchange');if(stageGuest)avoid.push(actorRect(stageGuest));
+   if(prompt&&!prompt.hidden){const r=prompt.getBoundingClientRect(),base=scene.getBoundingClientRect();avoid.push({x:r.left-base.left,y:r.top-base.top,w:r.width,h:r.height});}
+   const placed=placeFocusedVenuePrompt(scene.clientWidth,scene.clientHeight,sx,sy,bw,bh,avoid);
+   bubble.style.left=placed.left+'px';bubble.style.top=placed.top+'px';bubble.style.setProperty('--speech-tail',placed.tail+'px');
+   bubble.classList.toggle('irl-detached',!placed.attached);
   }
   bubble.classList.toggle('irl-danger',g.type==='security'&&g.life-g.age<=12);
   set('#irl-speech-time',Math.max(0,Math.ceil(g.life-g.age))+'s');const fill=$('#irl-speech-fill');if(fill)fill.style.width=irlClampUI((g.life-g.age)/g.life*100,0,100)+'%';

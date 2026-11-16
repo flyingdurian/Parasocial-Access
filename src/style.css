@@ -516,3 +516,6 @@
  .irl-world-speech p{font-size:10px;line-height:1.2}
  .irl-world-speech small{font-size:9px}
 }
+
+/* v0.8.8f: mobile and desktop focus cards avoid the live stage speaker. */
+.irl-world-speech.irl-detached:after{display:none}

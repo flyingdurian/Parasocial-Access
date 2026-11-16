@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 /* Fast isolated IRL harness: imports no main game engine, world art or UI.
    This is an additive dev route; it does not alter production save keys. */
@@ -7,7 +7,7 @@ import {IRL_LEVELS} from './irl-progression-v085.js';
 import {loadGraphics,saveGraphics,setupGraphicsCanvas,applyVenueTexture,applyVenueCRT} from './graphics-v082.js';
 import {createGraphicsPanel} from './graphics-panel.js';
 import {drawVenueCharacter,drawContactShadow,venueSpriteGeometry,stageAction} from './sprite-animation.js';
-import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay} from './irl-atmosphere-v083.js';
+import {drawStageAtmosphere,drawAmbientBubble,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay,placeFocusedVenuePrompt} from './irl-atmosphere-v083.js';
 import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
@@ -125,8 +125,15 @@ function update(){
  if(guest){
   set('#h-name','◉ '+guest.name);setRich('#h-text','“'+guest.text+'”');setRich('#h-cue',guest.cue);set('#h-timer',Math.max(0,Math.ceil(guest.life-guest.age))+' seconds · '+guest.type.toUpperCase());
   const wrap=q('#h-stage').getBoundingClientRect(),point=modularVenueReady(modularVenue)?venueCameraPoint(guest.x+17,guest.y-2):{x:guest.x+17,y:guest.y-2},sx=point.x/384*wrap.width,sy=point.y/216*wrap.height,bw=bubble.offsetWidth,bh=bubble.offsetHeight;
-  const left=Math.max(3,Math.min(wrap.width-bw-3,sx-bw*.48)),top=Math.max(3,Math.min(wrap.height-bh-3,sy-bh-12));
-  bubble.style.left=left+'px';bubble.style.top=top+'px';bubble.style.setProperty('--speech-tail',Math.max(12,Math.min(bw-18,sx-left))+'px');
+  const projected=(wx,wy)=>{const p=modularVenueReady(modularVenue)?venueCameraPoint(wx,wy):{x:wx,y:wy};return {x:p.x/384*wrap.width,y:p.y/216*wrap.height};};
+  const scale=modularVenueReady(modularVenue)?MODULAR_CAMERA_SCALE:1,unitX=scale*wrap.width/384,unitY=scale*wrap.height/216;
+  const rectFor=(person,pad=5)=>{const p=projected(person.x-pad,person.y-8);return {x:p.x,y:p.y,w:(34+pad*2)*unitX,h:53*unitY};};
+  const tv=projected(MODULAR_TV_BOUNDS.x,MODULAR_TV_BOUNDS.y);
+  const avoid=[rectFor({x:event.hostX,y:event.hostY}),rectFor(guest),{x:tv.x,y:tv.y,w:MODULAR_TV_BOUNDS.w*unitX,h:MODULAR_TV_BOUNDS.h*unitY}];
+  const stageGuest=event.departures.find(person=>person.stageVisit==='exchange');if(stageGuest)avoid.push(rectFor(stageGuest));
+  const placed=placeFocusedVenuePrompt(wrap.width,wrap.height,sx,sy,bw,bh,avoid);
+  bubble.style.left=placed.left+'px';bubble.style.top=placed.top+'px';bubble.style.setProperty('--speech-tail',placed.tail+'px');
+  bubble.classList.toggle('irl-detached',!placed.attached);
  }
  if(event.mode==='results'){
   const panel=q('#h-start');panel.hidden=false;q('#h-start h2').textContent=event.session==='endless'?'SURVIVAL COMPLETE · WAVE '+event.wave:event.result.clear?'LEVEL CLEARED':'SHIFT ENDED';

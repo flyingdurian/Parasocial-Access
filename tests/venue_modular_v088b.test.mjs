@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {existsSync,readFileSync} from 'node:fs';
 import {MODULAR_GATES,MODULAR_PROPS,MODULAR_BLOCKERS,MODULAR_TV_BOUNDS,MODULAR_TV_PROJECTION,MODULAR_ATLAS} from '../src/venue-geometry-v088b.js';
 import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue,drawModularTV} from '../src/venue-rig-v088b.js';
+import {placeFocusedVenuePrompt,bubbleRectsOverlap} from '../src/irl-atmosphere-v083.js';
 import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable,venueRoute,VENUE_STATIONS} from '../src/venue-nav.js';
 const asset=name=>new URL('../assets/'+name,import.meta.url);
 
@@ -65,6 +66,13 @@ test('staff and guards start on walkable floor instead of old entrance furniture
  const eventSource=readFileSync(new URL('../src/irl-v07.js',import.meta.url),'utf8');
  assert(eventSource.includes('this.staff=[[170,145],[314,145]]'));
  assert(!eventSource.includes('[349,160]'),'retired right planter guard spawn');
+});
+
+test('review cards move off stage actors without leaving the viewport',()=>{
+ const host={x:900,y:260,w:70,h:190};
+ const placed=placeFocusedVenuePrompt(1160,650,1050,480,300,140,[host]);
+ assert(!bubbleRectsOverlap({x:placed.left,y:placed.top,w:300,h:140},host,7),'host remains visible during floor decisions');
+ assert(placed.left>=0&&placed.left+300<=1160&&placed.top>=0&&placed.top+140<=650,'responsive panel remains in bounds');
 });
 
 test('LCD projection fits inside the re-anchored empty stage shell',()=>{
