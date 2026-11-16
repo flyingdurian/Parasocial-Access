@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 /* Fast isolated IRL harness: imports no main game engine, world art or UI.
    This is an additive dev route; it does not alter production save keys. */
@@ -61,7 +61,7 @@ q('#h-begin').addEventListener('click',()=>{if(event.mode==='results')reset();ev
 q('#h-pause').addEventListener('click',()=>{if(event.mode==='playing')event.paused=!event.paused;update();});
 q('#h-nav').addEventListener('click',()=>{graphics={...graphics,showNav:!graphics.showNav};saveGraphics(graphics);gfx.setSettings(graphics);});
 for(const button of root.querySelectorAll('button[data-action]'))button.addEventListener('click',()=>{event.action(button.dataset.action);update();});
-q('#h-canvas').addEventListener('click',e=>{const box=e.currentTarget.getBoundingClientRect(),x=(e.clientX-box.left)/box.width*384,y=(e.clientY-box.top)/box.height*216;const closest=event.visitors.filter(g=>!g.pending).find(g=>x>=g.x-5&&x<g.x+39&&y>=g.y-14&&y<g.y+45);if(closest)event.choose(closest.id);update();});
+q('#h-canvas').addEventListener('click',e=>{const box=e.currentTarget.getBoundingClientRect(),px=(e.clientX-box.left)/box.width*384,py=(e.clientY-box.top)/box.height*216,world=modularVenueReady(modularVenue)?venueCameraUnproject(px,py):{x:px,y:py},x=world.x,y=world.y;const closest=event.visitors.filter(g=>!g.pending).find(g=>x>=g.x-5&&x<g.x+39&&y>=g.y-14&&y<g.y+45);if(closest)event.choose(closest.id);update();});
 document.addEventListener('keydown',e=>{
  if(e.repeat||e.altKey||e.ctrlKey||e.metaKey||e.target.closest('select,input,textarea'))return;
  if(e.code==='Space'){e.preventDefault();if(event.mode==='playing')event.paused=!event.paused;update();}
@@ -71,6 +71,7 @@ document.addEventListener('keydown',e=>{
 function draw(t){
  const canvas=q('#h-canvas'),ctx=setupGraphicsCanvas(canvas,graphics);
  if(!ctx)return;
+ const useCamera=modularVenueReady(modularVenue);if(useCamera){ctx.save();applyModularVenueCamera(ctx);}
  const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,poses,cast:assets.cast,extra});
  if(!modern){if(assets.hall.complete&&assets.hall.naturalWidth)ctx.drawImage(assets.hall,0,0,384,216);else{ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);}
   drawStageAtmosphere(ctx,t,event.phase);drawVenueRush(ctx,event,t);drawVenueScreens(ctx,event,t,{host:assets.pose0,cast:assets.cast,extra});drawVenueGates(ctx,assets.hall,event);}
@@ -96,9 +97,10 @@ function draw(t){
  }
  drawStageConversation(ctx,event,bubbleLayout);
  if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<waiting.length;i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout);}
- for(const fx of event.effects){ctx.font='bold 8px monospace';ctx.lineWidth=3;ctx.strokeStyle='#11152e';ctx.strokeText(fx.text,fx.x,fx.y);ctx.fillStyle=fx.color;ctx.fillText(fx.text,fx.x,fx.y);}
+ for(const fx of event.effects){if(fx.kind==='booth')continue;ctx.font='bold 8px monospace';ctx.lineWidth=3;ctx.strokeStyle='#11152e';ctx.strokeText(fx.text,fx.x,fx.y);ctx.fillStyle=fx.color;ctx.fillText(fx.text,fx.x,fx.y);}
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}
  drawCameraFlashes(ctx,event);
+ if(useCamera)ctx.restore();
  applyVenueTexture(ctx,canvas,graphics,t);
  applyVenueCRT(ctx,canvas,graphics);
 }
@@ -113,7 +115,7 @@ function update(){
  const guest=event.selected,bubble=q('#h-speech');bubble.hidden=!guest;
  if(guest){
   set('#h-name','◉ '+guest.name);set('#h-text','“'+guest.text+'”');set('#h-cue',guest.cue);set('#h-timer',Math.max(0,Math.ceil(guest.life-guest.age))+' seconds · '+guest.type.toUpperCase());
-  const wrap=q('#h-stage').getBoundingClientRect(),sx=(guest.x+17)/384*wrap.width,sy=(guest.y-2)/216*wrap.height,bw=bubble.offsetWidth,bh=bubble.offsetHeight;
+  const wrap=q('#h-stage').getBoundingClientRect(),point=modularVenueReady(modularVenue)?venueCameraPoint(guest.x+17,guest.y-2):{x:guest.x+17,y:guest.y-2},sx=point.x/384*wrap.width,sy=point.y/216*wrap.height,bw=bubble.offsetWidth,bh=bubble.offsetHeight;
   const left=Math.max(3,Math.min(wrap.width-bw-3,sx-bw*.48)),top=Math.max(3,Math.min(wrap.height-bh-3,sy-bh-12));
   bubble.style.left=left+'px';bubble.style.top=top+'px';bubble.style.setProperty('--speech-tail',Math.max(12,Math.min(bw-18,sx-left))+'px');
  }

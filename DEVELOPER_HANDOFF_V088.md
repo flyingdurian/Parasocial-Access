@@ -183,3 +183,14 @@ Owner-approved focus: restore the vibrant evening indigo/magenta convention lang
 - Final v0.8.8c preview polish: stronger magenta velvet stage-lane ropes with gold floor stanchions; visible version strings updated in both the main game and isolated sandbox HTML/JS to distinguish browser builds.
 
 - Final v0.8.8c art correction: six-post transparent stage rope prop replaces the too-thin canvas-drawn queue lines; its widening perspective is mirrored by dynamic rope-line collisions in `isVenueWalkable`, preserving an open actor lane.
+
+
+## v0.8.8d — Live Visual QA Correction (2026-11-16)
+- Front entrance: scales check-in and lush planters up against independent scanner-gate plinths; adds a four-segment indigo/gold joinery rail behind the assets while preserving the existing two verified passage lanes. Scanner post geometry is sourced from the same open-atlas crop in every state; only glass flaps retract. Badge controller remains the authoritative permission check.
+- Camera: 0.965 centered world zoom is applied consistently in full-game and direct sandbox canvases; click-selection and DOM decision-bubble anchors use corresponding project/unproject coordinates. Hall image overscans to prevent black edges. Stage shell changes from (196,2,188,102) to (201,9,181,96); TV affine and bounds updated to match; image fringe is color-keyed only in the transparent outside-left-rail region and cached by image.
+- Stage furniture: remove furniture texture from active load and stage draw entirely; chairs/desks will be designed later. Preserve player/NPC exchange routing and 3.8-second debate state machine.
+- Live TV photo: retain both Destiny/guest sprites and signature but eliminate solid pale photo rectangle, composite on translucent broadcast glass.
+- Booth reward feedback: preserve booth transaction counters/animations, replace raw MERCH +1/SNACK +1/DRINK +1/PHOTO check labels with short-lived, animated icon particles at each actual venue activity anchor.
+- Decision UI: full-game and sandbox speech cards sized for readability; internal scrollbars disabled, mobile overrides updated. Both clicking and selection coordinate maps updated with camera scale.
+- Test target: check seven active modular assets, stable gate crop across open/closed frames, stage TV containment, no furniture, navigation verification lanes, no nested decision-scroll regression, desktop/iPhone visual QA.
+- Images: imagegen stage-cleanup candidates were rejected because red fringe persisted; keep original v088c shell and use narrowly scoped runtime transparency cleanup to avoid destructive texture replacement.

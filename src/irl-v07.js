@@ -170,8 +170,7 @@ export class IRLEvent {
      this.boothTransactions[activity]=(this.boothTransactions[activity]||0)+1;
      person.animation=activity==='photo'?'point':activity==='vending'?'point':activity==='snacks'?'cheer':'talk';
      person.dwell=Math.max(2.1,person.dwell);
-     const receipt={merch:'MERCH +1',snacks:'SNACK +1',vending:'DRINK +1',photo:'PHOTO ✓'}[activity];
-     this.effects.push({x:person.x,y:person.y-7,text:receipt,color:'#ffe7ae',ttl:1.1});
+     this.effects.push({kind:'booth',station:activity,seed:person.id,x:person.x,y:person.y-7,ttl:1.15,maxTtl:1.15});
      if(activity==='photo')this.cameraFlashes.push({x:person.x+15,y:person.y+5,ttl:.28});
     }
     const poses=['talk','laugh','cheer','point','argue','heckle','impatient','idle'];
@@ -231,7 +230,7 @@ export class IRLEvent {
   for(const person of this.crowd)if(person.speechTime>0)person.speechProgress=Math.min(person.speech.length,(person.speechProgress||0)+dt*13);
   for(const flash of this.cameraFlashes)flash.ttl-=dt;this.cameraFlashes=this.cameraFlashes.filter(flash=>flash.ttl>0);
   if(this.tvEvent){this.tvEvent.ttl-=dt;if(this.tvEvent.ttl<=0)this.tvEvent=null;}
-  for(const effect of this.effects){effect.ttl-=dt;effect.y-=dt*6;}this.effects=this.effects.filter(e=>e.ttl>0);
+  for(const effect of this.effects){effect.ttl-=dt;if(effect.kind!=='booth')effect.y-=dt*6;}this.effects=this.effects.filter(e=>e.ttl>0);
   if(!this.breatherActive)this.nextArrival-=dt;
   if(this.nextArrival<=0&&this.next<this.cards.length&&this.visitors.length+this.arrivals.length<(this.session==='endless'?6:4)){
    this.add({throughGate:true});this.nextArrival=(this.session==='endless'?endlessArrivalInterval(this.wave):this.config.arrival*(this.phase===3?.89:1))+(this.recovery>0?3:0);

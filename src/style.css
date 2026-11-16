@@ -480,3 +480,21 @@
  .irl-stage-top>span:last-child{max-width:38%}
  .irl-world-speech{max-height:calc(100% - 10px);width:min(58%,235px)}
 }
+
+
+/* v0.8.8d: restore fast, fully readable decisions with zero internal scrollers. */
+.irl-world-speech{
+ width:min(46%,480px);max-width:calc(100% - 12px);min-width:0;
+ max-height:none;overflow:visible;overflow-y:visible;
+ padding:10px 13px 11px;pointer-events:none;
+ font-size:clamp(10px,.95vw,14px);line-height:1.35;
+}
+.irl-world-speech strong{white-space:normal;overflow:visible;text-overflow:clip;font-size:clamp(13px,1.15vw,17px)}
+.irl-world-speech p{font-size:clamp(11px,.95vw,14px);line-height:1.35}
+.irl-world-speech small{font-size:clamp(10px,.8vw,12px);line-height:1.32}
+@media(max-width:660px){
+ .irl-world-speech{width:min(76%,380px);max-height:none;overflow:visible;overflow-y:visible;padding:6px 8px;font-size:10px}
+ .irl-world-speech strong{font-size:12px}
+ .irl-world-speech p{font-size:10px;line-height:1.23}
+ .irl-world-speech small{font-size:9px;line-height:1.2}
+}

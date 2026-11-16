@@ -6,9 +6,9 @@ import {MODULAR_VENUE_FILES,modularVenueReady,modularStageMode,drawModularVenue}
 import {VENUE_GATES,VENUE_STAGE,VENUE_OBSTACLES,isVenueWalkable} from '../src/venue-nav.js';
 const asset=name=>new URL('../assets/'+name,import.meta.url);
 
-test('eight modular assets mix stable hall/booths with corrected entrance and stage',()=>{
+test('seven modular assets keep the empty stage and independent entrance/booth layers',()=>{
  const names=Object.values(MODULAR_VENUE_FILES);
- assert.equal(names.length,8);
+ assert.equal(names.length,7);
  for(const file of names){
   const url=asset(file);assert(existsSync(url),file);
   assert.equal(readFileSync(url).toString('ascii',8,12),'WEBP',file);
@@ -37,17 +37,13 @@ test('every independent booth shares hitbox coordinates with the navigation map'
  assert.equal(VENUE_STAGE.exchange[1],55,'fan waits in front of the signing table after the stairs');
 });
 
-test('LCD content and stage furnishings sit inside the modular stage shell',()=>{
+test('LCD projection fits inside the re-anchored empty stage shell',()=>{
  const s=MODULAR_PROPS.stage,tv=MODULAR_TV_BOUNDS;
  assert(tv.x>=s.x&&tv.y>=s.y&&tv.x+tv.w<=s.x+s.w&&tv.y+tv.h<=s.y+s.h);
  const m=MODULAR_TV_PROJECTION;
  assert(m.e>=tv.x&&m.f>=tv.y);
  assert(m.e+100*m.a>=tv.x&&m.e+100*m.a<=tv.x+tv.w+2);
- for(const name of ['fixedFurniture']){
-  const p=MODULAR_PROPS[name];
-  assert(p.x>=s.x&&p.y>=s.y&&p.x+p.w<=s.x+s.w&&p.y+p.h<=s.y+s.h);
-  assert(p.y+p.h<=84,'permanent debate desks must leave central stairs visually accessible');
- }
+ assert(!('fixedFurniture' in MODULAR_PROPS),'all chairs and desks removed for v0.8.8d');
  assert.equal(modularStageMode({departures:[]}), 'fixed');
  assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:true}]}),'fixed');
  assert.equal(modularStageMode({departures:[{stageVisit:'exchange',debater:false}]}),'fixed');
@@ -63,7 +59,7 @@ function mockCtx(){
  };
  return ctx;
 }
-test('closed/open badge gates render distinctly while stage furniture remains fixed',()=>{
+test('gate hardware stays fixed while only glass flaps change state',()=>{
  const image={complete:true,naturalWidth:1700,naturalHeight:941};
  const images=Object.fromEntries(Object.keys(MODULAR_VENUE_FILES).map(k=>[k,image]));
  assert(modularVenueReady(images));
@@ -71,13 +67,22 @@ test('closed/open badge gates render distinctly while stage furniture remains fi
  const ctx=mockCtx();
  assert(drawModularVenue(ctx,images,idle,0));
  assert.equal(ctx.depth,0);
- assert(ctx.calls.some(c=>c.args[1]===MODULAR_ATLAS.gate.closed.x&&c.args[3]===MODULAR_ATLAS.gate.closed.w));
- assert(ctx.calls.some(c=>c.args[1]===MODULAR_ATLAS.debate.x&&c.args[3]===MODULAR_ATLAS.debate.w));
+ assert(ctx.calls.filter(c=>c.args[1]===MODULAR_ATLAS.gate.open.x&&c.args[3]===MODULAR_ATLAS.gate.open.w).length===2);
+ assert.equal(Object.prototype.hasOwnProperty.call(images,'furniture'),false);
  const admitted={...idle,elapsed:3,gateControllers:{left:{openedAt:2.5,openUntil:5},right:idle.gateControllers.right},
   departures:[{stageVisit:'exchange',debater:true}]};
  const open=mockCtx();drawModularVenue(open,images,admitted,0);
  assert.equal(open.depth,0);
- assert(open.calls.some(c=>c.args[1]===MODULAR_ATLAS.gate.open.x&&c.args[3]===MODULAR_ATLAS.gate.open.w));
- assert(open.calls.some(c=>c.args[1]===MODULAR_ATLAS.debate.x&&c.args[3]===MODULAR_ATLAS.debate.w));
- assert.equal(ctx.calls.length,open.calls.length,'no stage furniture swap or duplicate on debate');
+ assert(open.calls.filter(c=>c.args[1]===MODULAR_ATLAS.gate.open.x&&c.args[3]===MODULAR_ATLAS.gate.open.w).length===2);
+ assert.equal(ctx.calls.length,open.calls.length,'gate open never swaps architectural source frames');
+});
+
+
+test('v0.8.8d decision cards cannot introduce nested scrollbars',()=>{
+ const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+ const sandbox=readFileSync(new URL('../src/irl-sandbox-v085.css',import.meta.url),'utf8');
+ assert(css.includes('v0.8.8d: restore fast, fully readable decisions'));
+ assert(sandbox.includes('v0.8.8d: non-scrollable'));
+ assert(/\.irl-world-speech\{[^}]*overflow-y:visible/.test(css));
+ assert(/\.harness-prompt\{[^}]*overflow-y:visible/.test(sandbox));
 });

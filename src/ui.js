@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 import {engine,UPGRADES,WORLD_DEFS,GENERATOR_STATS,SURFACES,CONTRACTS,OPERATOR_UPGRADES,CREATORS,NETWORK_CREATORS,CREATOR_EVENTS,CREATOR_UPGRADES} from './engine.js';
 import {sound} from './audio.js';
@@ -159,13 +159,14 @@ function irlPage(){const r=irl?.result||null;return `<div class="page irl-page">
  <div class="irl-disclaimer">Fan-made fictional depiction · no affiliation with, endorsement by, or actual participation by Destiny · all attendees and threats invented</div>
  </main>${footer()}</div>`.replace('Guide twenty guests through the convention.',irl.session==='endless'?'Survive endless waves of guests and protect the venue.':'Guide '+irl.config.guests+' guests through '+irl.config.title+'.').replace('One guest at a time, even when the venue is busy.','The highlighted guest stays prominent; Chaos Mode can show incoming prompts simultaneously.').replace('the four actions below','the five actions below').replace('Welcome</b> fans and peaceful critics.','Welcome</b> fans. <b>Invite to Debate</b> peaceful critics.').replace('1 · FAN / CRITIC','1 · FAN');}
 function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-canvas');if(!canvas)return;const ctx=setupGraphicsCanvas(canvas,graphics);if(!ctx)return;
+ const useCamera=modularVenueReady(modularVenue);if(useCamera){ctx.save();applyModularVenueCamera(ctx);}
  const modern=drawModularVenue(ctx,modularVenue,irl,t,{host:irlPoseImages[0],poses:irlPoseImages,cast:irlImages.cast,extra:irlAdditionalSets});
  if(!modern){if(irlImages.hall.complete&&irlImages.hall.naturalWidth)ctx.drawImage(irlImages.hall,0,0,384,216);else{ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);}
   drawStageAtmosphere(ctx,t,irl.phase);drawVenueRush(ctx,irl,t);drawVenueScreens(ctx,irl,t,{host:irlPoseImages[0],cast:irlImages.cast,extra:irlAdditionalSets});drawVenueGates(ctx,irlImages.hall,irl);}
  drawStageQueueGuides(ctx,irl);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);
   ctx.fillStyle='#91f9b868';for(let y=84;y<184;y+=VENUE_CELL)for(let x=12;x<357;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}
- if(!irlImages.cast.complete||!irlImages.cast.naturalWidth)return;
+ if(!irlImages.cast.complete||!irlImages.cast.naturalWidth){if(useCamera)ctx.restore();return;}
  // Each cell of the generated atlas contains a separate illustrated pixel sprite;
  // no duplicated palette-swapped character is drawn as a stand-in.
  const sprite=(kind,x,y,w=35,h=43,state='idle',motion=null)=>{
@@ -231,7 +232,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  if(irl.phase===2&&Math.floor(t/1050)%2===0){ctx.fillStyle='#fff1a6';ctx.fillRect(330,110,3,3);ctx.fillRect(333,107,1,8);}
  if(irl.phase===3){ctx.fillStyle=Math.floor(t/460)%2?'#83edf5':'#f9b1df';ctx.fillRect(276,44,12,2);ctx.fillRect(300,50,6,2);}
  if(irl.recovery>0){ctx.fillStyle='#84fce2';ctx.fillRect(7,8,100,12);ctx.fillStyle='#14283d';ctx.font='bold 7px monospace';ctx.fillText('RECOVERY · BREATHE',11,16);}
- for(const e of irl.effects){ctx.font='bold 9px monospace';const x=Math.max(3,Math.min(381-ctx.measureText(e.text).width,e.x));ctx.lineWidth=3;ctx.strokeStyle='#172039';ctx.strokeText(e.text,x,e.y);ctx.fillStyle=e.color;ctx.fillText(e.text,x,e.y);}
+ for(const e of irl.effects){if(e.kind==='booth')continue;ctx.font='bold 9px monospace';const x=Math.max(3,Math.min(381-ctx.measureText(e.text).width,e.x));ctx.lineWidth=3;ctx.strokeStyle='#172039';ctx.strokeText(e.text,x,e.y);ctx.fillStyle=e.color;ctx.fillText(e.text,x,e.y);}
  if(irl.arcadeFlash>0){
   ctx.save();ctx.globalAlpha=Math.min(.32,irl.arcadeFlash*.42);ctx.fillStyle=irl.lastVerdict?.success?'#80ffdb':'#ff4764';ctx.fillRect(0,0,384,216);ctx.restore();
  }
@@ -240,9 +241,11 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
   ctx.save();ctx.fillStyle='rgba(4,7,17,'+Math.min(1,1-irl.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);
   ctx.fillStyle='#fff4e1';ctx.font='bold 14px monospace';ctx.fillText('EVENT CANCELED',115,102);ctx.restore();
  }
+ if(useCamera)ctx.restore();
  applyVenueTexture(ctx,canvas,graphics,t);
  applyVenueCRT(ctx,canvas,graphics);
 }
+const useSceneCameraPoint=(x,y,modern)=>modern?venueCameraPoint(x,y):{x,y};
 function irlRefresh(force=false){if(engine.mode!=='irl'||!irl)return;const set=(key,value)=>{const el=$(key);if(el)el.textContent=value;};
  const stamp=$('#irl-arcade-stamp');if(stamp){
   const active=irl.lastVerdict&&irl.elapsed-irl.lastVerdict.at<.8;
@@ -263,7 +266,8 @@ function irlRefresh(force=false){if(engine.mode!=='irl'||!irl)return;const set=(
    const renderWidth=mobile?scene.clientHeight*384/216:scene.clientWidth;
    const offset=mobile?irlClampUI(scene.clientWidth*.49-(g.x+16)/384*renderWidth,scene.clientWidth-renderWidth,0):0;
    if(stageCanvas){stageCanvas.style.width=renderWidth+'px';stageCanvas.style.left=offset+'px';}
-   const sx=offset+(g.x+16)/384*renderWidth,sy=(g.y-2)/216*scene.clientHeight;
+   const point=useSceneCameraPoint(g.x+16,g.y-2,modularVenueReady(modularVenue));
+   const sx=offset+point.x/384*renderWidth,sy=point.y/216*scene.clientHeight;
    const bw=bubble.offsetWidth,bh=bubble.offsetHeight;
    const normalLeft=Math.max(6,Math.min(scene.clientWidth-bw-6,sx-bw*.48));
    const normalTop=Math.max(6,Math.min(scene.clientHeight-bh-6,sy-bh-14));
@@ -385,7 +389,7 @@ document.addEventListener('pointerdown',e=>{const btn=e.target.closest?.('[data-
 document.addEventListener('error',avatarError,true);
 document.addEventListener('click',e=>{const button=e.target.closest('[data-cmd]');if(button&&!button.disabled)cmd(button);});
 document.addEventListener('change',e=>{if(e.target?.id!=='irl-speed')return;const next=Number(e.target.value);if(![1,1.5,2].includes(next))return;irlSpeed=next;try{localStorage.setItem('feedfall-destiny-speed',String(next));}catch{}});
-document.addEventListener('click',e=>{if(e.target.id!=='irl-canvas'||engine.mode!=='irl'||irl?.mode!=='playing')return;const b=e.target.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*384,y=(e.clientY-b.top)/b.height*216;const closest=[...irl.visitors].reverse().find(g=>x>=g.x-4&&x<=g.x+37&&y>=g.y-10&&y<=g.y+45);if(closest){irl.choose(closest.id);irlRefresh(true);}});
+document.addEventListener('click',e=>{if(e.target.id!=='irl-canvas'||engine.mode!=='irl'||irl?.mode!=='playing')return;const b=e.target.getBoundingClientRect(),px=(e.clientX-b.left)/b.width*384,py=(e.clientY-b.top)/b.height*216,world=modularVenueReady(modularVenue)?venueCameraUnproject(px,py):{x:px,y:py},x=world.x,y=world.y;const closest=[...irl.visitors].reverse().find(g=>x>=g.x-4&&x<=g.x+37&&y>=g.y-10&&y<=g.y+45);if(closest){irl.choose(closest.id);irlRefresh(true);}});
 document.addEventListener('keydown',e=>{if(e.altKey||e.metaKey||e.ctrlKey||e.repeat||e.target.closest('input,textarea,select'))return;if(engine.mode!=='playing')return;
  if(e.code==='Escape'&&paused){paused=false;pauseOverlay();return;}
  if(e.code==='KeyQ'&&!paused){e.preventDefault();engine.triggerPulse();return;}
