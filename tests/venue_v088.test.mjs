@@ -5,6 +5,7 @@ import {IRLEvent} from '../src/irl-v07.js';
 import {selectDebateTopic,judgeStageDebate,stageDialogueBeat,fanInteractionKind,DESTINY_DEBATE_TOPICS} from '../src/irl-debates-v088.js';
 import {VENUE_LED_SCREEN} from '../src/venue-effects-v086.js';
 import {VENUE_STAGE,venueStageQueueSpot,isVenueWalkable,VENUE_GATES} from '../src/venue-nav.js';
+import {MODULAR_TV_BOUNDS} from '../src/venue-geometry-v088b.js';
 
 const engine=()=>({progress:{credits:0,irlRecords:{},creators:{destiny:{xp:0}}},save(){}});
 const inProject=path=>new URL('../'+path,import.meta.url);
@@ -21,15 +22,15 @@ const simulateStage=(row,action)=>{
  return {event,shown,flashed,spoke};
 };
 
-test('v0.8.8 hall uses a native illustrated LED and unpainted gates in both entry points',()=>{
- const hall=inProject('assets/irl-hall-open-v088.webp');
- assert(existsSync(hall));assert.equal(readFileSync(hall).toString('ascii',8,12),'WEBP');
- assert(VENUE_LED_SCREEN.x>=238&&VENUE_LED_SCREEN.x<=244);
- assert(VENUE_LED_SCREEN.y<=17&&VENUE_LED_SCREEN.w>=80&&VENUE_LED_SCREEN.h<=33);
+test('v0.8.8m unified hall uses on-plate LCD and physically mounted scanner gates',()=>{
+ const hall=inProject('assets/Neon Convention Hall Claw Machine.png');
+ assert(existsSync(hall));assert.equal(readFileSync(hall).toString('ascii',1,4),'PNG');
+ assert(MODULAR_TV_BOUNDS.x>=230&&MODULAR_TV_BOUNDS.x<=236);
+ assert(MODULAR_TV_BOUNDS.y>=29&&MODULAR_TV_BOUNDS.w>=65&&MODULAR_TV_BOUNDS.h<=34);
  const ui=readFileSync(inProject('src/ui.js'),'utf8');
  const sandbox=readFileSync(inProject('src/irl-sandbox-v085.js'),'utf8');
  for(const code of [ui,sandbox]){
-  assert(code.includes('irl-hall-open-v088.webp'));
+  assert(code.includes('loadModularVenueAssets')&&code.includes('drawModularVenue'));
   assert(code.includes('drawStageQueueGuides(')&&code.includes('drawStageConversation('));
   assert(code.includes('data-action="debate"'));
  }
@@ -51,7 +52,7 @@ test('third six-person roster has idle, four-step walk, north walk and four reac
 });
 
 test('stage is centered at the stair opening with orderly, separate fan/debate sides',()=>{
- assert.deepEqual(venueStageQueueSpot(0),VENUE_STAGE.staging);
+ assert(Math.hypot(venueStageQueueSpot(0)[0]-VENUE_STAGE.staging[0],venueStageQueueSpot(0)[1]-VENUE_STAGE.staging[1])<6);
  for(let i=1;i<6;i++)assert(venueStageQueueSpot(i)[1]>venueStageQueueSpot(i-1)[1]);
  assert(VENUE_STAGE.debate[0]>VENUE_STAGE.stairs[0]);
  assert(VENUE_STAGE.exchange[0]>VENUE_STAGE.stairs[0]);

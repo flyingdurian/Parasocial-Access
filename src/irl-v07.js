@@ -378,7 +378,7 @@ export class IRLEvent {
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,24))g.stageVisit='climbStairs';
    }else if(g.stageVisit==='climbStairs'){
     if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:g.fanKind==='photo'?VENUE_STAGE.photoGuest:VENUE_STAGE.exchange),dt,23)){
-     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):3.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.38;g.exchangeAction=g.debater?'argue':'cheer';g.walking=false;g.facing=g.debater?1:-1;
+     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):3.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.38;g.exchangeAction=g.debater?'argue':'cheer';g.walking=false;g.facing=g.debater?-1:1;
      this.hostMood=g.debater?'argue':'talk';this.hostUntil=this.elapsed+g.exchangeClock;
      this.effects.push({x:217,y:78,text:g.debater?'LIVE DEBATE!':g.fanKind==='autograph'?'✦ AUTOGRAPH!':'♥ PHOTO OP!',color:'#ffeaa5',ttl:1.5});
      this.effects.push({x:200,y:93,text:loreStageLine(g,0),color:'#ffedb4',ttl:1.7});
@@ -485,10 +485,10 @@ export class IRLEvent {
     }else worker.walking=false;
    }else{
     // Ticket support staff take small real walking laps when not assigned a task.
-    const index=this.staff.indexOf(worker),offset=index===1?-11:11;
+    const index=this.staff.indexOf(worker),offset=index===1?-14:14;
     worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
     if(worker.patrolDwell<=0){
-     const tx=worker.homeX+(worker.patrolIndex%2?0:offset),ty=worker.homeY+(worker.patrolIndex%2?0:7);
+     const tx=worker.homeX+(worker.patrolIndex%2?0:offset),ty=worker.homeY+(worker.patrolIndex%2?0:index===1?1:-8);
      if(moveVenue(worker,tx,ty,dt,19)){
       worker.patrolIndex++;worker.patrolDwell=1.2;
      }
