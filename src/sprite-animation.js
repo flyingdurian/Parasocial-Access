@@ -19,24 +19,37 @@ export function poseFrame(state,time=0,kind=0,motion=null){
 }
 export function walkCycleFrame(distance=0){return ((Math.floor(Math.max(0,distance)/VENUE_STRIDE)%4)+4)%4;}
 export function venueSpriteGeometry(x,y,w,h,motion=null){
- const footX=x+w/2,footY=y+h;
+ const footX=x+w/2,footY=Number.isFinite(motion?.groundY)?motion.groundY+h:y+h;
  const t=Math.max(0,Math.min(1,(footY-74)/144));
  const scale=Math.max(.91,Math.min(1.05,.91+.14*t));
  const gait=motion?.walking&&Number.isFinite(motion.stepDistance)?Math.max(0,Math.sin(motion.stepDistance/VENUE_STRIDE*Math.PI/2)):0;
  // Near-zero gait variation: no visible 'moon bounce' or floating feet.
  const bob=gait*.14;
- return {x:footX-w*scale/2,y:footY-h*scale-bob,w:w*scale,h:h*scale,footX,footY,scale,bob};
+ return {x:footX-w*scale/2,y:y+h-h*scale-bob,w:w*scale,h:h*scale,footX,footY,scale,bob};
 }
 export function drawContactShadow(ctx,geometry){
  ctx.save();ctx.fillStyle='rgba(9,8,22,.56)';ctx.beginPath();ctx.ellipse(geometry.footX,geometry.footY+1,Math.max(5,geometry.w*.30),Math.max(1.5,geometry.h*.072),0,0,Math.PI*2);ctx.fill();ctx.restore();
 }
-export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w=35,h=43,walkAtlas=null,extraAtlases=null,walk4Atlases=null,motion=null,back4Atlases=null,stagePoseAtlases=null,reactionAtlases=null,originalWalk4Atlases=null,originalBack4Atlases=null){
+export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w=35,h=43,walkAtlas=null,extraAtlases=null,walk4Atlases=null,motion=null,back4Atlases=null,stagePoseAtlases=null,reactionAtlases=null,originalWalk4Atlases=null,originalBack4Atlases=null,newCastAtlases=null){
  const facing=motion?.facing===-1?-1:1;
  const flip=facing===-1;
  const paint=(image,sx,sy,sw,sh)=>{
   if(flip){ctx.save();ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(image,sx,sy,sw,sh,0,0,w,h);ctx.restore();}
   else ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);
  };
+ // Six additional 4-row character sheets: rear walk, side walk, front reactions.
+ if(kind>=30&&kind<36){
+  const action=state!=='walk'&&state!=='idle';
+  const rear=motion?.direction==='north';
+  const sheet=action||state==='idle'&&!rear?newCastAtlases?.react:rear?newCastAtlases?.back:newCastAtlases?.walk;
+  if(sheet?.complete&&sheet.naturalWidth>0){
+   const row=action?(state==='talk'||state==='mic'?0:state==='cheer'||state==='laugh'?1:state==='point'?2:3):state==='walk'?walkCycleFrame(motion?.stepDistance??time/18):0;
+   const cw=sheet.naturalWidth/6,ch=sheet.naturalHeight/4;
+   paint(sheet,(kind-30)*cw,row*ch,cw,ch);
+   return true;
+  }
+  kind=2; // artwork loading fallback
+ }
  if(kind>=12&&kind<=29){
   const sheetIndex=Math.floor((kind-12)/6);
   const action=state!=='walk'&&state!=='idle';
