@@ -34,7 +34,7 @@ function ctx(){
 
 test("first nineteen crowd positions form the owner's near-stage half ellipse",()=>{
  const spots=Array.from({length:19},(_,i)=>venueDebateAudienceSpot(i));
- assert(spots.every(([x,y])=>x>=180&&x<=355&&y<=148),'first wave stays within stage apron');
+ assert(spots.every(([x,y])=>x+16>=188&&x+16<=345&&y+35>=99&&y+35<=141),'first wave FOOT CONTACT stays within stage apron, not at gates');
  assert(Math.max(...spots.map(([x])=>x))-Math.min(...spots.map(([x])=>x))>135,'crowd spans the entire stage width');
  assert(spots.every(([x,y])=>isVenueWalkable(x,y)),'all audience targets have a navigable footprint');
  assert(new Set(spots.map(p=>p.join(','))).size===spots.length,'pit slots do not overlap');

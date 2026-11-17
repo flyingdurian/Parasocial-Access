@@ -12,9 +12,10 @@ test('stage audience fills a broad U across both wings, not one concentrated clu
  const spots=Array.from({length:36},(_,i)=>venueDebateAudienceSpot(i));
  assert.equal(new Set(spots.map(p=>p.join(','))).size,36);
  assert(spots.every(([x,y])=>isVenueWalkable(x,y)));
- assert(Math.min(...spots.map(p=>p[0]))<200,'left wing filled');
- assert(Math.max(...spots.map(p=>p[0]))>340,'right wing filled');
- assert(spots.some(([,y])=>y>128),'middle of the arena filled');
+ assert(Math.min(...spots.map(p=>p[0]+16))<192,'left wing filled');
+ assert(Math.max(...spots.map(p=>p[0]+16))>338,'right wing filled');
+ assert(spots.every(([,y])=>y+35<140),'no spectator feet drift toward the entrance');
+ assert(spots.some(([,y])=>y+35>130),'front edge of the stage ellipse is populated');
 });
 
 test('endless wave density scales but stays bounded and safety strikes are documented',()=>{

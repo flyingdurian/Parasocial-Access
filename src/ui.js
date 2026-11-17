@@ -12,6 +12,7 @@ import {avatarPath,avatarError} from './avatars-v083.js';
 import {drawStageAtmosphere,drawAmbientBubble,drawDebateShout,drawQueuedDecisionBubble,createBubbleLayout,reserveCanvasOverlay,placeFocusedVenuePrompt} from './irl-atmosphere-v083.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawDebateCombatEffects,drawSecurityComic,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
+import {createResilientAnimationLoop} from './venue-frame-loop-v088r.js';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const fmt=n=>Math.round(n).toLocaleString();
 const avatar=avatarPath;
@@ -59,7 +60,7 @@ const irlDggl=new Image();irlDggl.src='/assets/irl-dggl-v088e.webp';
 irlPoseImages[0].src='assets/irl-host-poses.webp';
 irlPoseImages[1].src='assets/irl-photographer-poses.webp';
 irlPoseImages[3].src='assets/irl-security-poses.webp';
-function header(){return `<header class="topnav"><div class="brand"><span class="brand-symbol">⌁</span><div class="brand-word">FEED<span>FALL</span><small>RUSH HOUR / OFF THE FEED <b>0.8.8q DEV</b></small></div></div><div class="toplinks"><span class="status-led"><i></i> SYSTEM ACTIVE</span><button class="dev-header-link" data-cmd="debug">⚙ TEST MENU</button><button class="audio-toggle ${sound.musicEnabled?'on':''}" data-cmd="music" aria-label="Toggle music"><span>♫</span><small>MUSIC ${sound.musicEnabled?'ON':'OFF'}</small></button><button class="audio-toggle ${sound.sfxEnabled?'on':''}" data-cmd="sfx" aria-label="Toggle sound effects"><span>◖))</span><small>FX ${sound.sfxEnabled?'ON':'OFF'}</small></button><button class="audio-toggle" data-cmd="volume" aria-label="Change music volume"><span>◖</span><small>VOL ${sound.volumePercent()}%</small></button></div></header>`;}
+function header(){return `<header class="topnav"><div class="brand"><span class="brand-symbol">⌁</span><div class="brand-word">FEED<span>FALL</span><small>RUSH HOUR / OFF THE FEED <b>0.8.8r DEV</b></small></div></div><div class="toplinks"><span class="status-led"><i></i> SYSTEM ACTIVE</span><button class="dev-header-link" data-cmd="debug">⚙ TEST MENU</button><button class="audio-toggle ${sound.musicEnabled?'on':''}" data-cmd="music" aria-label="Toggle music"><span>♫</span><small>MUSIC ${sound.musicEnabled?'ON':'OFF'}</small></button><button class="audio-toggle ${sound.sfxEnabled?'on':''}" data-cmd="sfx" aria-label="Toggle sound effects"><span>◖))</span><small>FX ${sound.sfxEnabled?'ON':'OFF'}</small></button><button class="audio-toggle" data-cmd="volume" aria-label="Change music volume"><span>◖</span><small>VOL ${sound.volumePercent()}%</small></button></div></header>`;}
 function worldCard(w,i){const p=engine.worldState(i),locked=!engine.worldAvailable(i);return `<button class="world-card world-${w.id} ${activeWorld===i?'active':''} ${locked?'locked':''}" data-cmd="world" data-world="${i}" aria-label="${esc(w.title)} world ${locked?'locked':'available'}"><span class="world-mark">${w.icon}</span><span class="world-copy"><strong>${esc(w.title)}</strong><small>${esc(w.subtitle)}</small><em>${locked?(i===1?'CLEAR OPEN FEED TO UNLOCK':i===2?'CLEAR LIVE ARENA TO UNLOCK':'CLEAR MARKET WATCH TO UNLOCK'):`${p.stars.filter(n=>n>0).length} / ${w.levels} LEVELS CLEARED`}</em></span><span class="world-arrow">${locked?'▧':'↗'}</span></button>`;}
 function levelTile(w,i){const p=engine.worldState(activeWorld),locked=!engine.levelUnlocked(activeWorld,i),l=w.levelsConfig[i],stars=p.stars[i]||0;return `<button class="level-tile ${locked?'locked':''} ${stars?'won':''}" data-cmd="level" data-world="${activeWorld}" data-level="${i}" ${locked?'disabled':''}><div class="level-top"><span>0${i+1}</span><span class="level-stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</span></div><span class="level-name">${esc(l.tag)}</span><small>${l.count} POSTS · ${l.seconds}s ${w.id==='arena'?'· LIVE':''}</small><span class="level-status">${locked?'LOCKED':stars?'REPLAY ↗':'PLAY ↗'}</span></button>`;}
 function home(){const p=engine.progress,w=WORLD_DEFS[activeWorld],st=p.worlds[activeWorld],locked=!engine.worldAvailable(activeWorld);return `<div class="page home-page">${header()}<main class="home-main"><section class="hero"><div class="hero-art"><div class="hero-art-overlay"></div><div class="hero-orbit orb1"></div><div class="hero-orbit orb2"></div><span class="hero-signal"><i class="live-dot"></i> NEW SHIFT AVAILABLE</span></div><div class="hero-copy"><div class="eyebrow">ARCADE MODERATION · CREATOR NETWORK</div><h1>MAKE THE CALL.<br><em>KEEP THE FLOW.</em></h1><p>A fast, tactile social-media arcade. Build your combo, upgrade real equipment, survive a moving livestream, expose scam rings—and make it look easy.</p><div class="hero-stats"><div><strong>${fmt(p.credits)}</strong><span>CREDITS</span></div><div><strong>${p.sessions}</strong><span>SHIFTS</span></div><div><strong>${fmt(p.totalReviewed)}</strong><span>HANDLED</span></div></div><div class="hero-ctas"><button class="primary" data-cmd="play" ${locked?'disabled':''}>▶ PLAY ${w.title} <span>↗</span></button><button class="secondary" data-cmd="shop">⌁ EQUIPMENT</button></div><p class="hero-hint">3 ACTIONS · 19 LEVELS · 3 CREATOR CHANNELS · UNOFFICIAL GAME FICTION</p></div></section>
@@ -186,7 +187,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  ctx.fillStyle=(Math.floor(t/750)%2)?'#f9c7ff':'#a0f5fb';ctx.fillRect(309,23,2,2);
  // People visit actual venue stations and stop for pictures, food, merch and Q&A.
  // Individual walk bobs translate entire rigid sprites by one pixel at most.
- const actors=[...irl.crowd.map(person=>({person,role:'crowd',w:27,h:34})),...irl.arrivals.map(person=>({person,role:'arrival',w:30,h:38})),...irl.departures.map(person=>({person,role:'departure',w:30,h:38})),...irl.guardPositions.map(person=>({person,role:'guard',w:30,h:38})),...irl.staff.map(person=>({person,role:'staff',w:30,h:38})),...irl.visitors.map(person=>({person,role:'guest',w:30,h:38})),...(irl.mascot?[{person:irl.mascot,role:'mascot',w:22,h:24}]:[])];
+ const actors=[...irl.crowd.map(person=>({person,role:'crowd',w:27,h:34})),...irl.arrivals.map(person=>({person,role:'arrival',w:30,h:38})),...irl.departures.map(person=>({person,role:'departure',w:30,h:38})),...irl.guardPositions.map(person=>({person,role:'guard',w:34,h:43})),...irl.staff.map(person=>({person,role:'staff',w:30,h:38})),...irl.visitors.map(person=>({person,role:'guest',w:30,h:38})),...(irl.mascot?[{person:irl.mascot,role:'mascot',w:22,h:24}]:[])];
  actors.sort((a,b)=>(a.person.y+a.h)-(b.person.y+b.h));
  const bubbleLayout=createBubbleLayout([modularVenueReady(modularVenue)?MODULAR_TV_BOUNDS:VENUE_LED_SCREEN]);
  reserveCanvasOverlay(bubbleLayout,canvas,$('#irl-world-speech'));
@@ -209,7 +210,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
    // into the photo booth: it creates visible rubber-banding on exit.
    const jump=role==='crowd'?(g.hypeJump||0):0;
    const motion=jump>0?{...g,groundY:g.y}:g;
-   sprite(g.kind??(role==='guard'?3:7),g.x+(stageSpeaker?2.5:0),g.y+toss-jump,stageSpeaker?29:w,stageSpeaker?37:h,action,motion);
+   sprite(g.kind??(role==='guard'?3:7),g.x+(role==='guard'?-2:stageSpeaker?2.5:0),g.y-(role==='guard'?5:0)+toss-jump,stageSpeaker?29:w,stageSpeaker?37:h,action,motion);
    if(role==='guard'&&g.task){ctx.fillStyle='#ffae8b';ctx.fillRect(Math.round(g.x+14),Math.round(g.y-5),7,4);}
   else if(role==='staff'&&g.task){ctx.fillStyle='#a4ffe7';ctx.fillRect(Math.round(g.x+13),Math.round(g.y-5),7,4);}
  }
@@ -243,7 +244,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  if(irl.phase===2&&Math.floor(t/1050)%2===0){ctx.fillStyle='#fff1a6';ctx.fillRect(330,110,3,3);ctx.fillRect(333,107,1,8);}
  if(irl.phase===3){ctx.fillStyle=Math.floor(t/460)%2?'#83edf5':'#f9b1df';ctx.fillRect(276,44,12,2);ctx.fillRect(300,50,6,2);}
  if(irl.recovery>0){ctx.fillStyle='#84fce2';ctx.fillRect(7,8,100,12);ctx.fillStyle='#14283d';ctx.font='bold 7px monospace';ctx.fillText('RECOVERY · BREATHE',11,16);}
- drawVenueFeedback(ctx,irl.effects,irlDggl);
+ drawVenueFeedback(ctx,irl.effects,irlDggl,irl);
  if(irl.arcadeFlash>0){
   ctx.save();ctx.globalAlpha=Math.min(.32,irl.arcadeFlash*.42);ctx.fillStyle=irl.lastVerdict?.success?'#80ffdb':'#ff4764';ctx.fillRect(0,0,384,216);ctx.restore();
  }
@@ -435,7 +436,29 @@ document.addEventListener('keydown',e=>{if(e.altKey||e.metaKey||e.ctrlKey||e.rep
  if((engine.stream||engine.market||engine.threaded)&&['ArrowUp','ArrowDown'].includes(e.code)){e.preventDefault();const idx=engine.queue.findIndex(c=>c.id===engine.focus),next=engine.queue[(idx+(e.code==='ArrowDown'?1:-1)+engine.queue.length)%engine.queue.length];if(next)engine.select(next.id);}
 });
 document.addEventListener('keydown',e=>{if(engine.mode!=='irl'||!irl||e.repeat||e.altKey||e.metaKey||e.ctrlKey)return;if(e.code==='KeyP'||e.code==='Space'){e.preventDefault();if(irl.mode==='playing'){irl.paused=!irl.paused;irlRefresh(true);}return;}if(irl.mode!=='playing'||irl.paused)return;const action={Digit1:'welcome',Digit2:'check',Digit3:'redirect',Digit4:'debate',Digit5:'security'}[e.code];if(action){e.preventDefault();if(irl.action(action))sound.irlDispatch(action);irlRefresh(true);if(irl.mode==='results')draw();}});
-function loop(t){const dt=lastFrame?(t-lastFrame)/1000:0;lastFrame=t;if(engine.mode==='playing'&&!paused){engine.update(dt);if(engine.mode==='playing'){sound.tick();if(t-lastUi>110){lastUi=t;renderQueue();renderHud();}}}else if(engine.mode==='irl'&&irl){const previous=irl.mode;irl.tick(dt*irlSpeed);sound.irlDebateTick(irl);sound.irlSecurityTick(irl);if(irl.mode==='playing')sound.setMode(irl.paused?'menu':irl.phase===1?'convention':irl.phase===2?'convention-peak':'convention-qa');if(irl.finished.length>irlLastLogCount){irlLastLogCount=irl.finished.length;const last=irl.finished[irl.finished.length-1];sound.irlStamp(last.success,last.action);if(!last.success)navigator.vibrate?.([55,30,75]);else if(last.action==='security')navigator.vibrate?.(40);}irlPaint(t);if(previous!==irl.mode&&irl.mode==='results')draw();if(t-lastUi>125){lastUi=t;irlRefresh();sound.tick();if(irl.mode==='playing'&&!irl.paused)sound.irlAmbience(irl.phase);}}raf=requestAnimationFrame(loop);}
+const loop=createResilientAnimationLoop(t=>{
+ const dt=Math.min(.09,lastFrame?(t-lastFrame)/1000:0);lastFrame=t;
+ if(engine.mode==='playing'&&!paused){
+  engine.update(dt);
+  if(engine.mode==='playing'){sound.tick();if(t-lastUi>110){lastUi=t;renderQueue();renderHud();}}
+ }else if(engine.mode==='irl'&&irl){
+  const previous=irl.mode;irl.tick(dt*irlSpeed);
+  sound.irlDebateTick(irl);sound.irlSecurityTick(irl);
+  if(irl.mode==='playing')sound.setMode(irl.paused?'menu':irl.phase===1?'convention':irl.phase===2?'convention-peak':'convention-qa');
+  if(irl.finished.length>irlLastLogCount){
+   irlLastLogCount=irl.finished.length;
+   const last=irl.finished[irl.finished.length-1];sound.irlStamp(last.success,last.action);
+   if(!last.success)navigator.vibrate?.([55,30,75]);else if(last.action==='security')navigator.vibrate?.(40);
+  }
+  irlPaint(t);
+  if(previous!==irl.mode&&irl.mode==='results')draw();
+  if(t-lastUi>125){lastUi=t;irlRefresh();sound.tick();if(irl.mode==='playing'&&!irl.paused)sound.irlAmbience(irl.phase);}
+ }
+},{schedule:callback=>{raf=requestAnimationFrame(callback);},onError:error=>{
+ console.error('[FEEDFALL] Animation frame recovered after error',error);
+ if(irl)irl.message='DISPLAY RECOVERING · Animation continues. See browser console for details.';
+}});
+document.addEventListener('visibilitychange',()=>{lastFrame=0;});
 draw();raf=requestAnimationFrame(loop);
 const graphicsPanel=createGraphicsPanel(graphics,next=>{graphics=saveGraphics(next);});
 document.body.appendChild(graphicsPanel.element);

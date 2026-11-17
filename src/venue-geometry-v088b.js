@@ -4,7 +4,7 @@
 export const MODULAR_VENUE_W=384;
 export const MODULAR_VENUE_H=216;
 export const MODULAR_STAGE=Object.freeze({
- staging:[253,78],stairs:[249,61],exchange:[253,44],debate:[285,32],
+ staging:[253,78],stairs:[249,61],exchange:[253,44],debate:[285,40],
  // Feet land on the illuminated front stage boards, not the backdrop wall.
  // Signing sits centrally; the photo duo poses immediately behind the tripod.
  autographGuest:[264,38],autographHost:[243,38],

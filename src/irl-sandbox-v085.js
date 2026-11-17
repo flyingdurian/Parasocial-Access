@@ -12,6 +12,7 @@ import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
 import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawDebateCombatEffects,drawSecurityComic,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
+import {createResilientAnimationLoop} from './venue-frame-loop-v088r.js';
 
 const root=document.querySelector('#irl-harness');
 const q=(selector)=>root.querySelector(selector);
@@ -40,7 +41,7 @@ newCast.back.src='/assets/irl-cast%20new%20sheet%201.png';
 newCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
 newCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8q · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8r · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
@@ -85,7 +86,7 @@ function draw(t){
  const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box,t,motion?.stageVisit==='exchange'||kind===0?'stage':'hall');drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack,newCast);};
  const mood=stageAction(event.phase,event.elapsed,event.visitors.length,event.elapsed<event.hostUntil?event.hostMood:'idle');
  sprite(0,event.hostX,event.hostY,31,39,event.hostWalking&&!event.departures.some(g=>g.stageVisit==='exchange')?'walk':mood);
- const actors=[...event.crowd.map(g=>({g,role:'crowd',w:27,h:34})),...event.arrivals.map(g=>({g,role:'arrival',w:30,h:38})),...event.visitors.map(g=>({g,role:'visitor',w:30,h:38})),...event.departures.map(g=>({g,role:'depart',w:30,h:38})),...event.staff.map(g=>({g,role:'staff',w:30,h:38})),...event.guardPositions.map(g=>({g,role:'guard',w:30,h:38})),...(event.mascot?[{g:event.mascot,role:'mascot',w:22,h:24}]:[])].sort((a,b)=>a.g.y+a.h-(b.g.y+b.h));
+ const actors=[...event.crowd.map(g=>({g,role:'crowd',w:27,h:34})),...event.arrivals.map(g=>({g,role:'arrival',w:30,h:38})),...event.visitors.map(g=>({g,role:'visitor',w:30,h:38})),...event.departures.map(g=>({g,role:'depart',w:30,h:38})),...event.staff.map(g=>({g,role:'staff',w:30,h:38})),...event.guardPositions.map(g=>({g,role:'guard',w:34,h:43})),...(event.mascot?[{g:event.mascot,role:'mascot',w:22,h:24}]:[])].sort((a,b)=>a.g.y+a.h-(b.g.y+b.h));
  const bubbleLayout=createBubbleLayout([modularVenueReady(modularVenue)?MODULAR_TV_BOUNDS:VENUE_LED_SCREEN]);
  reserveCanvasOverlay(bubbleLayout,canvas,q('#h-speech'));
  reserveStageSpeech(bubbleLayout,event);
@@ -100,7 +101,7 @@ function draw(t){
    // the physical floor even while the visible sprite cheers and jumps.
    const jump=role==='crowd'?(g.hypeJump||0):0;
    const motion=jump>0?{...g,groundY:g.y}:g;
-   sprite(kind,g.x+(stageSpeaker?2.5:0),g.y-jump,stageSpeaker?29:w,stageSpeaker?37:h,state,motion);
+   sprite(kind,g.x+(role==='guard'?-2:stageSpeaker?2.5:0),g.y-(role==='guard'?5:0)-jump,stageSpeaker?29:w,stageSpeaker?37:h,state,motion);
  }
  if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue,event);captureLiveAudienceFrame(ctx,liveAudienceFrame,event);}
  for(const g of event.crowd){
@@ -115,7 +116,7 @@ function draw(t){
  drawDebateCombatEffects(ctx,event,t);
  drawSecurityComic(ctx,event,t);
  if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<Math.min(2,waiting.length);i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout,assets.dggl);}
- drawVenueFeedback(ctx,event.effects,assets.dggl);
+ drawVenueFeedback(ctx,event.effects,assets.dggl,event);
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}
  drawCameraFlashes(ctx,event);
  if(useCamera)ctx.restore();
@@ -161,7 +162,7 @@ function update(){
  }
 }
 let last=0,lastSpeechId=-1,lastSpeechCount=-1,lastSpeechAt=0;
-function loop(now){const dt=Math.min(.09,last?(now-last)/1000:0);last=now;
+const loop=createResilientAnimationLoop(now=>{const dt=Math.min(.09,last?(now-last)/1000:0);last=now;
  if(event.mode==='playing'&&!event.paused)for(let i=0;i<speed;i++)event.tick(dt);
  sound.irlDebateTick(event);sound.irlSecurityTick(event);
  if(event.mode==='playing'&&!event.paused){
@@ -174,7 +175,12 @@ function loop(now){const dt=Math.min(.09,last?(now-last)/1000:0);last=now;
    }
   }
  }
- draw(now);update();requestAnimationFrame(loop);
-}
+ draw(now);update();
+},{onError:error=>{
+ console.error('[FEEDFALL IRL SANDBOX] Animation frame recovered after error',error);
+ event.message='DISPLAY RECOVERING · Retry continues automatically.';
+ q('#h-caption').textContent=event.message;
+}});
+document.addEventListener('visibilitychange',()=>{last=0;});
 reset();requestAnimationFrame(loop);
 globalThis.__FEEDFALL_IRL_SANDBOX={get event(){return event;},engine,graphics,reset};

@@ -1,9 +1,20 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8q concert-pit/arcade/staff-interaction corrections, pending mobile owner QA; p is the prior preview.
-**Working branch:** `feature/v088q-concert-pit-arcade-interactions` (forked from `feature/v088p-stage-bloodsports-relaxed`).
+**Current candidate:** v0.8.8r stage-front foot-space semicircle, clerk sizing, gate glass, dialogue and animation recovery; q is the prior preview.
+**Working branch:** `feature/v088r-stage-front-crowd-gates-stability` (forked from `feature/v088q-concert-pit-arcade-interactions`).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8q targeted/current Node regression sweep 61/61 passing (`venue_v088q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Browser/mobile visual acceptance remains outstanding.
+**Verification:** v0.8.8r targeted/current Node regression sweep **68/68 passing** (`venue_v088r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Local Chromium visual smoke was blocked by the executor's `socket(): Operation not permitted` sandbox restriction; Vercel preview browser/mobile visual acceptance remains outstanding.
+
+## v0.8.8r — active candidate, owner playtest required
+
+- **Stage crowd correction, third-pass root cause:** Earlier semicircles measured targets from sprite TOP-LEFT, shifting every spectator's actual feet ~35 canvas units toward the entrance. New formation is explicitly specified at FOOT CONTACT, 36 separate slots in three interleaved semicircular rows, foot x=189..341 and foot y=101..137, running side-to-side along the stage apron/stairs. The short gold/velvet stage rail stays. Each watcher faces the stage and resumes the prior activity after debate.
+- **Human-scale attendees:** Crop the actual opaque body from each 111×111 ticket-clerk walk atlas cell (previously only 32px of character art, which was being squeezed to a ~9px pencil silhouette). Draw at 31×38. Guards are 34×43 (approximately +12%) but retain their original contact-foot locations.
+- **Grounded debate actors:** Right-side challenger stage location y=40 (previously 32), keeping his foot contact within 4 units of Destiny's. Remove outlined spotlight targeting ellipses entirely while keeping soft stage-light beams and meaningful contact shadows.
+- **Readable stage effects:** Comic audience bubbles keep words whole on line breaks; stage overlay status cards are suppressed during live debates so their thin teal strips cannot intersect the TV or challenger. Win/loss remains on LCD only.
+- **Entrances:** Replace the wrongly implemented prison-style moving metal grille with clear waist-height optical doors that meet at idle and retract at ticketed crossings. Independent fixed **metal infill only** bridges gaps between plant boxes/scanners and the check-in counter. Posts and furniture are unchanged.
+- **Animation recovery:** Shared `createResilientAnimationLoop` schedules the next RAF in `finally`, reports throttled runtime errors, and resets frame deltas on tab visibility changes so a single thrown renderer error no longer freezes play indefinitely. This is a resilience fix; any particular browser-only intermittent trigger still requires live repro/logs.
+- **Deferred:** Claw model rework stays untouched per owner instruction; any *additional* six-character expansion is a follow-up after accepting this correction pass.
+- **QA:** `tests/venue_v088r.test.mjs` covers actual feet in the stagefront arc, challenger footing, full-word comic text, ring removal, trimmed clerk frames, no stage feedback bars and RAF recovery. `tests/browser_v088r.mjs` is a desktop/phone Chrome visual smoke fixture, subject to browser permissions in the execution environment.
 
 ## v0.8.8q — current candidate, owner playtest required
 

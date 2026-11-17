@@ -130,13 +130,15 @@ export function fitMeasuredText(ctx,value,maxWidth,marker='…'){
  }
  return fitted+marker;
 }
-export function wrapMeasuredText(ctx,value,maxWidth,maxLines=3){
+export function wrapMeasuredText(ctx,value,maxWidth,maxLines=3,splitLongWords=true){
  const text=String(value??'').replace(/\s+/g,' ').trim();
  if(!text)return [];
  const lines=[];let current='';
  for(const word of text.split(' ')){
   if(ctx.measureText(word).width>maxWidth){
    if(current){lines.push(current);current='';}
+   // Preserve whole comic-book words instead of slicing 'rebuttal' in half.
+   if(!splitLongWords){lines.push(word);continue;}
    let chunk='';
    for(const character of word){
     if(chunk&&ctx.measureText(chunk+character).width>maxWidth){lines.push(chunk);chunk=character;}
@@ -215,8 +217,9 @@ export function drawDebateShout(ctx,person,layout=null){
  const max=1.85,elapsed=max-ttl;
  const message=String(person.debateSpeech);
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font='bold 5.5px system-ui,sans-serif';
- const width=Math.min(78,Math.max(42,ctx.measureText(message).width/2+11));
- const parts=wrapMeasuredText(ctx,message,width-13,Number.POSITIVE_INFINITY);
+ const longest=Math.max(0,...message.split(/\s+/).map(word=>ctx.measureText(word).width));
+ const width=Math.min(94,Math.max(56,longest+17,ctx.measureText(message).width/2.4+13));
+ const parts=wrapMeasuredText(ctx,message,width-13,Number.POSITIVE_INFINITY,false);
  const height=8+parts.length*7;
  const x=person.x+14,y=person.y-5-Math.min(4,elapsed*5);
  // Never bypass a declined collision placement: the fallback used to render

@@ -113,11 +113,16 @@ test('claw holds one collectible and drops it down the pictured chute',()=>{
  assert(toys[0][3]>=MODULAR_PROPS.claw.y+34,'one plush is now in the chute');
 });
 
-test('entrance uses full-height gate grilles with ticket access unchanged',()=>{
+test('entrance has sliding waist-height glass doors and separate fixed gap barriers',()=>{
  const e=new IRLEvent(engine());
  const ctx=context();
  drawModularVenue(ctx,assets,e,100,{});
  const gateBands=ctx.calls.filter(c=>c[0]==='fillRect'&&Object.values(MODULAR_GATES).some(g=>c[1]>=g.lane.left-3&&c[1]<=g.lane.right+3&&c[2]>=g.lane.top-8&&c[2]<=g.lane.bottom));
- assert(gateBands.some(c=>c[4]>=20),'closed gate panels fill the full entrance opening');
+ assert(gateBands.some(c=>c[4]>=20),'permanent metal infill remains between planters, posts and desk');
+ for(const gate of Object.values(MODULAR_GATES)){
+  const doors=ctx.calls.filter(c=>c[0]==='fillRect'&&c[1]>=gate.lane.left&&c[1]<gate.lane.right&&c[2]===gate.lane.top+5);
+  assert(doors.some(c=>c[4]===16),'real gate doors are waist-height translucent glass, not full-height prison grilles');
+  assert(!doors.some(c=>c[4]>=20),'no 27px metal cage is used as a door');
+ }
  assert.equal(e.gateControllers.left.openUntil<e.elapsed,true);
 });

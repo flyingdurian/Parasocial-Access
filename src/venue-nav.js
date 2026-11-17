@@ -217,16 +217,22 @@ export function venueStationApproachPoint(name,id=0,visit=0){
  }
  return station;
 }
-// Three nested, genuinely CURVED half-ellipses encompass the whole stage
-// apron from wing to wing. Low-discrepancy ordering distributes even the
-// first nineteen spectators across the WHOLE U, instead of packing its left
-// half before the next wave arrives. Targets are top-left sprite coordinates.
-const concertArc=(radiusX,radiusY,count,stride)=>Array.from({length:count},(_,order)=>{
- const fraction=((order*stride)%count)/(count-1),angle=Math.PI*(1-fraction);
- return [Math.round(270+radiusX*Math.cos(angle)),Math.round(98+radiusY*Math.sin(angle))];
+// Stage-front spectator pit: these are FEET positions, not sprite top-lefts.
+// The old formula began at sprite y=98 and added another 35px for the feet;
+// that placed the supposed 'stage crowd' down by the entrance. Three nested
+// half-ellipses now hug the apron (feet y=100..138), from BOTH stage wings
+// around the stairs. The baked velvet rope stays in place as an obstacle.
+const concertArc=(radiusX,edgeFeetY,depth,count,stride)=>Array.from({length:count},(_,order)=>{
+ const fraction=((order*stride)%count)/(count-1),angle=Math.PI*fraction;
+ const footX=265+radiusX*Math.cos(angle),footY=edgeFeetY+depth*Math.sin(angle);
+ return [Math.round(footX-16),Math.round(footY-35)];
 });
-const CONCERT_RINGS=[concertArc(77,38,15,4),concertArc(61,29,12,5),concertArc(44,21,9,4)];
-const DEBATE_AUDIENCE_SPOTS=Object.freeze(Array.from({length:15},(_,step)=>CONCERT_RINGS.flatMap(ring=>ring[step]?[ring[step]]:[])).flat());
+const CONCERT_RINGS=[
+ concertArc(76,101,17,16,7),
+ concertArc(68,107,20,12,5),
+ concertArc(59,113,25,8,3)
+];
+const DEBATE_AUDIENCE_SPOTS=Object.freeze(Array.from({length:16},(_,step)=>CONCERT_RINGS.flatMap(ring=>ring[step]?[ring[step]]:[])).flat());
 export function venueDebateAudienceSpot(index){
  const point=DEBATE_AUDIENCE_SPOTS[((index%DEBATE_AUDIENCE_SPOTS.length)+DEBATE_AUDIENCE_SPOTS.length)%DEBATE_AUDIENCE_SPOTS.length];
  return isVenueWalkable(...point)?[...point]:snapVenue(...point);

@@ -30,7 +30,7 @@ test('idle audience roam destinations stay outside the reserved queue corridor',
 
 test('challenger finishes on right-hand platform facing Destiny on left',()=>{
  assert(VENUE_STAGE.debate[0]>VENUE_STAGE.stairs[0]+25);
- assert(VENUE_STAGE.debate[1]<=34);
+ assert(VENUE_STAGE.debate[1]>=39&&VENUE_STAGE.debate[1]<=43,'challenger feet land on front boards');
  assert(stagePosition('talk',12,true).x<219);
  assert(stagePosition('talk',12,true).y<=34);
  const event=new IRLEvent(engine(),{level:0});
@@ -100,14 +100,14 @@ test('claw arm lifts a real dggL art sprite and drops it through prize chute',()
  assert(delivered.calls.some(x=>x[0]==='image'&&x[1]===assets.mascot&&x[3]>=cabinet.y+34),'real prize exits in cabinet chute');
 });
 
-test('security grille leaves fully enclose both lanes at idle',()=>{
+test('sliding optical doors close both lanes at idle without full-height cages',()=>{
  const c=context();
  const event={elapsed:6,clawMachine:{activeUntil:0},gateControllers:{left:{openedAt:-1,openUntil:0},right:{openedAt:-1,openUntil:0}},departures:[]};
  drawModularVenue(c,assets,event,6000,{});
  for(const gate of Object.values(MODULAR_GATES)){
   const lane=gate.lane;
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[3]>5&&x[4]>=20),'fixture has full left grille');
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2-.7))<1.2&&x[3]>5&&x[4]>=20),'fixture has full right grille');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[2]===lane.top+5&&x[3]>5&&x[4]===16),'waist-high left glass closes lane');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2-.5))<1.2&&x[2]===lane.top+5&&x[3]>5&&x[4]===16),'waist-high right glass closes lane');
  }
 });
 

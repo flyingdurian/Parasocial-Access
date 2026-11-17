@@ -35,19 +35,19 @@ function openness(event,side){
 }
 function drawGate(ctx,event,side){
  const open=openness(event,side),lane=MODULAR_GATES[side].lane;
- const span=lane.right-lane.left,waist=lane.top+11;
- const leaf=Math.max(0,(span/2+.7)*(1-open)),top=lane.top-6,height=27;
- // Full-height convention security grille. Each leaf retracts at its own post;
- // unlike the prior tiny waist-height scanner arm, closed means visibly closed.
+ const span=lane.right-lane.left;
+ const leaf=Math.max(0,(span/2+.5)*(1-open)),top=lane.top+5,height=16;
+ // Actual waist-high optical turnstile doors: two translucent panels meet in
+ // the middle when idle, then retract fully into the existing scanner posts.
+ // They are NOT the metal fences used to seal scenery gaps at either side.
  ctx.save();
  for(let i=0;i<2;i++){
   const x=i===0?lane.left:lane.right-leaf;
   if(leaf>.05){
-   ctx.fillStyle='rgba(17,28,51,.63)';ctx.fillRect(x,top,leaf,height);
-   ctx.fillStyle='#a2c0cf';ctx.fillRect(x,top,leaf,1.45);ctx.fillRect(x,top+height-2,leaf,1.35);
-   ctx.fillStyle='#607d99';ctx.fillRect(x,top+12,leaf,.75);
-   ctx.fillStyle='#91afc6';for(let bar=x+3;bar<x+leaf;bar+=3.1)ctx.fillRect(bar,top+1,1,height-3);
-   ctx.fillStyle='#d9eafb';ctx.fillRect(i===0?x+leaf-1.1:x,top+9,1.2,7);
+   ctx.fillStyle='rgba(92,176,199,.22)';ctx.fillRect(x,top,leaf,height);
+   ctx.fillStyle='#accbd9';ctx.fillRect(x,top,leaf,1.25);ctx.fillRect(x,top+height-1.3,leaf,1.15);
+   ctx.fillStyle='rgba(203,234,245,.4)';ctx.fillRect(x+1,top+3,Math.max(0,leaf-2),1);
+   ctx.fillStyle=open>.6?'#7effda':'#d9eafb';ctx.fillRect(i===0?x+leaf-1.4:x,top+1,1.4,height-2);
   }
  }
  const pulse=.65+.25*Math.sin((event?.elapsed||0)*8);
@@ -59,11 +59,12 @@ function drawGate(ctx,event,side){
  // remain traversable; their arms default CLOSED in the absence of a pass.
  const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
  for(const [a,b] of segments){
-  ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,top,b-a,height);
-  ctx.fillStyle='#9db8c9';ctx.fillRect(a,top,b-a,1.3);
-  ctx.fillStyle='#55677b';ctx.fillRect(a,top+height-2,b-a,1.3);
-  for(let bar=a+3;bar<b;bar+=3.1){ctx.fillStyle='#8da9bb';ctx.fillRect(bar,top+1,1,height-3);}
-  ctx.fillStyle='#364b68';ctx.fillRect(a,top,1.5,height);
+  const fenceTop=lane.top+1,fenceH=24;
+  ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,fenceTop,b-a,fenceH);
+  ctx.fillStyle='#9db8c9';ctx.fillRect(a,fenceTop,b-a,1.3);
+  ctx.fillStyle='#55677b';ctx.fillRect(a,fenceTop+fenceH-2,b-a,1.3);
+  for(let bar=a+3;bar<b;bar+=3.1){ctx.fillStyle='#8da9bb';ctx.fillRect(bar,fenceTop+1,1,fenceH-3);}
+  ctx.fillStyle='#364b68';ctx.fillRect(a,fenceTop,1.5,fenceH);
  }
  ctx.restore();
 }
@@ -77,13 +78,17 @@ export function drawTicketClerk(ctx,assets,event){
  ctx.save();
  // Four subtle counter-service keyframes: check screen, scan pass, look up,
  // rest. The desk remains a fixed collision object.
- const bob=worker.walking?Math.abs(Math.sin(t*12))*.85:frame===2?-.25:0;
+ const bob=worker.walking?Math.abs(Math.sin(t*12))*.35:frame===2?-.25:0;
  const dx=worker.walking&&frame%2?.3:0;
  if(assets.clerkWalk?.complete&&assets.clerkWalk.naturalWidth){
   const atlas=assets.clerkWalk,cellW=atlas.naturalWidth/4,cellH=atlas.naturalHeight/2;
   const rear=worker.walking&&worker.direction==='north';
-  ctx.drawImage(atlas,(rear?Math.min(2,frame):frame)*cellW,rear?cellH:0,cellW,cellH,worker.x+dx,worker.y+bob,29,36);
- }else ctx.drawImage(assets.clerk,worker.x+dx,worker.y+bob,29,36);
+  // The sheet has 32px of art inside 111px cells. Drawing whole cells shrank
+  // her to a thin 9px silhouette; crop transparency before fitting 31×38.
+  const chosen=rear?Math.min(2,frame):frame;
+  const sourceX=chosen===3?33:39,sourceWidth=chosen===3?44:35;
+  ctx.drawImage(atlas,chosen*cellW+sourceX,(rear?cellH:0)+1,sourceWidth,cellH-2,worker.x+dx-1,worker.y+bob-2,31,38);
+ }else ctx.drawImage(assets.clerk,worker.x+dx-1,worker.y+bob-2,31,38);
  if(scanned){
   const strength=Math.max(0,1-(t-worker.lastScanAt)/.6);
   ctx.globalAlpha=strength*.80;ctx.fillStyle='#b8fff2';
@@ -200,8 +205,7 @@ export function drawStageDebateUplight(ctx,event,t){
   const gradient=ctx.createLinearGradient(sourceX,sourceY,targetX,76);
   gradient.addColorStop(0,'rgba(225,207,255,.17)');gradient.addColorStop(1,'rgba(225,207,255,.035)');
   ctx.fillStyle=gradient;ctx.beginPath();ctx.moveTo(sourceX-4,sourceY);ctx.lineTo(sourceX+4,sourceY);ctx.lineTo(targetX+15,75);ctx.lineTo(targetX-15,75);ctx.lineTo(sourceX-4,sourceY);ctx.fill();
-  ctx.strokeStyle=color;ctx.globalAlpha=.36+.18*Math.sin(tick*2.7+sourceX);
-  ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(targetX,73,15,3,0,0,Math.PI*2);ctx.stroke();
+  // Soft theatrical light remains; artificial target rings around shoes do not.
  }
  for(let i=0;i<3;i++){
   const x=236+i*34+Math.sin(tick*1.6+i*2)*10,y=104+i%2*8;
