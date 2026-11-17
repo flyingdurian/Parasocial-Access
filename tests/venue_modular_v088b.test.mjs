@@ -217,6 +217,7 @@ test('left aisle claw machine awards prizes and booth loops stay physical',()=>{
  const event=new IRLEvent({progress:{irlRecords:{destinyMeet:{attempts:0}}}},{level:0});
  const actor=event.crowd[0];
  [actor.x,actor.y]=venueStationApproachPoint('claw',actor.id,1);
+ actor.visits=1; // target and physical approach must use the same actual visit
  actor.station='wander';actor.target='claw';actor.dwell=0;
  event.crowdTick(.1);
  assert.equal(event.boothTransactions.claw,1);
