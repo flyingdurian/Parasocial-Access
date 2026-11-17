@@ -28,8 +28,11 @@ irlImages.hall.src=globalThis.__IRL_HALL||'assets/irl-hall-open-v088.webp';
 irlImages.hall.onerror=()=>{irlImages.hall.onerror=()=>{irlImages.hall.onerror=null;irlImages.hall.src='assets/irl-hall.webp';};irlImages.hall.src='assets/irl-hall-open-v087.webp';};
 irlImages.cast.src=globalThis.__IRL_CAST||'assets/irl-cast.webp';
 const irlPoseImages={0:new Image(),1:new Image(),3:new Image()};
-const irlWalkAtlas=new Image(),irlAdditionalSets=[new Image(),new Image(),new Image()],irlWalk4Sets=[new Image(),new Image(),new Image()],irlBack4Sets=[new Image(),new Image(),new Image()],irlStagePoseSets=[new Image(),new Image()],irlReactionSets=[new Image(),new Image(),new Image()],irlOriginalWalk4Sets=[new Image(),new Image()],irlOriginalBack4Sets=[new Image(),new Image()];
+const irlWalkAtlas=new Image(),irlAdditionalSets=[new Image(),new Image(),new Image()],irlWalk4Sets=[new Image(),new Image(),new Image()],irlBack4Sets=[new Image(),new Image(),new Image()],irlStagePoseSets=[new Image(),new Image()],irlReactionSets=[new Image(),new Image(),new Image()],irlOriginalWalk4Sets=[new Image(),new Image()],irlOriginalBack4Sets=[new Image(),new Image()],irlNewCast={back:new Image(),walk:new Image(),react:new Image()};
 irlWalkAtlas.src='/assets/irl-cast-walk.webp';
+irlNewCast.back.src='/assets/irl-cast%20new%20sheet%201.png';
+irlNewCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
+irlNewCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
 irlAdditionalSets[0].src='/assets/irl-cast-set-a.webp';
 irlAdditionalSets[1].src='/assets/irl-cast-set-b.webp';
 irlAdditionalSets[2].src='/assets/irl-cast-set-c.webp';
@@ -150,7 +153,7 @@ function irlModeChooser(){const record=engine.progress.irlRecords?.destinyMeet||
  return `<section class="irl-mode-picker"><div class="eyebrow">CHOOSE THE CONVENTION SHIFT · PROGRESS SAVED PER LEVEL</div><div class="irl-mode-grid">${IRL_LEVELS.map((level,i)=>{const locked=!irlLevelUnlocked(record,i,!!engine.devAccess?.creators);const progress=record.levels?.[i];return `<button class="irl-mode-tile ${irl.session==='standard'&&irl.levelIndex===i?'selected':''}" data-cmd="irl-level" data-level="${i}" ${locked?'disabled':''}><b>LEVEL 0${i+1} · ${esc(level.title)}</b><span>${level.guests} GUESTS · ${level.seconds}s · ${progress?.stars?'★'.repeat(progress.stars):locked?'LOCKED':'READY'}</span></button>`;}).join('')}<button class="irl-mode-tile endless ${irl.session==='endless'?'selected':''}" data-cmd="irl-endless"><b>∞ ENDLESS CHAOS</b><span>ESCALATING WAVES · HIGH SCORE ${fmt(record.endless?.highScore||0)}</span></button></div><p>Currently selected: <b>${irl.session==='endless'?'Endless Survival':esc(irl.config.title)}</b>. The run starts after you open the convention.</p></section>`;
 }
 function irlPage(){const r=irl?.result||null;return `<div class="page irl-page">${header()}<main class="irl-main">
- <div class="irl-heading"><div><span class="eyebrow">OFF THE FEED · WORLD 05 · LIVING EVENT SIMULATOR / v0.8.8j</span><h1>DESTINY <em>MEET &amp; GREET.</em></h1><p>${irl.session==='endless'?'Endless survival · incoming waves · rising pressure':irl.config.guests+' fictional encounters · '+irl.config.title+' · stage queue'}</p></div><button class="secondary" data-cmd="irl-exit">← CREATOR NETWORK</button></div>
+ <div class="irl-heading"><div><span class="eyebrow">OFF THE FEED · WORLD 05 · LIVING EVENT SIMULATOR / v0.8.8n</span><h1>DESTINY <em>MEET &amp; GREET.</em></h1><p>${irl.session==='endless'?'Endless survival · incoming waves · rising pressure':irl.config.guests+' fictional encounters · '+irl.config.title+' · stage queue'}</p></div><button class="secondary" data-cmd="irl-exit">← CREATOR NETWORK</button></div>
  <div class="irl-speed-row"><label for="irl-speed">EVENT SPEED</label><select id="irl-speed" aria-label="Destiny convention event speed"><option value="1" ${irlSpeed===1?'selected':''}>1× Normal</option><option value="1.5" ${irlSpeed===1.5?'selected':''}>1.5× Fast</option><option value="2" ${irlSpeed===2?'selected':''}>2× Turbo</option></select><span>Destiny event only · saved between visits</span></div>
  <div class="irl-telemetry"><span>◷ <b id="irl-time">${shortClock(irl.clock)}</b></span><span>♥ CROWD <b id="irl-vibe">${irl.vibe}%</b></span><span>⬡ GUARDS <b id="irl-guards">${irl.available}/3</b></span><span>◈ SCORE <b id="irl-score">${fmt(irl.score)}</b></span><span>GUESTS <b id="irl-count">${irl.finished.length+irl.lost}/20</b></span></div>
  <section class="irl-stage-frame"><div class="irl-stage-top"><span class="live-dot"></span><span id="irl-phase">PHASE ${irl.phase} · ${['DOORS OPEN','SIGNING LINE','FINAL Q&A'][irl.phase-1]}</span><span>FAN-FICTION · LIVE CONVENTION CAM</span></div><div class="irl-canvas-wrap"><canvas id="irl-canvas" width="384" height="216" aria-label="Living pixel-art convention: Destiny on stage, moving audience and security, and the selected guest highlighted below their dialogue bubble"></canvas><div id="irl-arcade-stamp" class="irl-arcade-stamp" hidden></div><div id="irl-world-speech" class="irl-world-speech" aria-live="polite" hidden><div class="irl-speech-label"><span>◉ LIVE GUEST</span><b id="irl-speech-time">--s</b></div><strong id="irl-speech-name"></strong><p id="irl-speech-words"></p><small id="irl-speech-cue"></small><div class="irl-speech-meter"><i id="irl-speech-fill"></i></div></div><div class="irl-world-prompt" id="irl-world-prompt">WATCH THE ENTRANCE · GUESTS ARRIVING</div></div><div id="irl-stage-caption" class="irl-stage-caption" aria-live="polite">${esc(irl.message)}</div></section>
@@ -172,7 +175,7 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  const sprite=(kind,x,y,w=35,h=43,state='idle',motion=null)=>{
   const box=venueSpriteGeometry(x,y,w,h,motion);
   drawContactShadow(ctx,box);
-  return drawVenueCharacter(ctx,irlImages.cast,irlPoseImages[kind],kind,state,t,box.x,box.y,box.w,box.h,irlWalkAtlas,irlAdditionalSets,irlWalk4Sets,motion,irlBack4Sets,irlStagePoseSets,irlReactionSets,irlOriginalWalk4Sets,irlOriginalBack4Sets);
+  return drawVenueCharacter(ctx,irlImages.cast,irlPoseImages[kind],kind,state,t,box.x,box.y,box.w,box.h,irlWalkAtlas,irlAdditionalSets,irlWalk4Sets,motion,irlBack4Sets,irlStagePoseSets,irlReactionSets,irlOriginalWalk4Sets,irlOriginalBack4Sets,irlNewCast);
  };
  const guestAtStage=irl.departures.some(g=>g.stageVisit==='exchange');
  const hostState=stageAction(irl.phase,t/1000,irl.visitors.filter(g=>!g.pending).length,irl.elapsed<irl.hostUntil?irl.hostMood:'idle');
@@ -206,12 +209,12 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
   const action=role==='crowd'?(g.walking?'walk':g.animation):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='departure'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='guard'?(g.task?.phase==='escort'?'point':g.walking?'walk':'idle'):role==='staff'?(g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):g.pending?'talk':g.type==='redirect'?'heckle':g.type==='security'?'argue':g.type==='check'?'point':'idle';
   const toss=role==='departure'&&g.tossTime>0?-Math.sin((.65-g.tossTime)/.65*Math.PI)*12:0;
   const stageSpeaker=role==='departure'&&g.stageVisit==='exchange';
-  const boothRemain=role==='crowd'?Math.max(0,(g.photoPoseUntil||0)-irl.elapsed):0;
-  const photoMix=boothRemain>0?Math.max(0,Math.min(1,(2.4-boothRemain)/.5,boothRemain/.45)):0;
-  const drawX=g.x+(role==='crowd'?(344-g.x)*photoMix:0);
-  const drawY=g.y+(role==='crowd'?(57-g.y)*photoMix:0);
-  sprite(g.kind??(role==='guard'?3:7),drawX+(stageSpeaker?2.5:0),drawY+toss-(role==='crowd'?(g.hypeJump||0):0),stageSpeaker?29:w,stageSpeaker?37:h,action,g);
-  if(role==='crowd'){
+  // Floor positions are authoritative. Do not lerp only rendered guests
+   // into the photo booth: it creates visible rubber-banding on exit.
+   const jump=role==='crowd'?(g.hypeJump||0):0;
+   const motion=jump>0?{...g,groundY:g.y}:g;
+   sprite(g.kind??(role==='guard'?3:7),g.x+(stageSpeaker?2.5:0),g.y+toss-jump,stageSpeaker?29:w,stageSpeaker?37:h,action,motion);
+   if(role==='crowd'){
    if(g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){
     if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;
    }
