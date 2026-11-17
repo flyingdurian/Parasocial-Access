@@ -35,36 +35,22 @@ function openness(event,side){
 }
 function drawGate(ctx,event,side){
  const open=openness(event,side),lane=MODULAR_GATES[side].lane;
- const span=lane.right-lane.left,top=lane.top+1,base=lane.bottom-6;
- const leaf=(span/2+.7)*(1-open);
- // Frame is attached flush to the inner scanner posts. Narrow lateral plates
- // and permanent top/bottom rails hide the seam even when the leaves retract.
+ const span=lane.right-lane.left,waist=lane.top+11;
+ const leaf=Math.max(0,(span/2-1)*(1-open));
+ // Low scanner arms retract into fixed illustrated posts, with no moving walls.
  ctx.save();
- ctx.fillStyle='rgba(34,45,76,.9)';
- ctx.fillRect(lane.left-2,top-2,2.8,base-top+4);
- ctx.fillRect(lane.right-.8,top-2,2.8,base-top+4);
- ctx.fillStyle='#8dd8ec';ctx.fillRect(lane.left-2,top-2,span+4,.9);
- ctx.fillStyle='rgba(101,140,175,.95)';ctx.fillRect(lane.left-1,base,span+2,2);
- ctx.fillStyle='rgba(14,21,48,.55)';ctx.fillRect(lane.left-1,base+2,span+2,1.5);
- if(leaf>.1){
-  for(const sideIndex of [0,1]){
-   const x=sideIndex===0?lane.left:lane.right-leaf;
-   ctx.fillStyle='rgba(48,68,87,.84)';ctx.fillRect(x,top,leaf,base-top);
-   ctx.fillStyle='rgba(166,214,231,.36)';ctx.fillRect(x+.5,top+1,Math.max(0,leaf-1),base-top-2);
-   // Real horizontal security slats; their continuous spacing aligns across
-   // both leaves instead of floating lower than the illustrated scanners.
-   for(let y=top+3;y<base-1;y+=4.3){
-    ctx.fillStyle='#b1d5e2';ctx.fillRect(x,y,leaf,.85);
-    ctx.fillStyle='rgba(27,45,68,.7)';ctx.fillRect(x,y+1,leaf,.55);
-   }
-   ctx.fillStyle='#eaf8fc';
-   ctx.fillRect(sideIndex===0?x+leaf-.9:x,top,.9,base-top);
+ for(let i=0;i<2;i++){
+  const x=i===0?lane.left:lane.right-leaf;
+  if(leaf>.05){
+   ctx.fillStyle='rgba(24,35,58,.82)';ctx.fillRect(x,waist+.8,leaf,3.5);
+   ctx.fillStyle='#a3c8d9';ctx.fillRect(x,waist,leaf,1.2);
+   ctx.fillStyle='rgba(225,245,251,.72)';ctx.fillRect(x,waist+1.5,Math.max(0,leaf-.6),.65);
   }
  }
- const pulse=.65+.25*Math.sin((event?.elapsed||0)*9);
- ctx.fillStyle=open>.55?'rgba(90,255,195,'+pulse+')':'#ffd08c';
- ctx.fillRect(lane.left-4,lane.top+2,1.4,2.4);
- ctx.fillRect(lane.right+2,lane.top+2,1.4,2.4);
+ const pulse=.65+.25*Math.sin((event?.elapsed||0)*8);
+ ctx.fillStyle=open>.65?'rgba(92,255,191,'+pulse+')':'#efc076';
+ ctx.fillRect(lane.left-2.6,lane.top+3,1.6,2.6);
+ ctx.fillRect(lane.right+1,lane.top+3,1.6,2.6);
  ctx.restore();
 }
 // A single, non-roaming staff member behind the desk, deliberately rendered
@@ -263,32 +249,32 @@ function drawBoothActivity(ctx,event,assets){
   }
   ctx.restore();
  }
- // A complete real-toy pickup: travel above the DGG plush, descend,
- // close two fingers around its body, lift it, carry it to the chute, release.
- // Every animated pixel is bound to the ONE pictured cabinet's glass UV.
+ // The ONE claw prize never respawns on the cabinet floor after pickup.
+ // Pickup -> carry -> fall into the existing bottom chute.
  if((event?.clawMachine?.activeUntil||0)>(event?.elapsed||0)){
   const cabinet=MODULAR_PROPS.claw;
   const glass={x:cabinet.x+2,y:cabinet.y+9,w:cabinet.w-4,h:22};
   const p=Math.max(0,Math.min(1,1-(event.clawMachine.activeUntil-event.elapsed)/2.3));
-  const pickupX=glass.x+glass.w*.47;
-  const headX=pickupX+(p>.73?Math.min(1,(p-.73)/.20)*(glass.w*.28):0);
-  const headY=p<.30?glass.y+3:p<.47?glass.y+3+(p-.30)/.17*12:p<.72?glass.y+15-(p-.47)/.25*12:glass.y+3;
-  const hasToy=p>=.47&&p<.92;
+  const pickupX=glass.x+glass.w*.47,dropX=cabinet.x+17;
+  const headX=pickupX+(p>.58?Math.min(1,(p-.58)/.20)*(glass.w*.28):0);
+  const headY=p<.20?glass.y+3:p<.40?glass.y+3+(p-.20)/.20*12:p<.58?glass.y+15-(p-.40)/.18*12:glass.y+3;
+  const carried=p>=.40&&p<.78;
   ctx.save();ctx.beginPath();ctx.rect(glass.x,glass.y,glass.w,glass.h);ctx.clip();
   ctx.fillStyle='rgba(147,251,255,.12)';ctx.fillRect(glass.x+1,glass.y+1,glass.w-2,glass.h-2);
-  const toyY=hasToy?headY+4:glass.y+glass.h-7;
-  const toyX=hasToy?headX-3:pickupX-3;
-  if(assets?.mascot?.naturalWidth)ctx.drawImage(assets.mascot,toyX,toyY,6.4,7);
-  const left=headX-3.4,right=headX+2.1,grip=hasToy?1.6:3.1;
+  if(p<.78&&assets?.mascot?.naturalWidth){
+   const toyX=carried?headX-3:pickupX-3,toyY=carried?headY+4:glass.y+glass.h-7;
+   ctx.drawImage(assets.mascot,toyX,toyY,6.4,7);
+  }
+  const grip=carried?1.6:3.1;
   ctx.fillStyle='#ccf3ff';ctx.fillRect(headX-.6,glass.y,1.2,Math.max(1,headY-glass.y));
   ctx.fillStyle='#e6f7ff';ctx.fillRect(headX-2.5,headY,5,2.5);
-  ctx.fillStyle='#efcf93';ctx.fillRect(left+grip*.38,headY+2,1.2,2.8);
-  ctx.fillRect(right-grip*.38,headY+2,1.2,2.8);
+  ctx.fillStyle='#efcf93';ctx.fillRect(headX-3.4+grip*.38,headY+2,1.2,2.8);
+  ctx.fillRect(headX+2.1-grip*.38,headY+2,1.2,2.8);
   ctx.restore();
-  if(p>=.92&&assets?.mascot?.naturalWidth){
-   // Physical prize-delivery chute below the glass, inside the same cabinet.
+  if(p>=.78&&assets?.mascot?.naturalWidth){
    ctx.save();ctx.beginPath();ctx.rect(cabinet.x+6,cabinet.y+34,cabinet.w-9,12);ctx.clip();
-   ctx.drawImage(assets.mascot,cabinet.x+17,cabinet.y+34+(p-.92)*43,6.4,7);
+   const fall=Math.min(1,(p-.78)/.18),dropY=cabinet.y+33+fall*6;
+   ctx.drawImage(assets.mascot,dropX,dropY,6.4,7);
    ctx.restore();
   }
  }
