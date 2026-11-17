@@ -48,6 +48,10 @@ export function drawContactShadow(ctx,geometry,time=0,lighting='hall'){
 export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w=35,h=43,walkAtlas=null,extraAtlases=null,walk4Atlases=null,motion=null,back4Atlases=null,stagePoseAtlases=null,reactionAtlases=null,originalWalk4Atlases=null,originalBack4Atlases=null,newCastAtlases=null){
  const facing=motion?.facing===-1?-1:1;
  const flip=facing===-1;
+ // A rear-facing concert spectator must stay rear-facing while cheering or
+ // arguing. Front-only reaction sheets made the pit appear to watch the player.
+ const spectatingBack=!!(motion?.debateWatching&&motion?.debateArrived&&motion?.direction==='north');
+ const backReactionRow=state==='point'?2:state==='argue'||state==='heckle'?3:state==='cheer'||state==='laugh'?(Math.floor(time/230)%2?1:3):1;
  const paint=(image,sx,sy,sw,sh)=>{
   if(flip){ctx.save();ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(image,sx,sy,sw,sh,0,0,w,h);ctx.restore();}
   else ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);
@@ -56,9 +60,9 @@ export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w
  if(kind>=30&&kind<36){
   const action=state!=='walk'&&state!=='idle';
   const rear=motion?.direction==='north';
-  const sheet=action||state==='idle'&&!rear?newCastAtlases?.react:rear?newCastAtlases?.back:newCastAtlases?.walk;
+  const sheet=spectatingBack&&newCastAtlases?.back?.naturalWidth?newCastAtlases.back:action||state==='idle'&&!rear?newCastAtlases?.react:rear?newCastAtlases?.back:newCastAtlases?.walk;
   if(sheet?.complete&&sheet.naturalWidth>0){
-   const row=action?(state==='talk'||state==='mic'?0:state==='cheer'||state==='laugh'?1:state==='point'?2:3):state==='walk'?walkCycleFrame(motion?.stepDistance??time/18):0;
+   const row=spectatingBack&&sheet===newCastAtlases?.back?backReactionRow:action?(state==='talk'||state==='mic'?0:state==='cheer'||state==='laugh'?1:state==='point'?2:3):state==='walk'?walkCycleFrame(motion?.stepDistance??time/18):0;
    const cw=sheet.naturalWidth/6,ch=sheet.naturalHeight/4;
    paint(sheet,(kind-30)*cw,row*ch,cw,ch);
    return true;
@@ -68,13 +72,13 @@ export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w
  if(kind>=12&&kind<=29){
   const sheetIndex=Math.floor((kind-12)/6);
   const action=state!=='walk'&&state!=='idle';
-  const reaction=action?reactionAtlases?.[sheetIndex]:null;
-  const rear=motion?.direction==='north'&&(state==='walk'||state==='idle');
+  const reaction=action&&!spectatingBack?reactionAtlases?.[sheetIndex]:null;
+  const rear=motion?.direction==='north'&&(state==='walk'||state==='idle'||spectatingBack);
   const directional=rear?back4Atlases?.[sheetIndex]:walk4Atlases?.[sheetIndex];
-  const sheet=reaction?.naturalWidth?reaction:(state==='walk'||rear)&&directional?.naturalWidth?directional:extraAtlases?.[sheetIndex];
+  const sheet=spectatingBack&&directional?.naturalWidth?directional:reaction?.naturalWidth?reaction:(state==='walk'||rear)&&directional?.naturalWidth?directional:extraAtlases?.[sheetIndex];
   if(sheet?.complete&&sheet.naturalWidth>0){
    const col=(kind-12)%6,rows=sheet===reaction||sheet===walk4Atlases?.[sheetIndex]||sheet===back4Atlases?.[sheetIndex]?4:2;
-   const row=sheet===reaction?state==='talk'||state==='mic'?0:state==='cheer'||state==='laugh'?1:state==='point'?2:3:state==='walk'?(rows===4?walkCycleFrame(motion?.stepDistance??time/18):Math.floor((motion?.stepDistance??time/60)/VENUE_STRIDE)%2):0;
+   const row=spectatingBack&&sheet===back4Atlases?.[sheetIndex]?backReactionRow:sheet===reaction?state==='talk'||state==='mic'?0:state==='cheer'||state==='laugh'?1:state==='point'?2:3:state==='walk'?(rows===4?walkCycleFrame(motion?.stepDistance??time/18):Math.floor((motion?.stepDistance??time/60)/VENUE_STRIDE)%2):0;
    const cw=sheet.naturalWidth/6,ch=sheet.naturalHeight/rows;
    paint(sheet,col*cw,row*ch,cw,ch);
    return true;
@@ -83,13 +87,13 @@ export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w
  }
  // The original 12 cast members now have the same four authored steps and
  // actual north-facing sheets as the later expansion sets.
- if(kind>=0&&kind<12&&(state==='walk'||(state==='idle'&&motion?.direction==='north'))){
+ if(kind>=0&&kind<12&&(spectatingBack||state==='walk'||(state==='idle'&&motion?.direction==='north'))){
   const group=Math.floor(kind/6);
   const rear=motion?.direction==='north';
   const sheet=rear?originalBack4Atlases?.[group]:originalWalk4Atlases?.[group];
   if(sheet?.complete&&sheet.naturalWidth){
    const sw=sheet.naturalWidth/6,sh=sheet.naturalHeight/4;
-   const row=state==='walk'?walkCycleFrame(motion?.stepDistance??time/18):1;
+   const row=spectatingBack?backReactionRow:state==='walk'?walkCycleFrame(motion?.stepDistance??time/18):1;
    paint(sheet,(kind%6)*sw,row*sh,sw,sh);
    return true;
   }

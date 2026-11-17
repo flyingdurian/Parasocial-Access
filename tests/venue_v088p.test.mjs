@@ -5,7 +5,7 @@ import {IRLEvent} from '../src/irl-v07.js';
 import {isVenueWalkable,venueDebateAudienceSpot} from '../src/venue-nav.js';
 import {MODULAR_STAGE} from '../src/venue-geometry-v088b.js';
 import {MODULAR_GATES} from '../src/venue-geometry-v088b.js';
-import {drawContactShadow,venueSpriteGeometry} from '../src/sprite-animation.js';
+import {drawContactShadow,drawVenueCharacter,venueSpriteGeometry} from '../src/sprite-animation.js';
 import {createBubbleLayout,drawAmbientBubble,drawDebateShout} from '../src/irl-atmosphere-v083.js';
 import {drawDebateCombatEffects} from '../src/venue-effects-v086.js';
 import {captureLiveAudienceFrame} from '../src/venue-rig-v088b.js';
@@ -49,6 +49,18 @@ test('crowd enters actual first slots in order and turns toward stage when arriv
  assert(Math.hypot(watcher.x-expected[0],watcher.y-expected[1])<3,'ID 13 uses slot 0, not slot 13');
  assert.equal(watcher.direction,'north','audience shows rear-facing stage-view sprite');
  assert(e.crowd.slice(0,19).filter(p=>p.debateArrived).length>=15,'first wave converges rather than staying at gate');
+});
+
+test('arrived spectators retain rear-view animation while cheering or pointing',()=>{
+ const motion={debateWatching:true,debateArrived:true,direction:'north',facing:1};
+ const back={complete:true,naturalWidth:600,naturalHeight:400};
+ const front={complete:true,naturalWidth:600,naturalHeight:400};
+ const newOne=ctx();drawVenueCharacter(newOne,null,null,30,'cheer',1000,200,120,30,40,null,null,null,motion,null,null,null,null,null,{back,react:front});
+ assert(newOne.calls.some(call=>call[0]==='image'&&call[1]===back),'new cast never turns toward the player to cheer');
+ const expanded=ctx();drawVenueCharacter(expanded,null,null,13,'point',1000,200,120,30,40,null,[front],[front],motion,[back],null,[front]);
+ assert(expanded.calls.some(call=>call[0]==='image'&&call[1]===back),'expanded cast keeps rear-view cheering');
+ const original=ctx();drawVenueCharacter(original,null,null,2,'argue',1000,200,120,30,40,null,null,null,motion,null,null,null,null,[back,back]);
+ assert(original.calls.some(call=>call[0]==='image'&&call[1]===back),'original cast also watches the stage');
 });
 
 test('stage fan duos stand on front floor boards rather than LCD backdrop',()=>{
