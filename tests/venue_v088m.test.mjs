@@ -106,8 +106,8 @@ test('gate scanner arms remain low and retract into fixed pictured posts',()=>{
  drawModularVenue(c,assets,event,6000,{});
  for(const gate of Object.values(MODULAR_GATES)){
   const lane=gate.lane;
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[3]<=4),'fixture has left scanner connector');
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2+1))<1.2&&x[3]<=4),'fixture has right scanner connector');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[3]>5&&x[4]<=4),'fixture has left scanner connector');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2+1))<1.2&&x[3]>5&&x[4]<=4),'fixture has right scanner connector');
  }
 });
 
