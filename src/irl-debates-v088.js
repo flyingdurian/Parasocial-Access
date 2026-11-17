@@ -64,7 +64,7 @@ export const DEBATE_CHAT_LINES=Object.freeze([
 ]);
 export function debateExchangeDuration(guest,level=0){
  const difficulty=guest?.debateTopic?.difficulty||2;
- return clamp(6.2+difficulty*.8+((guest?.serial||0)%4)*.65+Math.min(1,level*.2),6,11.8);
+ return clamp(15+difficulty*.55+((guest?.serial||0)%4)*.7+Math.min(.6,level*.15),15,20);
 }
 export function debateChatLine(guest,beat){
  const offset=((guest?.serial||0)*3+DEBATE_CHAT_LINES.length)%DEBATE_CHAT_LINES.length;
