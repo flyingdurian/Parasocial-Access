@@ -7,6 +7,7 @@ import {wrapMeasuredText,drawDebateShout} from '../src/irl-atmosphere-v083.js';
 import {drawTicketClerk,drawStageDebateUplight} from '../src/venue-rig-v088b.js';
 import {drawVenueFeedback} from '../src/venue-effects-v086.js';
 import {createResilientAnimationLoop} from '../src/venue-frame-loop-v088r.js';
+import {IRLEvent} from '../src/irl-v07.js';
 
 const canvas=()=>{
  const calls=[];
@@ -58,6 +59,16 @@ test('clerk frames crop transparent atlas margins to person-sized art',()=>{
  assert.equal(image[9],38);
  const ui=readFileSync('src/ui.js','utf8'),sandbox=readFileSync('src/irl-sandbox-v085.js','utf8');
  for(const src of [ui,sandbox])assert(src.includes("role:'guard',w:34,h:43"),'guards are 10-15% larger');
+});
+
+test('gate monitor does not visually stack its body on dedicated clerk',()=>{
+ const e=new IRLEvent({progress:{irlRecords:{destinyMeet:{attempts:0}}}});e.begin();e.nextArrival=999;
+ const monitor=e.staff[0],clerk=e.ticketClerk;
+ let closest=Infinity;
+ for(let i=0;i<300;i++){
+  e.tick(.1);closest=Math.min(closest,Math.hypot(monitor.x-clerk.x,monitor.y-clerk.y));
+ }
+ assert(closest>25,'monitor patrol stays clear of the clerk silhouette');
 });
 
 test('teal feedback strips do not cross active debater or onstage TV',()=>{

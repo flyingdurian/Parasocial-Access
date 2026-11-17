@@ -104,7 +104,8 @@ export class IRLEvent {
    const [x,y]=snapVenue(...newCastSpots[i]);
    this.crowd.push({id:13+i,kind:30+i,x,y,station:'wander',target:'wander',dwell:.4+i*.22,visits:0,walking:false,animation:'idle',facing:1,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
   }
-  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=[[184,137],[304,137],[268,139]][i];worker.homeX=worker.x;worker.homeY=worker.y;worker.patrolIndex=0;worker.patrolDwell=1.2;});
+  // The gate monitor must not overlap the dedicated clerk's desk footprint.
+  this.staff.forEach((worker,i)=>{[worker.x,worker.y]=[[115,139],[304,137],[268,139]][i];worker.homeX=worker.x;worker.homeY=worker.y;worker.patrolIndex=0;worker.patrolDwell=1.2;});
   this.guardPositions.forEach((worker,i)=>{[worker.x,worker.y]=[[72,138],[311,116],[343,137]][i];worker.homeX=worker.x;worker.homeY=worker.y;});
   this.staff[0].gateMonitor=true;this.staff[0].monitoring=false;
   this.mascot={x:198,y:140,targetX:198,targetY:140,walking:false,facing:1,dwell:1.5,heartClock:3,heartBurst:0,patrolIndex:0};
@@ -581,7 +582,9 @@ export class IRLEvent {
    }else if(worker===this.staff[0]){
     // Distinct gate monitor watches scanner activity while the ticket clerk stays at the desk.
     worker.monitoring=Object.values(this.gateControllers).some(g=>g.openUntil>this.elapsed)||worker.patrolIndex%2===0;
-    const stops=[[115,139],[184,137],[252,139],[184,137]];
+    // Sweep the left scanner and left edge of the check-in desk. Previous
+    // cross-desk stops at x184 physically stacked this NPC on the ticket clerk.
+    const stops=[[115,139],[145,116],[125,123],[112,143]];
     worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
     if(worker.patrolDwell<=0){
      if(moveVenue(worker,...stops[worker.patrolIndex%stops.length],dt,30)){
