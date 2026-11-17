@@ -103,7 +103,7 @@ export function moveVenue(actor,targetX,targetY,dt,speed=30){
   if(d>remaining){actor.x+=dx/d*remaining;actor.y+=dy/d*remaining;remaining=0;}
   else{actor.x=x;actor.y=y;remaining-=d;actor.route.shift();}
  }
- const arrived=!!actor.routeBlocked||Math.hypot(actor.x-endpoint[0],actor.y-endpoint[1])<1.5;
+ const arrived=!actor.routeBlocked&&Math.hypot(actor.x-endpoint[0],actor.y-endpoint[1])<1.5;
  const dx=actor.x-oldX,dy=actor.y-oldY,moved=Math.hypot(dx,dy);
  actor.stepDistance=(actor.stepDistance||0)+moved;
  actor.turnTimer=Math.max(0,(actor.turnTimer||0)-dt);
@@ -202,7 +202,7 @@ export function venueStationApproachPoint(name,id=0,visit=0){
  return station;
 }
 // A floor-level semicircular ring around the stage, avoiding the real rope and stairs.
-const DEBATE_AUDIENCE_SPOTS=Object.freeze([[157,102],[168,114],[182,129],[197,139],[214,146],[230,151],[246,154],[263,153],[279,149],[295,144],[311,135],[325,121],[337,111],[341,98],[178,116],[317,111]]);
+const DEBATE_AUDIENCE_SPOTS=Object.freeze([[157,102],[168,114],[182,129],[197,139],[214,146],[230,151],[246,154],[263,153],[279,149],[295,144],[311,135],[325,121],[337,111],[341,98],[178,116],[317,111],[146,115],[159,133],[173,150],[192,161],[214,169],[233,172],[252,171],[273,165],[293,159],[312,149],[330,137],[343,124],[350,109],[152,96],[335,101]]);
 export function venueDebateAudienceSpot(index){
  const point=DEBATE_AUDIENCE_SPOTS[((index%DEBATE_AUDIENCE_SPOTS.length)+DEBATE_AUDIENCE_SPOTS.length)%DEBATE_AUDIENCE_SPOTS.length];
  return isVenueWalkable(...point)?[...point]:snapVenue(...point);
