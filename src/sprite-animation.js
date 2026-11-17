@@ -27,8 +27,23 @@ export function venueSpriteGeometry(x,y,w,h,motion=null){
  const bob=gait*.14;
  return {x:footX-w*scale/2,y:y+h-h*scale-bob,w:w*scale,h:h*scale,footX,footY,scale,bob};
 }
-export function drawContactShadow(ctx,geometry){
- ctx.save();ctx.fillStyle='rgba(9,8,22,.56)';ctx.beginPath();ctx.ellipse(geometry.footX,geometry.footY+1,Math.max(5,geometry.w*.30),Math.max(1.5,geometry.h*.072),0,0,Math.PI*2);ctx.fill();ctx.restore();
+export function drawContactShadow(ctx,geometry,time=0,lighting='hall'){
+ // Sprite atlases contain small transparent foot padding. Two soft, offset
+ // light-source shadows plus a compact contact core visually join the shoes
+ // to the stage/floor; geometry remains fixed during bob and hype jumps.
+ const depth=Math.max(0,Math.min(1,(geometry.footY-68)/150));
+ const lit=lighting==='stage';
+ const focus=lit?.90:.62;
+ const drift=Math.sin(time*.00056+geometry.footX*.06);
+ const shift=(lit?2.2:1.2)*drift;
+ const y=geometry.footY-(lit?2.6:1.7);
+ const radius=Math.max(3.4,geometry.w*(lit?.25:.29)*(0.94+depth*.12));
+ ctx.save();
+ ctx.fillStyle=lit?'rgba(27,11,45,.19)':'rgba(18,12,38,.15)';
+ ctx.beginPath();ctx.ellipse(geometry.footX+shift*2,y+.25,radius*1.32,2.5+depth,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=`rgba(8,6,29,${focus})`;
+ ctx.beginPath();ctx.ellipse(geometry.footX,y,radius*.83,Math.max(1.2,geometry.h*.044),0,0,Math.PI*2);ctx.fill();
+ ctx.restore();
 }
 export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w=35,h=43,walkAtlas=null,extraAtlases=null,walk4Atlases=null,motion=null,back4Atlases=null,stagePoseAtlases=null,reactionAtlases=null,originalWalk4Atlases=null,originalBack4Atlases=null,newCastAtlases=null){
  const facing=motion?.facing===-1?-1:1;

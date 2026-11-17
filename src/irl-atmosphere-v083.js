@@ -74,6 +74,24 @@ export function createBubbleLayout(reserved=[]){
  return {
   reserve,
   get occupied(){return occupied.map(rect=>({...rect}));},
+  // Spoken lines must stay next to their OWN actor. A dropped bubble is less
+  // confusing than one teleported across the venue to the only empty corner.
+  placeNear(anchorX,anchorY,w,h){
+   const positions=[
+    [anchorX-w*.5,anchorY-h-7],
+    [anchorX-w*.72,anchorY-h-9],
+    [anchorX-w*.28,anchorY-h-9],
+    [anchorX-w*.5,anchorY+9]
+   ];
+   for(const [x,y] of positions){
+    const rect={x:clampBubble(x,2,382-w),y:clampBubble(y,2,214-h),w,h};
+    const tipX=clampBubble(anchorX,rect.x,rect.x+w);
+    const tipY=clampBubble(anchorY,rect.y,rect.y+h);
+    if(Math.hypot(anchorX-tipX,anchorY-tipY)>12)continue;
+    if(!occupied.some(other=>bubbleRectsOverlap(rect,other,1))){reserve(rect);return rect;}
+   }
+   return null;
+  },
   place(anchorX,anchorY,w,h){
    if(!(w>0&&h>0&&w<=378&&h<=210))return null;
    const candidates=[
@@ -154,7 +172,7 @@ export function drawBubblePointer(ctx,box,anchorX,anchorY,color){
   const ty=clampBubble(anchorY,y+7,y+h-7);
   ctx.moveTo(x+w-1,ty-4);ctx.lineTo(Math.min(anchorX,x+w+8),ty);ctx.lineTo(x+w-1,ty+4);
  }
- ctx.closePath();ctx.fill();
+ ctx.fill(); // canvas fills the triangle implicitly; tolerates minimal test contexts
 }
 export function drawQueuedDecisionBubble(ctx,content,x,y,index,type='welcome',layout=null,mascot=null){
  if(!content)return null;
@@ -195,17 +213,15 @@ export function drawDebateShout(ctx,person,layout=null){
  const ttl=person?.debateSpeechTime||0;
  if(ttl<=0||!person?.debateSpeech)return null;
  const max=1.85,elapsed=max-ttl;
- const message=String(person.debateSpeech).slice(0,54);
- const parts=message.length<27?[message]:(()=>{
-  const pivot=message.lastIndexOf(' ',27);
-  const cut=pivot>12?pivot:27;return [message.slice(0,cut).trim(),message.slice(cut).trim()];
- })();
+ const message=String(person.debateSpeech);
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font='bold 5.5px system-ui,sans-serif';
- const width=Math.min(85,Math.max(...parts.map(s=>ctx.measureText(s).width))+10),height=7+parts.length*7;
+ const width=Math.min(85,Math.max(43,ctx.measureText(message).width/2+10));
+ const parts=wrapMeasuredText(ctx,message,width-10,Number.POSITIVE_INFINITY);
+ const height=7+parts.length*7;
  const x=person.x+14,y=person.y-5-Math.min(6,elapsed*6);
  // Never bypass a declined collision placement: the fallback used to render
  // an unreserved shout on top of its speaker or the selected decision card.
- const box=layout?layout.place(x,y,width,height):{x:Math.max(2,Math.min(382-width,x-width/2)),y:Math.max(1,y-height-3),w:width,h:height};
+ const box=layout?layout.placeNear(x,y,width,height):{x:Math.max(2,Math.min(382-width,x-width/2)),y:Math.max(1,y-height-3),w:width,h:height};
  if(!box){ctx.restore();return null;}
  ctx.globalAlpha=Math.max(0,Math.min(1,ttl/.3));
  const angry=person.animation==='argue'||person.animation==='heckle';
@@ -213,25 +229,26 @@ export function drawDebateShout(ctx,person,layout=null){
  ctx.strokeStyle=angry?'#ef6681':'#7ad5e3';ctx.lineWidth=1;ctx.strokeRect(box.x+.5,box.y+.5,width-1,height-1);
  ctx.fillStyle='#262a49';
  for(let i=0;i<parts.length;i++)ctx.fillText(parts[i],box.x+5,box.y+9+i*7,width-10);
- ctx.fillStyle=angry?'#ef6681':'#7ad5e3';
- ctx.beginPath();ctx.moveTo(box.x+width*.45,box.y+height);ctx.lineTo(box.x+width*.50,box.y+height+3);
- ctx.lineTo(box.x+width*.58,box.y+height);ctx.fill();
+ drawBubblePointer(ctx,box,x,y,angry?'#ef6681':'#7ad5e3');
  ctx.restore();return box;
 }
 export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null,mascot=null){
  if(!content||opacity<=0)return null;
  ctx.save();ctx.globalAlpha=opacity;ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.font='bold 5.8px system-ui,sans-serif';
- const text=String(content).slice(0,Math.min(max,28)).replace(/\s+/g,' ').trim();
- const width=Math.min(58,measureInlineDggL(ctx,text,mascot,8)+10);
- const placed=layout?layout.place(x,y,width,11):{
-  x:clampBubble(x-width/2,2,382-width),y:clampBubble(y-16,2,203),w:width,h:11
+ const text=String(content).replace(/\s+/g,' ').trim();
+ // Let a line finish. A fixed 28-character slice caused 'I brought a sig…'
+ // even though the speaker had the full sentence in their simulation state.
+ const width=Math.min(86,Math.max(43,measureInlineDggL(ctx,text,mascot,8)+10));
+ const lines=wrapMeasuredText(ctx,text,width-10,Number.POSITIVE_INFINITY);
+ const height=6+Math.max(1,lines.length)*7;
+ const placed=layout?layout.placeNear(x,y,width,height):{
+  x:clampBubble(x-width/2,2,382-width),y:clampBubble(y-height-7,2,213-height),w:width,h:height
  };
  if(!placed){ctx.restore();return null;}
- const clipped=fitMeasuredText(ctx,text,width-10);
- ctx.fillStyle='#fff9ef';ctx.fillRect(placed.x,placed.y,width,11);
- ctx.save();ctx.beginPath();ctx.rect(placed.x+4,placed.y+1,width-8,9);ctx.clip();
- ctx.fillStyle='#344052';drawInlineDggL(ctx,clipped,placed.x+5,placed.y+7.5,mascot,8);
- ctx.restore();ctx.restore();
+ ctx.fillStyle='#fff9ef';ctx.fillRect(placed.x,placed.y,width,height);
+ ctx.save();ctx.beginPath();ctx.rect(placed.x+4,placed.y+1,width-8,height-2);ctx.clip();
+ ctx.fillStyle='#344052';lines.forEach((line,i)=>drawInlineDggL(ctx,line,placed.x+5,placed.y+8+i*7,mascot,8));
+ ctx.restore();drawBubblePointer(ctx,placed,x,y,'#fff9ef');ctx.restore();
  return placed;
 }

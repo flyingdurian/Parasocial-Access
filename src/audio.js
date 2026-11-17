@@ -70,12 +70,13 @@ export class RushAudio{
    this.osc(base+12+vowel,.045,delay+.012,'square',.010,'sfx',base+7+vowel);
   }
  }
- irlDebateClash(beat=0){
+ irlDebateClash(beat=0,power=1){
   const pitch=50+(beat%5)*2;
   this.irlDebateVoice(beat);
-  this.osc(pitch,.09,0,'sawtooth',.055,'sfx',pitch-10);
-  this.osc(pitch+19,.13,.07,'triangle',.065,'sfx',pitch+10);
-  if(beat%3===0)this.osc(83,.11,.095,'sine',.042);
+  if(power===0){this.osc(76,.10,0,'sine',.033,'sfx',62);this.osc(65,.11,.05,'triangle',.021,'sfx',58);return;}
+  this.osc(pitch,.09+(power===2?.08:0),0,'sawtooth',power===2?.13:.065,'sfx',pitch-10);
+  this.osc(pitch+19,.13,.07,'triangle',power===2?.11:.065,'sfx',pitch+10);
+  if(power===2){this.noise(this.ctx?.currentTime||0,.11,600,.13);this.osc(42,.19,.07,'sawtooth',.16,'sfx',25);}
  }
  irlDebateIntro(){
   this.osc(43,.22,0,'sawtooth',.085,'sfx',36);
@@ -94,7 +95,7 @@ export class RushAudio{
    const key=String(live.serial)+':'+String(live.id);
    if(this._debateActor!==key){this._debateActor=key;this._debateBeat=live.hypeBeat||0;this.irlDebateIntro();}
    else if((live.hypeBeat||0)>this._debateBeat){
-    this._debateBeat=live.hypeBeat;this.irlDebateClash(this._debateBeat);
+    this._debateBeat=live.hypeBeat;this.irlDebateClash(this._debateBeat,live.clashPower??1);
    }
   }else if(this._debateActor!==null&&this._debateActor!==undefined){
    if(event.tvEvent?.type==='debate')this.irlDebateOutro(!!event.tvEvent.won);

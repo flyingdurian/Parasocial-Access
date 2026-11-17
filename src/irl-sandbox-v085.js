@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,drawVenueMascot,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,drawVenueMascot,captureLiveAudienceFrame,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 /* Fast isolated IRL harness: imports no main game engine, world art or UI.
    This is an additive dev route; it does not alter production save keys. */
@@ -11,7 +11,7 @@ import {drawStageAtmosphere,drawAmbientBubble,drawDebateShout,drawQueuedDecision
 import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
-import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
+import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawDebateCombatEffects,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 
 const root=document.querySelector('#irl-harness');
 const q=(selector)=>root.querySelector(selector);
@@ -24,6 +24,7 @@ const engine={progress:{credits:previous.credits||0,irlRecords:previous.irlRecor
 let event=new IRLEvent(engine,{mode,level});
 let graphics=loadGraphics();
 let speed=Math.min(8,Math.max(1,Number(params.get('speed'))||1));
+const liveAudienceFrame=document.createElement('canvas');
 
 const assets={};
 const modularVenue=loadModularVenueAssets();
@@ -39,12 +40,12 @@ newCast.back.src='/assets/irl-cast%20new%20sheet%201.png';
 newCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
 newCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8o · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8p · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
  <section class="harness-mobile-prompt" id="h-mobile-prompt" aria-live="polite" hidden><div><b id="h-m-name"></b><span id="h-m-timer"></span></div><p id="h-m-text"></p><small id="h-m-cue"></small></section>
- <div class="harness-controls"><button data-action="welcome">1 · WELCOME</button><button data-action="check">2 · VERIFY</button><button data-action="redirect">3 · REDIRECT</button><button data-action="security">4 · SECURITY</button><button data-action="debate" class="debate-key">⚔ 5 · INVITE TO DEBATE</button></div>
+ <div class="harness-controls"><button data-action="welcome">1 · WELCOME</button><button data-action="check">2 · VERIFY</button><button data-action="redirect">3 · REDIRECT</button><button data-action="debate" class="debate-key">⚔ 4 · DEBATE</button><button data-action="security">5 · SECURITY</button></div>
  <div class="harness-settings"><label for="h-mode">Scene</label><select id="h-mode"><option value="standard">Standard</option><option value="endless">Endless</option></select><label for="h-level">Level</label><select id="h-level">${IRL_LEVELS.map((l,i)=>`<option value="${i}">${i+1}: ${l.title}</option>`).join('')}</select><label for="h-speed">Test speed</label><select id="h-speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select><button id="h-restart">↻ Restart</button><button id="h-pause">Ⅱ Pause</button><button id="h-nav">Grid</button></div>
  <div class="harness-foot">Use <b>G</b> for Graphics & Chaos Mode; <b>1–5</b> for actions, <b>Space</b> to pause. Click an awaiting guest to focus their prompt. This route intentionally stores test scores separately from your main save. All incidents are fictional.</div>`;
 q('#h-mode').value=mode;q('#h-level').value=String(level);q('#h-speed').value=String(speed);
@@ -70,18 +71,18 @@ q('#h-canvas').addEventListener('click',e=>{const box=e.currentTarget.getBoundin
 document.addEventListener('keydown',e=>{
  if(e.repeat||e.altKey||e.ctrlKey||e.metaKey||e.target.closest('select,input,textarea'))return;
  if(e.code==='Space'){e.preventDefault();if(event.mode==='playing')event.paused=!event.paused;update();}
- const action={Digit1:'welcome',Digit2:'check',Digit3:'redirect',Digit4:'security',Digit5:'debate'}[e.code];if(action){e.preventDefault();event.action(action);update();}
+ const action={Digit1:'welcome',Digit2:'check',Digit3:'redirect',Digit4:'debate',Digit5:'security'}[e.code];if(action){e.preventDefault();event.action(action);update();}
 });
 
 function draw(t){
  const canvas=q('#h-canvas'),ctx=setupGraphicsCanvas(canvas,graphics);
  if(!ctx)return;
  const useCamera=modularVenueReady(modularVenue);if(useCamera){ctx.save();applyModularVenueCamera(ctx);}
- const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,poses,cast:assets.cast,extra});
+ const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,poses,cast:assets.cast,extra,audienceFrame:liveAudienceFrame});
  if(!modern){ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);ctx.fillStyle='#dfc7f4';ctx.textAlign='center';ctx.font='bold 8px monospace';ctx.fillText('LOADING VENUE',192,107);}
  drawStageQueueGuides(ctx,event);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#91f9b868';for(let y=51;y<183;y+=VENUE_CELL)for(let x=8;x<359;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}
- const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box);drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack,newCast);};
+ const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box,t,motion?.stageVisit==='exchange'||kind===0?'stage':'hall');drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack,newCast);};
  const mood=stageAction(event.phase,event.elapsed,event.visitors.length,event.elapsed<event.hostUntil?event.hostMood:'idle');
  sprite(0,event.hostX,event.hostY,31,39,event.hostWalking&&!event.departures.some(g=>g.stageVisit==='exchange')?'walk':mood);
  const actors=[...event.crowd.map(g=>({g,role:'crowd',w:27,h:34})),...event.arrivals.map(g=>({g,role:'arrival',w:30,h:38})),...event.visitors.map(g=>({g,role:'visitor',w:30,h:38})),...event.departures.map(g=>({g,role:'depart',w:30,h:38})),...event.staff.map(g=>({g,role:'staff',w:30,h:38})),...event.guardPositions.map(g=>({g,role:'guard',w:30,h:38})),...(event.mascot?[{g:event.mascot,role:'mascot',w:22,h:24}]:[])].sort((a,b)=>a.g.y+a.h-(b.g.y+b.h));
@@ -108,9 +109,10 @@ function draw(t){
   else if(role==='crowd'&&!g.debateWatching&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0)drawDggEmote(ctx,assets.emotes,g.emote,g.x+9,g.y-15,13,assets.dggl);
   if(role==='visitor'&&g.pending){ctx.fillStyle='#77ffe2';ctx.fillRect(g.x+9,g.y-4,16,7);}
  }
- if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue);}
+ if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue);captureLiveAudienceFrame(ctx,liveAudienceFrame,event);}
  drawStageFanInteraction(ctx,event,t);
  drawStageConversation(ctx,event,bubbleLayout,assets.dggl);
+ drawDebateCombatEffects(ctx,event,t);
  if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<Math.min(2,waiting.length);i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout,assets.dggl);}
  drawVenueFeedback(ctx,event.effects,assets.dggl);
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}

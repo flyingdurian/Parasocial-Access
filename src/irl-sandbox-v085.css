@@ -17,7 +17,7 @@ body.irl-sandbox{background:#0d1224;color:#fff1df;font-family:system-ui,sans-ser
 .harness-caption{min-height:34px;padding:8px;background:#282740;color:#efdfcc;border-radius:0 0 8px 8px;font-size:13px}
 .harness-controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .harness-controls button,.harness-settings button{border:1px solid #8c8399;border-radius:8px;padding:12px 14px;background:#35395e;color:#fff4df;cursor:pointer;font-weight:800}
-.harness-controls button{flex:1;min-width:115px}.harness-controls button:nth-child(1){background:#285a59}.harness-controls button:nth-child(4){background:#782c4a}
+.harness-controls button{flex:1;min-width:115px}.harness-controls button:nth-child(1){background:#285a59}.harness-controls button:nth-child(5){background:#782c4a}
 .harness-controls button.debate-key{background:linear-gradient(120deg,#812568,#572aa6);border:2px solid #f9c27b;color:#fff4d2;box-shadow:inset 0 0 0 1px #f9a7e666,0 3px 0 #341349;text-shadow:0 0 7px #f4a5fc;font-weight:1000;letter-spacing:.02em}
 .harness-controls button.debate-key:hover{filter:brightness(1.18)}
 .harness-settings{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;padding:12px;background:#20243b;border:1px solid #555b7b;border-radius:8px}
@@ -66,3 +66,5 @@ body.irl-sandbox{background:#0d1224;color:#fff1df;font-family:system-ui,sans-ser
 body.irl-sandbox #irl-graphics-shell{position:relative;top:auto;right:auto;margin:0 0 9px;max-width:100%;display:flex;justify-content:flex-end;z-index:40}
 body.irl-sandbox #irl-graphics-panel{top:calc(100% + 3px)}
 @media(max-width:650px){.harness-prompt{display:none!important}.harness-mobile-prompt:not([hidden]){display:block}.harness-controls{margin-top:12px}}
+/* Keep all five venue actions in the same immediate decision cluster. */
+@media(max-width:650px){.harness-controls button{min-width:calc(33.333% - 8px);font-size:10px;padding:10px 3px}}

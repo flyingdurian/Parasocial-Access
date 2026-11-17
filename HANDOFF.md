@@ -1,9 +1,20 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8o mobile dialogue and staged fan-interaction polish; n remains the prior preview.
-**Working branch:** `feature/v088o-mobile-stage-interactions` (forked from `feature/v088n-movement-crowd-cast` at `7b2030d`).
+**Current candidate:** v0.8.8p owner playtest corrections, arcade debate show and relaxed mode; o is the previous preview.
+**Working branch:** `feature/v088p-stage-bloodsports-relaxed` (forked from `feature/v088o-mobile-stage-interactions`).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8n focused 37/37, v0.8.8o additional 5/5. Some superseded v082–v087 tests still assert old stage/queue geometry and fail; the entire historic suite is **not** green. Git-integrated Vercel preview deployments are enabled for this feature branch.
+**Verification:** v0.8.8p targeted/current regression sweep: 50/50 Node assertions passing before the final gate-timing adjustment. Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Preview visual acceptance remains outstanding.
+
+## v0.8.8p — current candidate, awaiting owner visual acceptance
+
+- **Actual pit formation:** Spectator placement now consumes consecutive 0-based crowd slots rather than sparse NPC IDs (13+, 1000+); the earlier bug skipped front-row targets. 33 walkable half-ellipse positions are concentrated around the stage apron (first 19 y82–112), with smaller spectator-separation impulses, rear-view walking/poses facing the actual stage, and return to preserved previous activities afterward.
+- **Speaker-owned chatter:** Ambient speech never slices the source sentence into `I brought a sig…`; wrapped text renders in its entirety. Debate/ambient bubbles search only speaker-adjacent collision-free slots; if none fit, defer the bubble rather than teleport it to another side of the arena. Stage dialogue boxes have more width/lines for complete exchanges.
+- **Fan grounding:** Signing duet moved to x243/264,y38 and joint photo to x270/293,y36 (on the stage floorboards, closer to the tripod). Shadows use foot-contact geometry, two-layer softness and animated directional offset that responds to stage lighting vs ambient hall illumination.
+- **Live audience television:** The stage LCD's audience cutaway copies the active rendered world-space crowd near stage from the same frame, instead of presenting disconnected portrait sprites.
+- **Arcade bloodsports:** Contestants lunge and recoil on exchange beats, with miss/normal/critical impact variations, stage/effect flashes, rotating concentrated spotlights and dramatic full-sized `DEBATE WON` / `DEBATE LOST` KO overlays. Original synthesized SFX respect mute.
+- **Closed entrance:** Gate leaf animation is idle-closed; admissions get a short timed open window refreshed while an authorized person physically crosses, and security exits hold only while the escorted person remains in the lane. Decorative permanent infill rails cover dead gaps between fixed scanners, planters and front desk.
+- **Live difficulty & HUD:** Expert remains default with no correct-answer cue. Relaxed mode exposes a clear case-type cue and emphasizes only the matching action, without changing decision duration, pace or score. A compact in-venue arcade telemetry strip shows score, vibe, time and guest count; guard counters are removed. All five decisions form one cluster, including Debate at #4 and Security #5, responsive on phones; number keys match the visual order.
+- **Code / QA:** Targeted coverage in `tests/venue_v088p.test.mjs`, plus current v088o/n/m/l/k/modular tests. Claw machine mechanics intentionally untouched in p per owner. Preserve browser-launchable `/irl-sandbox`; preview branch only until owner signs off.
 
 ## v0.8.8o — mobile-owner QA corrections, pending device acceptance
 

@@ -51,6 +51,16 @@ function drawGate(ctx,event,side){
  ctx.fillStyle=open>.65?'rgba(92,255,191,'+pulse+')':'#efc076';
  ctx.fillRect(lane.left-2.6,lane.top+3,1.6,2.6);
  ctx.fillRect(lane.right+1,lane.top+3,1.6,2.6);
+ // Bridge the small unguarded negative spaces between the illustrated
+ // planters, scanner posts and check-in counter. Only the two ticketed lanes
+ // remain traversable; their arms default CLOSED in the absence of a pass.
+ const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
+ for(const [a,b] of segments){
+  ctx.fillStyle='#252e49';ctx.fillRect(a,waist-1,b-a,3.8);
+  ctx.fillStyle='#9db8c9';ctx.fillRect(a,waist-1,b-a,1);
+  ctx.fillStyle='#55677b';ctx.fillRect(a,waist+7,b-a,1.4);
+  ctx.fillStyle='#2e3b56';ctx.fillRect(a,waist-1,1.7,10);
+ }
  ctx.restore();
 }
 // A single, non-roaming staff member behind the desk, deliberately rendered
@@ -172,6 +182,26 @@ export function drawStageDebateUplight(ctx,event,t){
  const debater=event?.departures?.find(g=>g.debater&&g.stageVisit==='exchange');
  if(!debater)return;
  ctx.save();
+ // Moving concert follow-spots. Beams converge on the actual left/right
+ // combatants, with a smaller violet wash passing over the seated pit.
+ const tick=t*.001;
+ const lamps=[[211,10,event.hostX+15, '#a9dcff'],[320,9,debater.x+15,'#ffc7e7']];
+ ctx.globalCompositeOperation='screen';
+ for(const [sourceX,sourceY,actorX,color] of lamps){
+  const targetX=actorX+Math.sin(tick*1.3+sourceX)*2.4;
+  const gradient=ctx.createLinearGradient(sourceX,sourceY,targetX,76);
+  gradient.addColorStop(0,'rgba(225,207,255,.17)');gradient.addColorStop(1,'rgba(225,207,255,.035)');
+  ctx.fillStyle=gradient;ctx.beginPath();ctx.moveTo(sourceX-4,sourceY);ctx.lineTo(sourceX+4,sourceY);ctx.lineTo(targetX+15,75);ctx.lineTo(targetX-15,75);ctx.lineTo(sourceX-4,sourceY);ctx.fill();
+  ctx.strokeStyle=color;ctx.globalAlpha=.36+.18*Math.sin(tick*2.7+sourceX);
+  ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(targetX,73,15,3,0,0,Math.PI*2);ctx.stroke();
+ }
+ for(let i=0;i<3;i++){
+  const x=236+i*34+Math.sin(tick*1.6+i*2)*10,y=104+i%2*8;
+  const spill=ctx.createRadialGradient(x,y,1,x,y,24);
+  spill.addColorStop(0,'rgba(218,164,255,.10)');spill.addColorStop(1,'rgba(218,164,255,0)');
+  ctx.globalAlpha=.82;ctx.fillStyle=spill;ctx.fillRect(x-25,y-25,50,50);
+ }
+ ctx.globalAlpha=1;
  for(const [x,y] of [[235,74],[268,74],[296,74]]){
   const grad=ctx.createRadialGradient(x,y,1,x,y-7,19);
   grad.addColorStop(0,'rgba(246,166,255,.22)');grad.addColorStop(1,'rgba(128,88,215,0)');
@@ -312,11 +342,14 @@ export function drawModularTV(ctx,event,t,streams={}){
   ctx.fillStyle='#ff637b';ctx.fillRect(7,10,2.6,2);
   ctx.save();ctx.beginPath();ctx.rect(6,17,88,29);ctx.clip();
   if(crowdCam){
-   const chosen=audience[Math.floor(t/1550)%audience.length];
-   liveFanPortrait(ctx,streams,chosen.kind,50,15,48,45);
-   if(audience.length>2){
-    liveFanPortrait(ctx,streams,audience[(audience.indexOf(chosen)+1)%audience.length].kind,17,26,25,22);
-    liveFanPortrait(ctx,streams,audience[(audience.indexOf(chosen)+2)%audience.length].kind,83,26,25,22);
+   if(streams.audienceFrame?.width){
+    // Frame from the *previous live canvas render*, filmed at the pit.
+    // No model-portrait cutaways masquerading as a real audience camera.
+    ctx.drawImage(streams.audienceFrame,7,17,86,29);
+    ctx.strokeStyle='#d4b8fa';ctx.lineWidth=.7;ctx.strokeRect(7.3,17.3,85.4,28.4);
+   }else{
+    const chosen=audience[Math.floor(t/1550)%audience.length];
+    liveFanPortrait(ctx,streams,chosen.kind,50,15,40,38);
    }
   }else if(shot===0||shot===4){
    const cell=[6,5,6,4][Math.floor(t/300)%4];
@@ -394,6 +427,18 @@ export function drawModularTV(ctx,event,t,streams={}){
  for(let y=8;y<54;y+=4)ctx.fillRect(3,y,94,.35);
  ctx.globalAlpha=1;
  ctx.restore();
+}
+export function captureLiveAudienceFrame(ctx,frame,event){
+ if(!frame||!event?.crowd?.some(person=>person.debateWatching))return false;
+ // The apron crop follows the actual drawn stage pit; rendered frames are
+ // copied only AFTER spectators are drawn, avoiding recursive canvas reads.
+ if(frame.width!==176)frame.width=176;
+ if(frame.height!==78)frame.height=78;
+ const capture=frame.getContext('2d');if(!capture)return false;
+ capture.imageSmoothingEnabled=false;
+ const scaleX=ctx.canvas.width/384,scaleY=ctx.canvas.height/216;
+ capture.drawImage(ctx.canvas,195*scaleX,81*scaleY,142*scaleX,63*scaleY,0,0,176,78);
+ return true;
 }
 export function drawModularVenue(ctx,assets,event,t,streams={}){
   if(!modularVenueReady(assets))return false;

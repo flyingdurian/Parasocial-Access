@@ -111,10 +111,10 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  const person=dialogue.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
  // A stage speaker owns the bubble ABOVE THEIR OWN HEAD. The earlier hard
  // clamp to x=140..210 teleported the challenger dialogue across the set.
- const anchorX=person.x+16,anchorY=person.y+(dialogue.speaker==='destiny'?1:5),w=60;
+ const anchorX=person.x+16,anchorY=person.y+(dialogue.speaker==='destiny'?1:5),w=84;
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.font='bold 4.6px sans-serif';
- const lines=wrapMeasuredText(ctx,dialogue.text,w-8,2);
+ const lines=wrapMeasuredText(ctx,dialogue.text,w-10,4);
  const h=11+Math.max(1,lines.length)*6;
  const placed={x:clamp(anchorX-w/2,2,382-w),y:clamp(anchorY-h-8,2,213-h),w,h};
  // Use the narrow strip ABOVE the screen bezel when a raised-stage actor
@@ -149,7 +149,7 @@ export function reserveStageSpeech(layout,event){
  const speaker=turn?.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
  if(!speaker)return null;
  const ax=speaker.x+16,ay=speaker.y+(turn.speaker==='destiny'?1:5);
- const rect={x:clamp(ax-30,2,322),y:clamp(ay-31,2,180),w:60,h:26};
+ const rect={x:clamp(ax-42,2,298),y:clamp(ay-40,2,174),w:84,h:35};
  if(rect.x<MODULAR_TV_BOUNDS.x+MODULAR_TV_BOUNDS.w&&rect.x+rect.w>MODULAR_TV_BOUNDS.x&&rect.y<MODULAR_TV_BOUNDS.y+MODULAR_TV_BOUNDS.h&&rect.y+rect.h>MODULAR_TV_BOUNDS.y)rect.y=2;
  return layout.reserve(rect);
 }
@@ -181,6 +181,42 @@ export function drawStageFanInteraction(ctx,event,t){
   ctx.fillRect(VENUE_LED_SCREEN.x+81,56,2,2);
  }
  ctx.restore();return true;
+}
+
+export function drawDebateCombatEffects(ctx,event,t){
+ const challenger=event?.departures?.find(g=>g.debater&&g.stageVisit==='exchange');
+ const verdict=event?.tvEvent?.type==='debate'&&event.tvEvent.ttl>0?event.tvEvent:null;
+ if(challenger){
+  const pulse=challenger.clashPulse||0;
+  if(pulse>0){
+   const strength=challenger.clashPower||0,alpha=Math.min(1,pulse/.22);
+   const centerX=(event.hostX+challenger.x+61)/2,centerY=54;
+   ctx.save();ctx.globalAlpha=alpha;
+   ctx.strokeStyle=strength===2?'#ffe18e':strength===0?'#c0d4fa':'#fd9bb4';
+   ctx.lineWidth=strength===2?2.2:1.2;
+   for(let i=0;i<9;i++){
+    const theta=i*Math.PI*2/9+t*.0004,length=6+(strength*3);
+    ctx.beginPath();ctx.moveTo(centerX+Math.cos(theta)*4,centerY+Math.sin(theta)*4);
+    ctx.lineTo(centerX+Math.cos(theta)*length,centerY+Math.sin(theta)*length);ctx.stroke();
+   }
+   ctx.fillStyle=strength===2?'#ffefb3':strength===0?'#c4d4ff':'#ffb6d9';
+   ctx.font='900 '+(strength===2?9:6)+'px monospace';ctx.textAlign='center';
+   ctx.fillText(strength===2?'CRITICAL!':strength===0?'MISS':'CLASH!',centerX,centerY-13);
+   ctx.restore();
+  }
+ }
+ if(verdict){
+  const age=verdict.maxTtl-verdict.ttl,enter=Math.min(1,age/.22),fade=Math.min(1,verdict.ttl/.42);
+  const alpha=enter*fade;
+  const x=202,y=46,w=127,h=29,accent=verdict.won?'#8affcb':'#ff79bb';
+  ctx.save();ctx.globalAlpha=alpha;
+  ctx.fillStyle='rgba(18,9,43,.93)';ctx.fillRect(x,y,w,h);
+  ctx.fillStyle=accent;ctx.fillRect(x,y,w,2.4);ctx.fillRect(x,y+h-2.4,w,2.4);
+  ctx.fillStyle='#fff3df';ctx.textAlign='center';ctx.font='900 8px monospace';ctx.fillText('⚔ BLOODSPORTS · K.O. ⚔',x+w/2,y+10);
+  ctx.shadowColor=accent;ctx.shadowBlur=6;ctx.fillStyle=accent;
+  ctx.font='900 '+Math.round(12+3*enter)+'px monospace';ctx.fillText(verdict.won?'DEBATE WON':'DEBATE LOST',x+w/2,y+25);
+  ctx.restore();
+ }
 }
 
 // Shared bounded transaction/decision feedback; never overflow the hall LCD
