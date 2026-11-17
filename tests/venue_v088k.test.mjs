@@ -39,14 +39,14 @@ test('v088k boss scene generates energy layers and sparks during live debate',()
  assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,1,'only one world plate');
 });
 
-test('v088k boss stances stay aggressive and chat rotates rapidly across a 6–12s round',()=>{
+test('v088k boss stances stay aggressive and chat rotates rapidly across a 15–20s round',()=>{
  const engine={progress:{irlRecords:{destinyMeet:{attempts:0}}}};
  const event=new IRLEvent(engine,{level:0});
  event.begin();event.nextArrival=999;event.clock=500;
  event.add({throughGate:false});
  const guest=event.visitors[0];event.resolve(guest,true,'debate');
  const challenger=event.departures.at(-1);
- assert(debateExchangeDuration(challenger,0)>=6&&debateExchangeDuration(challenger,0)<=12);
+ assert(debateExchangeDuration(challenger,0)>=15&&debateExchangeDuration(challenger,0)<=20);
  const poses=new Set(),hostPoses=new Set();
  let peakChat=0,chatLines=0,exchanging=false;
  for(let i=0;i<800;i++){
@@ -63,7 +63,7 @@ test('v088k boss stances stay aggressive and chat rotates rapidly across a 6–1
  }
  assert(exchanging);
  assert(poses.size>=2&&hostPoses.size>=2,'both actors change aggressive poses');
- assert(peakChat>=8,'hype chatter is frequent throughout the 6–12 second round');
+ assert(peakChat>=8,'hype chatter is frequent throughout the 15–20 second round');
  assert(chatLines>20,'crowd chatter is visible across the round');
  for(const line of ["Let Foodshop's debate!","Classic bridge burning","Vegas stream when?","Any gifters?","BINGO!","Mr. Redacted inbound"])
   assert(DEBATE_CHAT_LINES.includes(line));
