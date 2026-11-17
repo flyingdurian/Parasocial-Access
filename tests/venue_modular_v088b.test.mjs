@@ -225,21 +225,21 @@ test('left aisle claw machine awards prizes and booth loops stay physical',()=>{
  assert(event.effects.some(fx=>fx.kind==='booth'&&fx.station==='claw'));
 });
 
-test('arcade bloodsports run 6–12 seconds, convene spectators and show live close-ups',()=>{
+test('arcade bloodsports run 15–20 seconds, convene spectators and show live close-ups',()=>{
  const engine={progress:{irlRecords:{destinyMeet:{attempts:0}}}};
  const event=new IRLEvent(engine,{level:0});event.begin();event.nextArrival=999;event.clock=500;
  event.add({throughGate:false});
  const guest=event.visitors[0];event.resolve(guest,true,'debate');
  const challenger=event.departures.at(-1);
  assert.equal(challenger.debater,true);
- assert(debateExchangeDuration(challenger,0)>=6&&debateExchangeDuration(challenger,0)<=12);
+ assert(debateExchangeDuration(challenger,0)>=15&&debateExchangeDuration(challenger,0)<=20);
  assert(DEBATE_CHAT_LINES.includes("Where's the fact-check?!"));
  let visited=false,watchers=false,chat=false,result=false;
  for(let i=0;i<750;i++){
   event.tick(.1);
   if(challenger.stageVisit==='exchange'){
    visited=true;
-   assert(challenger.exchangeDuration>=6&&challenger.exchangeDuration<=12);
+   assert(challenger.exchangeDuration>=15&&challenger.exchangeDuration<=20);
    watchers||=event.crowd.some(g=>g.debateWatching);
    chat||=event.debateChat.length>0;
   }
