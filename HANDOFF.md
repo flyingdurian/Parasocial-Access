@@ -1,9 +1,20 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8s TypeError crowd-recovery patch, source-painted gate animation, transparent 11-emote library, new full-resolution clerk and enlarged live stage broadcast. v0.8.8r is the previous preview.
-**Working branch:** `feature/v088s-freeze-gates-assets` (forked from `feature/v088r-stage-front-crowd-gates-stability`).
+**Current candidate:** v0.8.8t polish: proportionate clerk, rebuilt painted gate movement, grounded mascot hearts, cleared phase-3 TV/challenger strips, wave surge and six four-direction cosplayers. v0.8.8s is the preceding owner preview.
+**Working branch:** `feature/v088t-venue-wave-cosplayers` (forked from local v0.8.8s patch source).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8s targeted/current Node regression sweep **74/74 passing** (`venue_v088s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Local Chromium smoke fails to start due to executor `socket(): Operation not permitted`, unrelated to game code; Vercel preview browser/mobile visual acceptance remains outstanding.
+**Verification:** v0.8.8t targeted/current Node regression sweep **79/79 passing** (`venue_v088t/s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Desktop/iPhone visual acceptance still required before production promotion.
+
+## v0.8.8t — entrance, wave urgency and six cosplay cast (owner review)
+
+- **Clerk:** Draw the existing high-resolution atlas at **22×31** instead of **28×43** projected units; cropped source/scan animation remains, but the clerk no longer dwarfs the 27×34 visitors.
+- **Gate:** Continue using the **source-painted rail** with no additional door sprites. Each half retracts into its scanner and reconstructs a taller 15.9-unit leaf from sampled original rail pixels plus subtle glass; the baked original rail is erased under the moving mechanism, and only the foreground draws the leaf. Permanent infill between fixtures stays distinct from the moving doors.
+- **Mascot:** The earlier global `scale(-1,1)` was still applied when drawing hearts after a left-facing mascot, throwing the hearts to the far opposite screen edge. Sprite flipping now uses a nested save/restore; heart positions stay at mascot world x/y. Patrol stops stay on walkable hall floor and y is constrained away from the stage riser.
+- **Pink strips and bubble collision:** Retired the exact stray phase-3 `fillRect(276,44,12,2)` and `fillRect(300,50,6,2)` in the main renderer (they persisted indefinitely across post-debate scenes). Removed redundant guard/staff task bars. Stage conversation now separates the `DESTINY` speaker label from the body by a larger, separately clipped text area.
+- **Larger live stage screen:** Projection increases to x232/y30.8 and 72×~33 inside the painted bezel; no detached monitor. The verdict's stray top accent stripe is also suppressed.
+- **Wave arrival:** Endless starts with 10 instead of 9 decisions, bounded at 34 per wave and at nine simultaneous cases; for 3–4.5s after a new wave, more ticketed arrivals enter rapidly from the gate spawn points, with a bold 3.15s on-scene `WAVE N — INCOMING!` slate. An original 172-BPM seven-second `convention-wave` score with an entrance stinger emphasizes the transition, then reverts to the existing music. This is a modest pacing bump, not doubling the simultaneous task ceiling.
+- **Cosplay expansion:** Six new original anime/video-game-style cosplay characters `kind 36..41`, visible from session start, each with **four four-row transparent WebP atlases**: side walk, rear walk, front walk and front reactions. All six columns share identities and 4-step frames; sprites load in both full game and isolated `/irl-sandbox`. Assets `assets/irl-cosplay-six-{walk,back,front,react}-v088t.webp`.
+- **QA:** `tests/venue_v088t.test.mjs` covers all direction/frame routing, asset signatures, mirrored hearts, mascot stage exclusion, painted gate height/sampling, clerk scale, wave bursts/density/audio and removal of stale bars. Four prior expectations were updated to the new owner-specified size/count/leaf behavior. **79/79 current focused tests green.** No Rival Invasions code is included in this stabilization pass. Preview branch only; visual inspection of gate and TV on iPhone/desktop is required.
 
 ## v0.8.8s — owner review candidate
 

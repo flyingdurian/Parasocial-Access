@@ -56,8 +56,10 @@ test('animated gate uses only existing painted plate fragments and zero independ
  const closed={elapsed:6,gateControllers:{left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}}};
  const open={elapsed:6,gateControllers:{left:{openedAt:5,openUntil:7},right:{openedAt:5,openUntil:7}}};
  drawPaintedGate(ctx,plate,closed,'left');
- assert.equal(calls.filter(c=>c[0]==='image').length,3);
- assert(calls.every(c=>c[0]==='image'&&c[1]===plate));
+ assert.equal(calls.filter(c=>c[0]==='image').length,1,'erase the painted closed rail under the moving leaf');
+ drawPaintedGate(ctx,plate,closed,'left',true);
+ assert.equal(calls.filter(c=>c[0]==='image').length,7,'two leaves each reconstruct three painted source strips');
+ assert(calls.filter(c=>c[0]==='image').every(c=>c[1]===plate));
  calls.length=0;drawPaintedGate(ctx,plate,open,'left');
  assert.equal(calls.filter(c=>c[0]==='image').length,1,'fully open painted rail is concealed, leaving only the carpet restoration');
 });

@@ -19,9 +19,9 @@ test('stage audience fills a broad U across both wings, not one concentrated clu
 });
 
 test('endless wave density scales but stays bounded and safety strikes are documented',()=>{
- assert.equal(endlessWaveGuests(1),9);
+ assert.equal(endlessWaveGuests(1),10);
  assert(endlessWaveGuests(9)>=endlessWaveGuests(3)*2);
- assert(endlessWaveGuests(20)<=32);
+ assert(endlessWaveGuests(20)<=34);
  assert.equal(endlessLiveDecisions(1),4);
  assert(endlessLiveDecisions(9)>=8);
  assert(endlessLiveDecisions(99)<=IRL_ENDLESS.maxLiveDecisions);

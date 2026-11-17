@@ -11,7 +11,7 @@ import {drawStageAtmosphere,drawAmbientBubble,drawDebateShout,drawQueuedDecision
 import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
-import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawDebateCombatEffects,drawSecurityComic,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
+import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawDebateCombatEffects,drawSecurityComic,drawStageQueueGuides,drawVenueFeedback,drawVenueWaveBanner,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 import {createResilientAnimationLoop} from './venue-frame-loop-v088r.js';
 
 const root=document.querySelector('#irl-harness');
@@ -37,11 +37,13 @@ assets.hall.src='/assets/irl-hall-open-v088.webp';
 assets.hall.onerror=()=>{assets.hall.onerror=()=>{assets.hall.onerror=null;assets.hall.src='/assets/irl-hall.webp';};assets.hall.src='/assets/irl-hall-open-v087.webp';};
 const poses={0:assets.pose0,1:assets.pose1,3:assets.pose3};
 const newCast={back:new Image(),walk:new Image(),react:new Image()};
+const cosplayCast={back:new Image(),walk:new Image(),front:new Image(),react:new Image()};
 newCast.back.src='/assets/irl-cast%20new%20sheet%201.png';
 newCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
 newCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
+for(const direction of ['walk','back','front','react'])cosplayCast[direction].src='/assets/irl-cosplay-six-'+direction+'-v088t.webp';
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8s · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8t · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
@@ -83,7 +85,7 @@ function draw(t){
  if(!modern){ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);ctx.fillStyle='#dfc7f4';ctx.textAlign='center';ctx.font='bold 8px monospace';ctx.fillText('LOADING VENUE',192,107);}
  drawStageQueueGuides(ctx,event);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#91f9b868';for(let y=51;y<183;y+=VENUE_CELL)for(let x=8;x<359;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}
- const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box,t,motion?.stageVisit==='exchange'||kind===0?'stage':'hall');drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack,newCast);};
+ const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box,t,motion?.stageVisit==='exchange'||kind===0?'stage':'hall');drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack,newCast,cosplayCast);};
  const mood=stageAction(event.phase,event.elapsed,event.visitors.length,event.elapsed<event.hostUntil?event.hostMood:'idle');
  sprite(0,event.hostX,event.hostY,31,39,event.hostWalking&&!event.departures.some(g=>g.stageVisit==='exchange')?'walk':mood);
  const actors=[...event.crowd.map(g=>({g,role:'crowd',w:27,h:34})),...event.arrivals.map(g=>({g,role:'arrival',w:30,h:38})),...event.visitors.map(g=>({g,role:'visitor',w:30,h:38})),...event.departures.map(g=>({g,role:'depart',w:30,h:38})),...event.staff.map(g=>({g,role:'staff',w:30,h:38})),...event.guardPositions.map(g=>({g,role:'guard',w:34,h:43})),...(event.mascot?[{g:event.mascot,role:'mascot',w:22,h:24}]:[])].sort((a,b)=>a.g.y+a.h-(b.g.y+b.h));
@@ -117,6 +119,7 @@ function draw(t){
  drawSecurityComic(ctx,event,t);
  if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<Math.min(2,waiting.length);i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout,assets.dggl);}
  drawVenueFeedback(ctx,event.effects,assets.dggl,event);
+ drawVenueWaveBanner(ctx,event,t);
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}
  drawCameraFlashes(ctx,event);
  if(useCamera)ctx.restore();
@@ -164,9 +167,9 @@ function update(){
 let last=0,lastSpeechId=-1,lastSpeechCount=-1,lastSpeechAt=0;
 const loop=createResilientAnimationLoop(now=>{const dt=Math.min(.09,last?(now-last)/1000:0);last=now;
  if(event.mode==='playing'&&!event.paused)for(let i=0;i<speed;i++)event.tick(dt);
- sound.irlDebateTick(event);sound.irlSecurityTick(event);
+ sound.irlDebateTick(event);sound.irlSecurityTick(event);sound.irlWaveStart(event);
  if(event.mode==='playing'&&!event.paused){
-  sound.setMode(event.phase===2?'convention-peak':event.phase===3?'convention-qa':'convention');sound.tick();
+  sound.setMode(event.session==='endless'&&event.elapsed-event.waveStartedAt<7?'convention-wave':event.phase===2?'convention-peak':event.phase===3?'convention-qa':'convention');sound.tick();
   const speaker=event.crowd.find(g=>g.speechTime>0);
   if(speaker&&!graphics.chatterMuted){
    const count=Math.floor(speaker.speechProgress||0);

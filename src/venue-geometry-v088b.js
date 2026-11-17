@@ -15,8 +15,8 @@ export const MODULAR_GATES=Object.freeze({
  right:Object.freeze({id:'right',spawn:[266,225],check:[266,176],inside:[266,137],crossing:[266,178],panel:[266,196],art:{x:240,y:180,w:70,h:36},lane:{left:254,right:297,top:183,bottom:216}})
 });
 // Inside the single baked LCD bezel (screen pixels x1010..1320,y136..284).
-export const MODULAR_TV_BOUNDS=Object.freeze({x:233,y:32,w:70,h:32});
-export const MODULAR_TV_PROJECTION=Object.freeze({a:.70,b:0,c:0,d:.57,e:233,f:32});
+export const MODULAR_TV_BOUNDS=Object.freeze({x:232,y:31,w:72,h:33});
+export const MODULAR_TV_PROJECTION=Object.freeze({a:.72,b:0,c:0,d:.59,e:232,f:30.8});
 export const MODULAR_PROPS=Object.freeze({
  stage:Object.freeze({x:188,y:19,w:150,h:76}),
  merch:Object.freeze({x:18,y:45,w:75,h:53,solid:{x:20,y:79,w:74,h:19}}),

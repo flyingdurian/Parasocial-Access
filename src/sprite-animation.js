@@ -52,7 +52,7 @@ export function drawContactShadow(ctx,geometry,time=0,lighting='hall'){
  ctx.beginPath();ctx.ellipse(geometry.footX,y,radius*.83,Math.max(1.2,geometry.h*.044),0,0,Math.PI*2);ctx.fill();
  ctx.restore();
 }
-export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w=35,h=43,walkAtlas=null,extraAtlases=null,walk4Atlases=null,motion=null,back4Atlases=null,stagePoseAtlases=null,reactionAtlases=null,originalWalk4Atlases=null,originalBack4Atlases=null,newCastAtlases=null){
+export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w=35,h=43,walkAtlas=null,extraAtlases=null,walk4Atlases=null,motion=null,back4Atlases=null,stagePoseAtlases=null,reactionAtlases=null,originalWalk4Atlases=null,originalBack4Atlases=null,newCastAtlases=null,cosplayAtlases=null){
  const facing=motion?.facing===-1?-1:1;
  const flip=facing===-1;
  // A rear-facing concert spectator must stay rear-facing while cheering or
@@ -63,6 +63,21 @@ export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w
   if(flip){ctx.save();ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(image,sx,sy,sw,sh,0,0,w,h);ctx.restore();}
   else ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);
  };
+ // Six new full-direction cosplayers: four authored foot phases each for
+ // front, side and rear movement plus four front-facing reaction states.
+ if(kind>=36&&kind<42){
+  const action=state!=='walk'&&state!=='idle';
+  const back=motion?.direction==='north'||spectatingBack;
+  const moving=state==='walk';
+  const sheet=back?cosplayAtlases?.back:action?cosplayAtlases?.react:moving&&motion?.direction==='south'?cosplayAtlases?.front:moving?cosplayAtlases?.walk:cosplayAtlases?.react;
+  if(sheet?.complete&&sheet.naturalWidth>0){
+   const frame=back&&spectatingBack?backReactionRow:action?(state==='talk'||state==='mic'?0:state==='cheer'||state==='laugh'?1:state==='point'?2:3):moving?walkCycleFrame(motion?.stepDistance??time/18):0;
+   const cw=sheet.naturalWidth/6,ch=sheet.naturalHeight/4;
+   paint(sheet,(kind-36)*cw,frame*ch,cw,ch);
+   return true;
+  }
+  kind=2;
+ }
  // Six additional 4-row character sheets: rear walk, side walk, front reactions.
  if(kind>=30&&kind<36){
   const action=state!=='walk'&&state!=='idle';

@@ -115,7 +115,7 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.font='bold 4.6px sans-serif';
  const lines=wrapMeasuredText(ctx,dialogue.text,w-10,4);
- const h=11+Math.max(1,lines.length)*6;
+ const h=14+Math.max(1,lines.length)*6;
  const placed={x:clamp(anchorX-w/2,2,382-w),y:clamp(anchorY-h-8,2,213-h),w,h};
  // Use the narrow strip ABOVE the screen bezel when a raised-stage actor
  // stands directly in front of the televised backdrop.
@@ -130,10 +130,10 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  ctx.fillStyle=background;ctx.fillRect(x,y,w,h);
  ctx.strokeStyle=dialogue.speaker==='destiny'?'#62cfe1':'#ec9eb6';ctx.lineWidth=1.5;ctx.strokeRect(x+.6,y+.6,w-1.2,h-1.2);
  ctx.fillStyle='#4d396a';ctx.font='bold 4.5px monospace';
- ctx.fillText(dialogue.speaker==='destiny'?'DESTINY':String(guest.name||'GUEST').slice(0,16),x+4,y+6,w-8);
+ ctx.fillText(dialogue.speaker==='destiny'?'DESTINY':String(guest.name||'GUEST').slice(0,16),x+4,y+7,w-8);
  ctx.fillStyle='#252940';ctx.font='bold 4.6px sans-serif';
- ctx.save();ctx.beginPath();ctx.rect(x+3,y+9,w-6,h-10);ctx.clip();
- lines.forEach((line,i)=>drawInlineDggL(ctx,line,x+4,y+12+i*6,mascot,7));
+ ctx.save();ctx.beginPath();ctx.rect(x+3,y+11,w-6,h-12);ctx.clip();
+ lines.forEach((line,i)=>drawInlineDggL(ctx,line,x+4,y+16+i*6,mascot,7));
  ctx.restore();
  drawBubblePointer(ctx,{x,y,w,h},anchorX,anchorY,background);
  ctx.restore();
@@ -245,6 +245,24 @@ export function drawVenueFeedback(ctx,effects=[],mascot=null,event=null){
   drawInlineDggL(ctx,label,x+4,y,mascot,7);
   ctx.restore();
  }
+}
+
+export function drawVenueWaveBanner(ctx,event,t){
+ if(event?.session!=='endless'||event.mode!=='playing')return;
+ const age=event.elapsed-(event.waveStartedAt??-100);
+ if(age<0||age>=3.15)return;
+ const alpha=Math.min(1,age/.24,(3.15-age)/.45);
+ const flash=.75+.25*Math.sin(t*.018);
+ ctx.save();ctx.globalAlpha=alpha;
+ const x=110,y=4,w=164,h=24;
+ ctx.fillStyle='rgba(20,13,39,.94)';ctx.fillRect(x,y,w,h);
+ ctx.strokeStyle=`rgba(255,177,96,${flash})`;ctx.lineWidth=1.6;ctx.strokeRect(x+.8,y+.8,w-1.6,h-1.6);
+ ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.fillStyle='#fff0a3';ctx.font='900 11px ui-monospace,monospace';
+ ctx.fillText(`⚠ WAVE ${event.wave} — INCOMING!`,192,y+10,154);
+ ctx.fillStyle='#bbf3ff';ctx.font='bold 4.8px ui-monospace,monospace';
+ ctx.fillText('NEW VISITORS FLOODING THROUGH THE GATES',192,y+19,153);
+ ctx.restore();
 }
 
 export function drawVenueRush(ctx,event,t){

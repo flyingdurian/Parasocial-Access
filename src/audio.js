@@ -1,7 +1,7 @@
 /* Original procedural score composed for Feedfall Rush Hour. All notes, rhythms and
    SFX generated locally with Web Audio. No copyrighted recordings or external requests. */
 const semitone=n=>440*Math.pow(2,(n-69)/12);
-const TRACKS={pulse:{bpm:96,bass:[48,48,53,48,46,48,53,51],arp:[72,76,79,83,76,79,84,88],chords:[60,64,67]},feed:{bpm:112,bass:[43,43,38,43,46,43,41,38],arp:[67,70,74,70,67,70,77,74],chords:[55,58,62]},arena:{bpm:123,bass:[45,45,41,43,45,48,41,43],arp:[69,72,76,72,69,76,79,76],chords:[57,60,64]},market:{bpm:118,bass:[40,43,45,40,48,43,45,38],arp:[64,67,71,74,67,71,76,74],chords:[52,55,59]},thread:{bpm:126,bass:[46,46,41,44,46,51,44,41],arp:[70,74,77,81,74,77,82,86],chords:[58,62,65]},destiny:{bpm:142,bass:[43,46,41,43,48,46,41,43],arp:[74,77,82,79,74,79,84,86],chords:[55,59,62]},emote:{bpm:156,bass:[43,43,50,48,43,50,48,43],arp:[79,86,91,86,79,86,91,98],chords:[55,62,67]},nova:{bpm:102,bass:[48,52,55,52,45,48,52,55],arp:[72,76,79,84,79,76,74,72],chords:[60,64,67]},glitch:{bpm:150,bass:[40,40,47,45,40,47,43,45],arp:[76,79,83,86,79,83,88,91],chords:[52,55,59]},'glitch-final':{bpm:178,bass:[40,47,43,40,45,48,43,47],arp:[83,88,91,95,86,91,95,98],chords:[52,55,59]},rush:{bpm:164,bass:[43,43,46,41,43,48,46,41],arp:[79,82,86,84,82,79,86,89],chords:[55,59,62]},convention:{bpm:108,bass:[43,43,50,46,43,48,46,50],arp:[67,74,79,74,69,74,81,77],chords:[55,62,67]},'convention-peak':{bpm:131,bass:[43,50,46,43,48,50,46,43],arp:[74,79,81,86,79,86,84,81],chords:[55,62,69]},'convention-qa':{bpm:120,bass:[43,46,50,43,48,46,43,50],arp:[79,74,86,81,79,77,84,86],chords:[55,59,65]}};
+const TRACKS={pulse:{bpm:96,bass:[48,48,53,48,46,48,53,51],arp:[72,76,79,83,76,79,84,88],chords:[60,64,67]},feed:{bpm:112,bass:[43,43,38,43,46,43,41,38],arp:[67,70,74,70,67,70,77,74],chords:[55,58,62]},arena:{bpm:123,bass:[45,45,41,43,45,48,41,43],arp:[69,72,76,72,69,76,79,76],chords:[57,60,64]},market:{bpm:118,bass:[40,43,45,40,48,43,45,38],arp:[64,67,71,74,67,71,76,74],chords:[52,55,59]},thread:{bpm:126,bass:[46,46,41,44,46,51,44,41],arp:[70,74,77,81,74,77,82,86],chords:[58,62,65]},destiny:{bpm:142,bass:[43,46,41,43,48,46,41,43],arp:[74,77,82,79,74,79,84,86],chords:[55,59,62]},emote:{bpm:156,bass:[43,43,50,48,43,50,48,43],arp:[79,86,91,86,79,86,91,98],chords:[55,62,67]},nova:{bpm:102,bass:[48,52,55,52,45,48,52,55],arp:[72,76,79,84,79,76,74,72],chords:[60,64,67]},glitch:{bpm:150,bass:[40,40,47,45,40,47,43,45],arp:[76,79,83,86,79,83,88,91],chords:[52,55,59]},'glitch-final':{bpm:178,bass:[40,47,43,40,45,48,43,47],arp:[83,88,91,95,86,91,95,98],chords:[52,55,59]},rush:{bpm:164,bass:[43,43,46,41,43,48,46,41],arp:[79,82,86,84,82,79,86,89],chords:[55,59,62]},convention:{bpm:108,bass:[43,43,50,46,43,48,46,50],arp:[67,74,79,74,69,74,81,77],chords:[55,62,67]},'convention-peak':{bpm:131,bass:[43,50,46,43,48,50,46,43],arp:[74,79,81,86,79,86,84,81],chords:[55,62,69]},'convention-qa':{bpm:120,bass:[43,46,50,43,48,46,43,50],arp:[79,74,86,81,79,77,84,86],chords:[55,59,65]},'convention-wave':{bpm:172,bass:[43,43,41,43,50,48,43,46],arp:[79,82,86,89,84,86,91,94],chords:[55,62,67]}};
 export class RushAudio{
  constructor(){this.ctx=null;this.sfxEnabled=true;this.musicEnabled=true;this.master=.52;this.musicVol=.29;this.musicLevel=2;this.nextNote=0;this.step=0;this.track='';this.mode='menu';this.musicBus=null;this.effectsBus=null;this.lastPhrase='';this._noise=null;this.nextVenueAmbience=0;}
  arm(){try{this.ctx??=new(window.AudioContext||window.webkitAudioContext)();if(!this.musicBus){this.musicBus=this.ctx.createGain();this.musicBus.gain.value=this.musicEnabled?this.musicVol:0;this.musicBus.connect(this.ctx.destination);this.effectsBus=this.ctx.createGain();this.effectsBus.gain.value=this.sfxEnabled?this.master:0;this.effectsBus.connect(this.ctx.destination);}if(this.ctx.state==='suspended')void this.ctx.resume();return !!this.ctx;}catch{return false;}}
@@ -13,7 +13,7 @@ export class RushAudio{
  setMusic(enabled){this.musicEnabled=enabled;if(!enabled){if(this.musicBus)this.musicBus.gain.value=0;}else{this.arm();if(this.musicBus)this.musicBus.gain.value=this.musicVol;this.nextNote=0;}return enabled;}
  setSfx(enabled){this.sfxEnabled=enabled;if(enabled)this.arm();if(this.effectsBus)this.effectsBus.gain.value=enabled?this.master:0;return enabled;}
  setMode(mode){this.mode=mode;const track=TRACKS[mode]?mode:'feed';if(track!==this.track){this.track=track;this.nextNote=0;this.step=0;this.lastPhrase=mode;}}
- tick(){if(!this.ctx||!this.musicEnabled||this.ctx.state!=='running')return;const ctx=this.ctx;if(this.mode==='menu'||this.mode==='results'||this.mode==='shop')return;const track=TRACKS[this.track]||TRACKS.feed;const spacing=60/track.bpm/2;if(this.nextNote<ctx.currentTime-.5)this.nextNote=ctx.currentTime+.03;if(!this.nextNote)this.nextNote=ctx.currentTime+.04;let iter=0;while(this.nextNote<ctx.currentTime+.18&&iter++<5){const s=this.step%16,idx=Math.floor(s/2)%8,t=this.nextNote;const fast=this.track==='rush';
+ tick(){if(!this.ctx||!this.musicEnabled||this.ctx.state!=='running')return;const ctx=this.ctx;if(this.mode==='menu'||this.mode==='results'||this.mode==='shop')return;const track=TRACKS[this.track]||TRACKS.feed;const spacing=60/track.bpm/2;if(this.nextNote<ctx.currentTime-.5)this.nextNote=ctx.currentTime+.03;if(!this.nextNote)this.nextNote=ctx.currentTime+.04;let iter=0;while(this.nextNote<ctx.currentTime+.18&&iter++<5){const s=this.step%16,idx=Math.floor(s/2)%8,t=this.nextNote;const fast=this.track==='rush'||this.track==='convention-wave';
   if(s%4===0)this.playAt(track.bass[idx],t,spacing*1.45,'triangle',fast?.105:.080,'music');
   if(s%2===0)this.playAt(track.arp[idx]+(s%8===6?12:0),t,spacing*(fast?.56:.78),'sine',fast?.055:.044,'music');
   if(s%8===0){for(let j=0;j<track.chords.length;j++)this.playAt(track.chords[j],t,spacing*5,'sine',.016,'music');}
@@ -37,6 +37,18 @@ export class RushAudio{
  miss(){this.osc(52,.14,0,'sawtooth',.11,'sfx',41);this.osc(48,.2,.07,'triangle',.10,'sfx',33);}
  combo(n){const base=70+Math.min(10,Math.floor(n/4));for(let i=0;i<4;i++)this.osc(base+[0,4,7,12][i],.17,i*.064,'sine',.10);}
  arrival(){this.osc(68,.045,0,'sine',.023);}
+ irlWaveStart(event){
+  if(!event||event.session!=='endless'||event.mode!=='playing')return;
+  if(this._waveSession!==event){this._waveSession=event;this._waveSeen=0;}
+  if(event.wave<=this._waveSeen)return;
+  this._waveSeen=event.wave;
+  // Original urgent 4-hit venue alarm, layered over the faster opening bars.
+  for(let i=0;i<4;i++){
+   this.osc(57+(i%2)*5,.17,i*.16,'sawtooth',.11,'sfx',50);
+   this.osc(79+i*2,.12,i*.16+.06,'triangle',.075);
+  }
+  if(this.ctx?.state==='running')this.noise(this.ctx.currentTime+.12,.24,920,.10);
+ }
  irlSpeechTick(seed=0){
   if(!this.sfxEnabled||!this.ctx||this.ctx.state!=='running')return;
   // Short varied retro gibberish per displayed text tick, deliberately quiet.

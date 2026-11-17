@@ -80,7 +80,7 @@ function irlHash(n){let x=n>>>0;x^=x<<13;x^=x>>>17;x^=x<<5;return x>>>0;}
 // Coordinates use the 384×216 hall art. Stations are on walkable floor, not
 // inside the counter, stage or barrier artwork.
 const IRL_STATIONS=VENUE_STATIONS;
-const IRL_VISIBLE_CROWD_CAP=31;
+const IRL_VISIBLE_CROWD_CAP=35;
 const IRL_STATION_NAMES=Object.keys(IRL_STATIONS);
 function arrange(run){const groups={};for(const raw of IRL_SCENARIOS){const s=isDebateInvitation(raw)?['debate',...raw.slice(1)]:raw;(groups[s[0]]??=[]).push(s);}
  const shuffle=(group,seed)=>{let list=[...groups[group]];for(let i=list.length-1;i>0;i--){seed=irlHash(seed+0x9e3779b9);let j=seed%(i+1);[list[i],list[j]]=[list[j],list[i]];}return list};
@@ -93,7 +93,7 @@ function arrange(run){const groups={};for(const raw of IRL_SCENARIOS){const s=is
  ];}
 export class IRLEvent {
  constructor(engine,options={}){this.engine=engine;this.session=options.mode==='endless'?'endless':'standard';this.levelIndex=irlClampLevel(options.level??0);this.config=IRL_LEVELS[this.levelIndex];this.wave=0;this.breakRemaining=0;this.congestionClock=0;this.safetyStrikes=0;this.highestWave=0;this.serial=0;this.mode='intro';this.elapsed=0;this.clock=this.session==='endless'?0:this.config.seconds;this.phase=1;this.score=0;this.vibe=76;this.errors=0;this.correct=0;this.lost=0;this.visitors=[];this.arrivals=[];this.finished=[];this.departures=[];this.stageCompleted=0;this.effects=[];this.focus=null;this.focusGrace=0;this.dispatchQueue=[];this.staff=[[170,145],[314,145],[270,142]].map(([x,y])=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null};});this.guardPositions=[[87,142],[310,106],[335,141]].map(([x,y],i)=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null,cooldown:0,patrolIndex:i,patrolDwell:i*.6};});this.nextArrival=1.2;this.paused=false;this.message='CONVENTION OPENING · Destiny is preparing for fans.';this.log=[];this.failure='';this.result=null;this.run=(engine.progress.irlRecords?.destinyMeet?.attempts||0);const deck=arrange(this.run+this.levelIndex*37);this.cards=this.session==='endless'?[]:Array.from({length:this.config.guests},(_,i)=>i<deck.length?deck[i]:arrange(this.run+this.levelIndex*37+Math.floor(i/deck.length))[i%deck.length]);this.next=0;this.hostMood='idle';this.hostUntil=0;this.hostX=198;this.hostY=32;this.hostWalking=false;this.incidentFade=0;this.arcadeFlash=0;this.lastVerdict=null;this.gateControllers={left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}};this.cameraFlashes=[];this.tvEvent=null;this.debateChat=[];this.speechQuietUntil=7;
-  this.debateHistory=[];this.combo=0;this.bestCombo=0;
+  this.debateHistory=[];this.combo=0;this.bestCombo=0;this.waveStartedAt=-100;this.waveBurstRemaining=0;
   // The desk clerk walks a short, real patrol behind the foreground counter.
   this.ticketClerk={id:'checkin-clerk',name:'Ticket Clerk',x:179,y:153,processed:0,lastScanAt:-20,lastTicket:null,walking:false,patrolIndex:0,patrolDwell:.6,stepDistance:0,direction:'south'};
   this.crowd=Array.from({length:13},(_,i)=>{const seed=irlHash(this.run*4919+i*811+17);return {id:i,kind:[1,2,4,5,6,8,9,10,11][i%9],x:171+(seed%31)-15,y:169+(seed%13),station:'entrance',target:'entrance',dwell:i*.22,visits:0,walking:false,facing:1,emote:'',emoteTime:0};});
@@ -103,6 +103,12 @@ export class IRLEvent {
   for(let i=0;i<6;i++){
    const [x,y]=snapVenue(...newCastSpots[i]);
    this.crowd.push({id:13+i,kind:30+i,x,y,station:'wander',target:'wander',dwell:.4+i*.22,visits:0,walking:false,animation:'idle',facing:1,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
+  }
+  // Six fully directional, independently dressed game/anime cosplayers.
+  const cosplaySpots=[[53,129],[117,142],[145,153],[298,134],[330,144],[75,151]];
+  for(let i=0;i<6;i++){
+   const [x,y]=snapVenue(...cosplaySpots[i]);
+   this.crowd.push({id:19+i,kind:36+i,x,y,station:'wander',target:'wander',dwell:.55+i*.21,visits:0,walking:false,animation:'idle',facing:1,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
   }
   // The gate monitor must not overlap the dedicated clerk's desk footprint.
   this.staff.forEach((worker,i)=>{[worker.x,worker.y]=[[115,139],[304,137],[268,139]][i];worker.homeX=worker.x;worker.homeY=worker.y;worker.patrolIndex=0;worker.patrolDwell=1.2;});
@@ -127,7 +133,7 @@ export class IRLEvent {
   if(this.crowd.length>=IRL_VISIBLE_CROWD_CAP)return;
   this.crowd.push({id:1000+g.serial,kind:g.kind,x:g.x,y:g.y,ticket:g.ticket,station:'rejoined',target:'rejoined',dwell:1.2,visits:0,walking:false,animation:g.debater?'talk':'cheer',actionClock:0,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
  }
- startNextWave(){this.wave++;this.highestWave=Math.max(this.highestWave,this.wave);const deck=arrange(this.run+this.wave*71);const count=endlessWaveGuests(this.wave);this.cards.push(...Array.from({length:count},(_,i)=>deck[i%deck.length]));this.nextArrival=this.wave===1?1.2:1.5;this.breakRemaining=0;this.breatherActive=false;this.phase=Math.min(3,1+Math.floor((this.wave-1)/2));this.message='WAVE '+this.wave+' · CROWD INBOUND';if(this.wave>1){if(this.crowd.length<IRL_ENDLESS.maxCrowd)this.addCrowdSet((this.wave-2)%3+1);this.effects.push({x:213,y:65,text:'WAVE '+this.wave+'!',color:'#ffe2a1',ttl:3});}}
+ startNextWave(){this.wave++;this.highestWave=Math.max(this.highestWave,this.wave);const deck=arrange(this.run+this.wave*71);const count=endlessWaveGuests(this.wave);this.cards.push(...Array.from({length:count},(_,i)=>deck[i%deck.length]));this.waveStartedAt=this.elapsed;this.waveBurstRemaining=this.wave===1?2:Math.min(4,2+Math.floor(this.wave/3));this.nextArrival=this.wave===1?.35:.18;this.breakRemaining=0;this.breatherActive=false;this.phase=Math.min(3,1+Math.floor((this.wave-1)/2));this.message='⚠ WAVE '+this.wave+' · CROWD FLOODING THROUGH THE GATES';if(this.wave>1){if(this.crowd.length<IRL_ENDLESS.maxCrowd)this.addCrowdSet((this.wave-2)%3+1);this.effects.push({x:213,y:65,text:'WAVE '+this.wave+'!',color:'#ffe2a1',ttl:2});}}
  get selected(){return this.visitors.find(g=>g.id===this.focus&&!g.pending)||null;}
  get remaining(){return this.cards.length-this.next+this.visitors.length;}
  get available(){return this.guardPositions.filter(g=>!g.task&&g.cooldown<=0).length;}
@@ -156,7 +162,8 @@ export class IRLEvent {
   const m=this.mascot;if(!m)return;
   m.heartBurst=Math.max(0,m.heartBurst-dt);
   m.heartClock-=dt;
-  const stops=[[184,139],[128,130],[71,129],[192,146],[308,136],[334,115],[211,151]];
+  // Stage platform is never a mascot roam target, even during stage events.
+  const stops=[[184,142],[128,137],[71,136],[192,149],[308,143],[334,131],[211,153]];
   if(m.dwell>0){m.dwell-=dt;m.walking=false;}
   else{
    const [tx,ty]=stops[m.patrolIndex%stops.length];
@@ -165,6 +172,8 @@ export class IRLEvent {
     m.patrolIndex++;m.dwell=1.8+(m.patrolIndex%3)*.7;
    }
   }
+  // Guard against navigation changes ever routing the mascot onto the stage.
+  if(m.y<122){m.y=122;m.routeTo=null;}
   if(m.heartClock<=0){
    m.heartClock=3.5+(m.patrolIndex%3)*1.15;
    m.heartBurst=1.15;
@@ -422,7 +431,9 @@ export class IRLEvent {
   for(const effect of this.effects){effect.ttl-=dt;if(effect.kind!=='booth')effect.y-=dt*6;}this.effects=this.effects.filter(e=>e.ttl>0);
   if(!this.breatherActive)this.nextArrival-=dt;
   if(this.nextArrival<=0&&this.next<this.cards.length&&this.visitors.length+this.arrivals.length<(this.session==='endless'?endlessLiveDecisions(this.wave):4)){
-   this.add({throughGate:true});this.nextArrival=(this.session==='endless'?endlessArrivalInterval(this.wave):this.config.arrival*(this.phase===3?.89:1))+(this.recovery>0?3:0);
+   this.add({throughGate:true});
+   if(this.session==='endless'&&this.waveBurstRemaining>0){this.waveBurstRemaining--;this.nextArrival=this.waveBurstRemaining>0?.43:endlessArrivalInterval(this.wave);}
+   else this.nextArrival=(this.session==='endless'?endlessArrivalInterval(this.wave):this.config.arrival*(this.phase===3?.89:1))+(this.recovery>0?3:0);
   }
   for(const g of [...this.arrivals]){
    if(g.entryPhase==='enter'){

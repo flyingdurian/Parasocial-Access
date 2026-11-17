@@ -40,16 +40,23 @@ export function drawPaintedGate(ctx,plate,event,side,foreground=false){
  const sx=plate.naturalWidth/384,sy=plate.naturalHeight/216;
  ctx.save();
  if(!foreground){
-  // The ORIGINAL illustrated rail is baked into the venue plate. Restore
-  // carpet beneath it before revealing the left/right retracted portions.
-  // There are no extra shutter panels or separate gate sprites.
+  // First erase the entire baked closed rail from the carpet. We reconstruct
+  // only the *original* painted leaf below; no second gate texture is added.
   ctx.drawImage(plate,lane.left*sx,(railY-12)*sy,span*sx,railH*sy,lane.left,railY,span,railH);
  }
  const visible=Math.max(0,span*.5*(1-open));
- if(visible>.1)for(const [x,w] of [[lane.left,visible],[lane.right-visible,visible]]){
+ if(foreground&&visible>.1)for(const [x,w] of [[lane.left,visible],[lane.right-visible,visible]]){
   ctx.beginPath();ctx.rect(x,railY,w,railH);ctx.clip();
   ctx.drawImage(plate,0,0,plate.naturalWidth,plate.naturalHeight,0,0,384,216);
-  // Each half is clipped individually; never leave the second clip active.
+  // Extend the actual painted scanner rail UP to scanner-door height. The
+  // lower painted rail stays in place; these top and lower strips are sampled
+  // directly from it, with translucent glass between them.
+  ctx.restore();ctx.save();
+  ctx.beginPath();ctx.rect(x,182.7,w,15.9);ctx.clip();
+  ctx.fillStyle='rgba(102,170,205,.17)';ctx.fillRect(x,185.1,w,7.3);
+  ctx.drawImage(plate,x*sx,railY*sy,w*sx,2.1*sy,x,183.8,w,2.4);
+  ctx.drawImage(plate,x*sx,(railY+3.3)*sy,w*sx,2.4*sy,x,196.1,w,2.4);
+  // Each leaf has its own clipping scope and retracts from its own post.
   ctx.restore();ctx.save();
  }
  if(foreground){
@@ -89,16 +96,18 @@ export function drawTicketClerk(ctx,assets,event){
   // and nearest-neighbor minification destroys facial and clothing detail.
   const sourceX=frame===3?110:139,sourceWidth=frame===3?216:170;
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.drawImage(atlas,frame*cellW+sourceX,(rear?cellH:0)+16,sourceWidth,cellH-29,worker.x+dx+.5,worker.y+bob-7,28,43);
- }else ctx.drawImage(assets.clerk,worker.x+dx+.5,worker.y+bob-7,28,43);
+  // Benchmark staff 30×38 and crowd 27×34. Clerk is on the same physical
+  // scale, not a 43-unit giant in front of the counter.
+  ctx.drawImage(atlas,frame*cellW+sourceX,(rear?cellH:0)+16,sourceWidth,cellH-29,worker.x+dx+3.5,worker.y+bob+5,22,31);
+ }else ctx.drawImage(assets.clerk,worker.x+dx+3.5,worker.y+bob+5,22,31);
  if(scanned){
   const strength=Math.max(0,1-(t-worker.lastScanAt)/.6);
   ctx.globalAlpha=strength*.80;ctx.fillStyle='#b8fff2';
-  ctx.fillRect(worker.x+18+frame%2,worker.y+20,4,2);
-  ctx.fillRect(worker.x+20,worker.y+17,1.4,3);
+  ctx.fillRect(worker.x+18+frame%2,worker.y+24,4,2);
+  ctx.fillRect(worker.x+20,worker.y+21,1.4,3);
  }else if(frame===1){
   ctx.globalAlpha=.55;ctx.fillStyle='#dff4fc';
-  ctx.fillRect(worker.x+20,worker.y+20,2,1.5);
+  ctx.fillRect(worker.x+20,worker.y+24,2,1.5);
  }
  ctx.restore();
 }
@@ -115,7 +124,7 @@ export function drawVenueMascot(ctx,assets,event,t){
  const x=Math.round(actor.x),y=Math.round(actor.y-bob);
  ctx.fillStyle='rgba(19,13,53,.24)';
  ctx.beginPath();ctx.ellipse(x+w/2,actor.y+h-1,9,2.4,0,0,Math.PI*2);ctx.fill();
- if(actor.facing<0){ctx.translate(x+w,0);ctx.scale(-1,1);ctx.drawImage(sprite,0,y,w,h);}
+ if(actor.facing<0){ctx.save();ctx.translate(x+w,0);ctx.scale(-1,1);ctx.drawImage(sprite,0,y,w,h);ctx.restore();}
  else ctx.drawImage(sprite,x,y,w,h);
  if(actor.heartBurst>0){
   const alpha=Math.min(1,actor.heartBurst/.4);
@@ -417,7 +426,8 @@ export function drawModularTV(ctx,event,t,streams={}){
   const age=(feed.maxTtl||2.4)-feed.ttl,slam=Math.min(1,age/.23);
   const accent=feed.won?'#81ffbf':'#ff86bf';
   ctx.fillStyle='rgba(15,12,46,.9)';ctx.fillRect(4,8,92,42);
-  ctx.fillStyle=accent;ctx.fillRect(6,10,88*slam,2);
+  // The verdict typography is the effect; no stranded magenta HP/progress
+  // stripe should linger on the LCD or read as a floating combat artifact.
   ctx.fillStyle='#f9e6ba';ctx.font='900 7px ui-monospace,monospace';ctx.fillText('BLOODSPORTS // K.O.',50,20,89);
   ctx.fillStyle=accent;ctx.font='900 '+Math.round(16+7*slam)+'px ui-monospace,monospace';
   ctx.fillText(feed.won?'DEBATE WON':'DEBATE LOST',50,38,92);

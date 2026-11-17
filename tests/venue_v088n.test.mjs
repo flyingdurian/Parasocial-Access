@@ -17,7 +17,7 @@ const assets={plate:{naturalWidth:1672,naturalHeight:941,complete:true},clerk:{n
 
 test('six new distinct crowd members are registered and all transparent artwork sheets exist',()=>{
  const e=new IRLEvent(engine());
- assert.deepEqual(e.crowd.filter(p=>p.kind>=30).map(p=>p.kind),[30,31,32,33,34,35]);
+ assert.deepEqual(e.crowd.filter(p=>p.kind>=30&&p.kind<36).map(p=>p.kind),[30,31,32,33,34,35]);
  for(const i of [1,2,3]){
   const b=readFileSync('assets/irl-cast new sheet '+i+'.png');
   assert.equal(b.toString('ascii',1,4),'PNG');
