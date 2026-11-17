@@ -1,9 +1,22 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8m stage-and-venue interaction polish on the verified v0.8.8l baseline.  
-**Working branch:** `recovery/v088i-arcade-debates` (continuing the v0.8.8h unified-plate baseline).  
-**Baseline:** `release/v0.8.8`, commit `bcbb27de6df8bb8f395cd3bbfe392315be7360b6`.  
-**Status:** The exact hall and mascot assets are live in the recovery branch. v0.8.8l passed 26/26 focused Node checks and deployed an HTTP 200 preview; owner playtest found lingering audience placement, stage composition, booth and gate visual issues. v0.8.8m addresses these; 34/34 focused venue/debate checks passed, with the Vercel sandbox route serving HTTP 200 and both exact PNG assets HTTP 200. Larger legacy IRL suite did not complete within its runner timeout, so it is not represented as passing. Owner visual approval is still pending; production release is unchanged.
+**Current candidate:** v0.8.8n movement, crowd, booth, gate, cast and debate polish.  
+**Working branch:** `feature/v088n-movement-crowd-cast` (forked from `recovery/v088i-arcade-debates` at `53e47d79`).  
+**Production release:** Unchanged; owner visual approval required before promotion.  
+**Verification:** 37/37 focused venue checks passing (v088b, k, l, m, n). Legacy full suite has not been claimed green. Git-integrated Vercel preview deployments are enabled for this feature branch.
+
+## v0.8.8n — implemented, awaiting visual acceptance
+
+- **Navigation correctness:** `moveVenue` cannot report arrival on a blocked route. The grid router now handles walkable targets whose coarsened 8px cell center falls inside the gate/floor collision boundary; previous false arrivals and stranded stage visitors were caused by this mismatch.
+- **Grounded movement:** Character artwork scales by physical floor depth while contact shadows remain at actual foot positions, even on hopping/cheering frames. No renderer-only photo booth translations.
+- **Photo engagement:** A guest walks to the doorway, physically enters x344/y57, poses, then triggers a delayed shutter and exits to the precise doorway position. A photo is not counted, animated or flashed until the guest is actually inside. Merch, food and claw trigger only on exact reached interaction positions, not within a broad 24px radius.
+- **Crowd debates:** Every free spectator rushes to the clear stage semicircle during challenger prelude/exchange, with distinct point, cheer and argument poses. Their original world position and intended activity are saved; on completion they walk back before resuming their routine. Grid-boundary routing regression fixed for all 19 starting spectators in simulation.
+- **15–20-second bloodsports:** Opponent faces Destiny to stage left throughout exchange. Existing split TV camera direction, original synthesized impact audio, rapid lore/meme chat, Destiny blue/gold aura (~25% duty) and challenger crimson/purple (~10%) preserved.
+- **Gates and staff:** Giant gridded shutter planes replaced with waist-height retracting scanner arms; physical admission remains ticket-controlled. Gate monitor patrol cycles left gate, desk, right gate and desk; the one-monitor clerk remains visible as stationary desk service.
+- **Claw:** The single real dggL plush travels from floor through gripping/lift/transport then falls into the cabinet chute. It no longer respawns in the glass after release.
+- **New cast:** `assets/irl-cast new sheet 1.png`, `2.png`, `3.png` are 1536×1024 RGBA six-column/four-row transparent sheets. Their rear walk, lateral walk and front reaction poses are loaded in both main world and isolated harness. All six IDs 30–35 appear in the crowd immediately. Remaining art work: dedicated front walking and stronger separate argument frames; do not claim these are authored yet.
+- **Harness parity and versioning:** Both `src/ui.js` and `src/irl-sandbox-v085.js` use real positions, grounded shadows and the new cast. HTML headers display v0.8.8n. `/irl-sandbox` is the direct playtest entry; 2× is the intended production speed cap (the isolated harness still offers higher developer fast-forward modes).
+- **Acceptance gate:** Test on iPhone and desktop: 31-guest high-pressure scene, first 6 new actors distinct in every orientation, photo doorway in/out, stage crowd front-of-stage ring and return, 15–20s opponent-facing battle, both gate scanner animations, ticket monitor patrol, dggL claw chute, and no floating sprite feet. Production stays untouched until owner approves.
 
 ## v0.8.8m — visual-correction pass after owner's annotated screenshot
 
