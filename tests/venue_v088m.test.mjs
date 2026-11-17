@@ -100,14 +100,14 @@ test('claw arm lifts a real dggL art sprite and drops it through prize chute',()
  assert(delivered.calls.some(x=>x[0]==='image'&&x[1]===assets.mascot&&x[3]>=cabinet.y+34),'real prize exits in cabinet chute');
 });
 
-test('gate scanner arms remain low and retract into fixed pictured posts',()=>{
+test('security grille leaves fully enclose both lanes at idle',()=>{
  const c=context();
  const event={elapsed:6,clawMachine:{activeUntil:0},gateControllers:{left:{openedAt:-1,openUntil:0},right:{openedAt:-1,openUntil:0}},departures:[]};
  drawModularVenue(c,assets,event,6000,{});
  for(const gate of Object.values(MODULAR_GATES)){
   const lane=gate.lane;
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[3]>5&&x[4]<=4),'fixture has left scanner connector');
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2+1))<1.2&&x[3]>5&&x[4]<=4),'fixture has right scanner connector');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[3]>5&&x[4]>=20),'fixture has full left grille');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2-.7))<1.2&&x[3]>5&&x[4]>=20),'fixture has full right grille');
  }
 });
 

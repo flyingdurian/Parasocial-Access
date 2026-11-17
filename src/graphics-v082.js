@@ -1,5 +1,5 @@
 export const GRAPHICS_KEY='feedfall:rush-hour:graphics:v082';
-const defaults=Object.freeze({mode:'bilinear',pixelStrength:35,showNav:false,texture:'off',textureStrength:25,chaos:false,crt:false,chatterMuted:false});
+const defaults=Object.freeze({mode:'bilinear',pixelStrength:35,showNav:false,texture:'off',textureStrength:25,chaos:true,crt:false,chatterMuted:false});
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function normalizeGraphics(value={}){
  return {
@@ -8,7 +8,7 @@ export function normalizeGraphics(value={}){
   showNav:!!value.showNav,
   texture:['off','dither','chromatic'].includes(value.texture)?value.texture:'off',
   textureStrength:clamp(Number.isFinite(+value.textureStrength)?Number(value.textureStrength):25,0,100),
-  chaos:!!value.chaos,
+  chaos:value.chaos!==false,
   crt:!!value.crt,
   chatterMuted:!!value.chatterMuted
  };

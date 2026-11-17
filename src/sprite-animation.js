@@ -39,6 +39,13 @@ export function drawContactShadow(ctx,geometry,time=0,lighting='hall'){
  const y=geometry.footY-(lit?2.6:1.7);
  const radius=Math.max(3.4,geometry.w*(lit?.25:.29)*(0.94+depth*.12));
  ctx.save();
+ // Stage follow-spots drift from one truss to the other during a debate.
+ // Their translucent directional cast is distinct from the shoe contact core.
+ if(lit){
+  const beam=Math.sin(time*.00037+geometry.footX*.009);
+  ctx.fillStyle='rgba(22,9,47,.13)';ctx.beginPath();
+  ctx.ellipse(geometry.footX+beam*7,y+2.6,radius*1.48,2.0,beam*.14,0,Math.PI*2);ctx.fill();
+ }
  ctx.fillStyle=lit?'rgba(27,11,45,.19)':'rgba(18,12,38,.15)';
  ctx.beginPath();ctx.ellipse(geometry.footX+shift*2,y+.25,radius*1.32,2.5+depth,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle=`rgba(8,6,29,${focus})`;

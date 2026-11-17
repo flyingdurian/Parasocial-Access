@@ -1,9 +1,19 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8p owner playtest corrections, arcade debate show and relaxed mode; o is the previous preview.
-**Working branch:** `feature/v088p-stage-bloodsports-relaxed` (forked from `feature/v088o-mobile-stage-interactions`).
+**Current candidate:** v0.8.8q concert-pit/arcade/staff-interaction corrections, pending mobile owner QA; p is the prior preview.
+**Working branch:** `feature/v088q-concert-pit-arcade-interactions` (forked from `feature/v088p-stage-bloodsports-relaxed`).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8p targeted/current regression sweep: 50/50 Node assertions passing before the final gate-timing adjustment. Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Preview visual acceptance remains outstanding.
+**Verification:** v0.8.8q targeted/current Node regression sweep 61/61 passing (`venue_v088q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Browser/mobile visual acceptance remains outstanding.
+
+## v0.8.8q — current candidate, owner playtest required
+
+- **Owner's concert semicircle:** Three navigable nested half-ellipses sweep the entire stage frontage, including left and right wings and the central stairs. Participants rush into unique ordered slots, face the stage with rear-view frames, then return to saved activities. The earlier compact clump has been replaced by a broader U-shaped audience arrangement.
+- **Clean broadcast & dialogue:** Capture the live audience *before* painting spectator chat, focus/decision markers, and other user-only overlays. World-space debate bubbles now use small kinetic comic bursts, reject placements far from their speakers, and prioritize readable stage dialogue. No `NEXT UP`, `LIVE EXCHANGE`, or head-mounted red timer ring. The live stage TV exclusively owns the debate win/loss graphic; its idle slate now uses a centered animated DGG LIVE identity.
+- **Still debate actors, stronger sound:** The debaters stay in their stage corners; no more physical forward/back lunges. Vocal synth banter and distinct POW/BAM/miss impact cues continue, with dramatic rotating stage lights, single TV verdict, original synthesized outro. A short non-graphic comic-book security scuffle adds visual/audio impact before the guard escorts a credible danger case out.
+- **Contextual staff actions:** VERIFY has a visible inspection hold, REDIRECT has a talking hold and escorted exit via a valid gate lane, SECURITY has a cartoon confrontation and removal. Only a correctly classified danger event triggers the scuffle. The ticket clerk now walks a small route near the front desk with a distinct transparent 4×2 walk/rear-view WebP atlas. The full-height metal gate grilles render in front of characters and remain shut at idle; illustrated counter masks remain foreground.
+- **Relaxed/arcade:** Remove the redundant standalone answer cue strip; keep only glowing action-button guidance. Five action buttons remain a single equal-priority row. Add cumulative arcade combo to the live HUD (bonus each five correct). Chaos layered decision bubbles are enabled by default with an off toggle in Graphics.
+- **Endless fairness:** Bounded exponential wave sizes, later-wave concurrent decision cap from 4 to 9, and a 3-warning threshold for credible safety misses (successful security interventions reduce outstanding warnings). End still triggers at zero Vibe; make post-run reason explicit in results. Neither a 100% Vibe nor a high guest count guarantees survival if a credible threat is missed.
+- **Out of scope:** Claw visuals deliberately unchanged; a fully modeled grabber is deferred. Production promotion awaits actual mobile/desktop playtest feedback.
 
 ## v0.8.8p — current candidate, awaiting owner visual acceptance
 

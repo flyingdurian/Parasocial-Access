@@ -217,16 +217,16 @@ export function venueStationApproachPoint(name,id=0,visit=0){
  }
  return station;
 }
-// Semi-elliptical concert pit DIRECTLY beneath the visible stage. Coordinates
-// are sprite top-left; their feet are +35px lower. The shorter back row is
-// adjacent to the riser and the wider front rows spread toward the audience.
-// Avoid the left-side stalls, the photo booth and the entrance turnstiles.
-const DEBATE_AUDIENCE_SPOTS=Object.freeze([
- [221,82],[238,82],[255,82],[272,82],[289,82],[306,82],
- [211,96],[227,96],[243,96],[259,96],[275,96],[291,96],[307,96],[323,96],
- [201,112],[217,112],[233,112],[249,112],[265,112],[281,112],[297,112],[313,112],[329,112],
- [191,129],[208,129],[225,129],[242,129],[259,129],[276,129],[293,129],[310,129],[327,129],[344,129]
-]);
+// Three nested, genuinely CURVED half-ellipses encompass the whole stage
+// apron from wing to wing. Low-discrepancy ordering distributes even the
+// first nineteen spectators across the WHOLE U, instead of packing its left
+// half before the next wave arrives. Targets are top-left sprite coordinates.
+const concertArc=(radiusX,radiusY,count,stride)=>Array.from({length:count},(_,order)=>{
+ const fraction=((order*stride)%count)/(count-1),angle=Math.PI*(1-fraction);
+ return [Math.round(270+radiusX*Math.cos(angle)),Math.round(98+radiusY*Math.sin(angle))];
+});
+const CONCERT_RINGS=[concertArc(77,38,15,4),concertArc(61,29,12,5),concertArc(44,21,9,4)];
+const DEBATE_AUDIENCE_SPOTS=Object.freeze(Array.from({length:15},(_,step)=>CONCERT_RINGS.flatMap(ring=>ring[step]?[ring[step]]:[])).flat());
 export function venueDebateAudienceSpot(index){
  const point=DEBATE_AUDIENCE_SPOTS[((index%DEBATE_AUDIENCE_SPOTS.length)+DEBATE_AUDIENCE_SPOTS.length)%DEBATE_AUDIENCE_SPOTS.length];
  return isVenueWalkable(...point)?[...point]:snapVenue(...point);

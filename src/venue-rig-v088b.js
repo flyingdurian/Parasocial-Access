@@ -1,7 +1,7 @@
 /* v0.8.8h unified plate, interactive TV, tickets, gate glass and dust motes. */
 import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_BLOCKERS} from './venue-geometry-v088b.js';
 
-const FILES=Object.freeze({plate:'Neon Convention Hall Claw Machine.png',clerk:'irl-ticket-clerk-v088h.webp',mascot:'Adorable blue mascot clutching a red heart.png'});
+const FILES=Object.freeze({plate:'Neon Convention Hall Claw Machine.png',clerk:'irl-ticket-clerk-v088h.webp',clerkWalk:'irl-ticket-clerk-walk-v088q.webp',mascot:'Adorable blue mascot clutching a red heart.png'});
 export function loadModularVenueAssets(){
  const assets={};
  for(const [key,file] of Object.entries(FILES)){
@@ -36,15 +36,18 @@ function openness(event,side){
 function drawGate(ctx,event,side){
  const open=openness(event,side),lane=MODULAR_GATES[side].lane;
  const span=lane.right-lane.left,waist=lane.top+11;
- const leaf=Math.max(0,(span/2-1)*(1-open));
- // Low scanner arms retract into fixed illustrated posts, with no moving walls.
+ const leaf=Math.max(0,(span/2+.7)*(1-open)),top=lane.top-6,height=27;
+ // Full-height convention security grille. Each leaf retracts at its own post;
+ // unlike the prior tiny waist-height scanner arm, closed means visibly closed.
  ctx.save();
  for(let i=0;i<2;i++){
   const x=i===0?lane.left:lane.right-leaf;
   if(leaf>.05){
-   ctx.fillStyle='rgba(24,35,58,.82)';ctx.fillRect(x,waist+.8,leaf,3.5);
-   ctx.fillStyle='#a3c8d9';ctx.fillRect(x,waist,leaf,1.2);
-   ctx.fillStyle='rgba(225,245,251,.72)';ctx.fillRect(x,waist+1.5,Math.max(0,leaf-.6),.65);
+   ctx.fillStyle='rgba(17,28,51,.63)';ctx.fillRect(x,top,leaf,height);
+   ctx.fillStyle='#a2c0cf';ctx.fillRect(x,top,leaf,1.45);ctx.fillRect(x,top+height-2,leaf,1.35);
+   ctx.fillStyle='#607d99';ctx.fillRect(x,top+12,leaf,.75);
+   ctx.fillStyle='#91afc6';for(let bar=x+3;bar<x+leaf;bar+=3.1)ctx.fillRect(bar,top+1,1,height-3);
+   ctx.fillStyle='#d9eafb';ctx.fillRect(i===0?x+leaf-1.1:x,top+9,1.2,7);
   }
  }
  const pulse=.65+.25*Math.sin((event?.elapsed||0)*8);
@@ -56,10 +59,11 @@ function drawGate(ctx,event,side){
  // remain traversable; their arms default CLOSED in the absence of a pass.
  const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
  for(const [a,b] of segments){
-  ctx.fillStyle='#252e49';ctx.fillRect(a,waist-1,b-a,3.8);
-  ctx.fillStyle='#9db8c9';ctx.fillRect(a,waist-1,b-a,1);
-  ctx.fillStyle='#55677b';ctx.fillRect(a,waist+7,b-a,1.4);
-  ctx.fillStyle='#2e3b56';ctx.fillRect(a,waist-1,1.7,10);
+  ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,top,b-a,height);
+  ctx.fillStyle='#9db8c9';ctx.fillRect(a,top,b-a,1.3);
+  ctx.fillStyle='#55677b';ctx.fillRect(a,top+height-2,b-a,1.3);
+  for(let bar=a+3;bar<b;bar+=3.1){ctx.fillStyle='#8da9bb';ctx.fillRect(bar,top+1,1,height-3);}
+  ctx.fillStyle='#364b68';ctx.fillRect(a,top,1.5,height);
  }
  ctx.restore();
 }
@@ -68,14 +72,18 @@ function drawGate(ctx,event,side){
 export function drawTicketClerk(ctx,assets,event){
  if(!assets?.clerk?.naturalWidth||!event?.ticketClerk)return;
  const worker=event.ticketClerk;
- const t=event.elapsed||0,frame=Math.floor(t*3)%4;
+ const t=event.elapsed||0,frame=Math.floor(t*(worker.walking?7:3))%4;
  const scanned=t-worker.lastScanAt<.6;
  ctx.save();
  // Four subtle counter-service keyframes: check screen, scan pass, look up,
  // rest. The desk remains a fixed collision object.
- const bob=frame===2?-.8:frame===3?-.25:0;
- const dx=frame===1?.55:0;
- ctx.drawImage(assets.clerk,worker.x+dx,worker.y+bob,29,36);
+ const bob=worker.walking?Math.abs(Math.sin(t*12))*.85:frame===2?-.25:0;
+ const dx=worker.walking&&frame%2?.3:0;
+ if(assets.clerkWalk?.complete&&assets.clerkWalk.naturalWidth){
+  const atlas=assets.clerkWalk,cellW=atlas.naturalWidth/4,cellH=atlas.naturalHeight/2;
+  const rear=worker.walking&&worker.direction==='north';
+  ctx.drawImage(atlas,(rear?Math.min(2,frame):frame)*cellW,rear?cellH:0,cellW,cellH,worker.x+dx,worker.y+bob,29,36);
+ }else ctx.drawImage(assets.clerk,worker.x+dx,worker.y+bob,29,36);
  if(scanned){
   const strength=Math.max(0,1-(t-worker.lastScanAt)/.6);
   ctx.globalAlpha=strength*.80;ctx.fillStyle='#b8fff2';
@@ -412,11 +420,14 @@ export function drawModularTV(ctx,event,t,streams={}){
   ctx.fillStyle='#fff0a2';ctx.fillText(String(feed.score??0)+' PTS',86,51,22);
   if(age<.14){ctx.globalAlpha=(.14-age)/.14*.55;ctx.fillStyle='#fff';ctx.fillRect(7,12,86,31);ctx.globalAlpha=1;}
  }else{
-  // The physical Destiny sprite crosses the LCD's left edge. Keep the idle
-  // broadcast slate entirely within the TV's right-hand text-safe region.
-  ctx.fillStyle='#e8eff0';ctx.font='bold 10px system-ui';ctx.fillText('DGG LIVE',77,19,41);
-  ctx.fillStyle='#dfc4ff';ctx.font='bold 6px system-ui';ctx.fillText('MEET & GREET',77,29,40);
-  ctx.fillStyle='#e8eff0';ctx.font='4.9px system-ui';ctx.fillText('CONVENTION CAM',77,37,42);
+  const glow=.55+.45*Math.sin(t/440);
+  ctx.fillStyle='rgba(21,22,58,.94)';ctx.fillRect(5,9,90,41);
+  ctx.strokeStyle='#8e92ee';ctx.lineWidth=1;ctx.strokeRect(9,12,82,34);
+  ctx.fillStyle='#ff728e';ctx.fillRect(14,15,2.4,2.4);
+  ctx.fillStyle='#b3fbfa';ctx.globalAlpha=.7+.3*glow;ctx.font='900 13px system-ui';ctx.fillText('DGG LIVE',50,27,76);
+  ctx.globalAlpha=1;ctx.fillStyle='#fde0a7';ctx.font='bold 6.4px system-ui';ctx.fillText('MEET & GREET',50,36,74);
+  ctx.fillStyle='#c1b9fa';ctx.font='bold 4.8px system-ui';ctx.fillText('CONVENTION CAM',50,43,71);
+  ctx.fillStyle='rgba(170,225,255,'+(.23+.23*glow)+')';ctx.fillRect(14+((t/100)%73),45,7,1);
  }
  if(feed&&(feed.type==='photo'||feed.type==='autograph')){
   const age=(feed.maxTtl||1.9)-feed.ttl;
@@ -454,7 +465,7 @@ export function drawModularVenue(ctx,assets,event,t,streams={}){
   ctx.restore();
   return true;
 }
-export function drawBakedForegroundOccluders(ctx,assets){
+export function drawBakedForegroundOccluders(ctx,assets,event){
   if(!modularVenueReady(assets))return;
   // Reuse pixels from the SAME baked image for foreground depth masking.
   // This makes people pass behind the counter/posts without separate art.
@@ -467,5 +478,8 @@ export function drawBakedForegroundOccluders(ctx,assets){
     draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
     ctx.restore();
   }
+  // The operational security grilles are foreground fixtures, too.
+  // Redraw after actors so nobody can visibly walk on top of the gates.
+  if(event)for(const side of ['left','right'])drawGate(ctx,event,side);
 }
 export {FILES as MODULAR_VENUE_FILES};

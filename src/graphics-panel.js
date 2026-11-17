@@ -46,7 +46,7 @@ export function createGraphicsPanel(initial,onChange){
  shell.querySelector('#irl-graphics-trigger').addEventListener('click',()=>toggle());
  shell.querySelector('#irl-graphics-mute-trigger').addEventListener('click',()=>update({chatterMuted:!settings.chatterMuted}));
  shell.querySelector('#irl-graphics-close').addEventListener('click',()=>toggle(false));
- shell.querySelector('#irl-graphics-reset').addEventListener('click',()=>update({mode:'bilinear',pixelStrength:35,showNav:false,texture:'off',textureStrength:25,chaos:false,crt:false,chatterMuted:false}));
+ shell.querySelector('#irl-graphics-reset').addEventListener('click',()=>update({mode:'bilinear',pixelStrength:35,showNav:false,texture:'off',textureStrength:25,chaos:true,crt:false,chatterMuted:false}));
  shell.querySelector('#irl-graphics-mode').addEventListener('change',event=>update({mode:event.target.value}));
  shell.querySelector('#irl-graphics-strength').addEventListener('input',event=>update({pixelStrength:Number(event.target.value)}));
  shell.querySelector('#irl-graphics-nav').addEventListener('change',event=>update({showNav:event.target.checked}));

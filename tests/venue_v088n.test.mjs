@@ -113,11 +113,11 @@ test('claw holds one collectible and drops it down the pictured chute',()=>{
  assert(toys[0][3]>=MODULAR_PROPS.claw.y+34,'one plush is now in the chute');
 });
 
-test('entrance uses narrow waist-high scanner arms with ticket access unchanged',()=>{
+test('entrance uses full-height gate grilles with ticket access unchanged',()=>{
  const e=new IRLEvent(engine());
  const ctx=context();
  drawModularVenue(ctx,assets,e,100,{});
- const gateBands=ctx.calls.filter(c=>c[0]==='fillRect'&&Object.values(MODULAR_GATES).some(g=>c[1]>=g.lane.left-3&&c[1]<=g.lane.right+3&&c[2]>=g.lane.top&&c[2]<=g.lane.bottom));
- assert(gateBands.every(c=>c[4]<=5),'no full-height floating gate panels');
+ const gateBands=ctx.calls.filter(c=>c[0]==='fillRect'&&Object.values(MODULAR_GATES).some(g=>c[1]>=g.lane.left-3&&c[1]<=g.lane.right+3&&c[2]>=g.lane.top-8&&c[2]<=g.lane.bottom));
+ assert(gateBands.some(c=>c[4]>=20),'closed gate panels fill the full entrance opening');
  assert.equal(e.gateControllers.left.openUntil<e.elapsed,true);
 });

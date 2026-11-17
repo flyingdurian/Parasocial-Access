@@ -34,8 +34,8 @@ function ctx(){
 
 test("first nineteen crowd positions form the owner's near-stage half ellipse",()=>{
  const spots=Array.from({length:19},(_,i)=>venueDebateAudienceSpot(i));
- assert(spots.every(([x,y])=>x>=200&&x<=329&&y<=117),'first wave not at lobby entrance');
- assert(spots.slice(0,6).every(([x,y])=>y<=84),'six front-row slots beside riser');
+ assert(spots.every(([x,y])=>x>=180&&x<=355&&y<=148),'first wave stays within stage apron');
+ assert(Math.max(...spots.map(([x])=>x))-Math.min(...spots.map(([x])=>x))>135,'crowd spans the entire stage width');
  assert(spots.every(([x,y])=>isVenueWalkable(x,y)),'all audience targets have a navigable footprint');
  assert(new Set(spots.map(p=>p.join(','))).size===spots.length,'pit slots do not overlap');
 });
@@ -75,7 +75,7 @@ test('dynamic shadow is anchored at foot contact and tracks stage lighting',()=>
  const box=venueSpriteGeometry(245,38,30,38,{walking:false});
  const floor=ctx(),stage=ctx();drawContactShadow(floor,box,1200,'hall');drawContactShadow(stage,box,3600,'stage');
  assert.equal(floor.calls.filter(c=>c[0]==='ellipse').length,2);
- assert.equal(stage.calls.filter(c=>c[0]==='ellipse').length,2);
+ assert.equal(stage.calls.filter(c=>c[0]==='ellipse').length,3);
  assert(stage.calls.every(c=>c[0]!=='ellipse'||c[2]<=box.footY),'shadows stay at or above actual feet');
  assert.notDeepEqual(floor.calls,stage.calls,'stage spotlights produce a different cast shadow');
 });
@@ -94,9 +94,9 @@ test('ambient chatter uses the entire sentence and bubbles never escape their sp
 test('arcade clashes and complete KO verdict have distinct visual states',()=>{
  const c=ctx(),g={debater:true,stageVisit:'exchange',x:272,clashPulse:.2,clashPower:2};
  drawDebateCombatEffects(c,{hostX:215,departures:[g]},1000);
- assert(c.calls.some(call=>call[0]==='text'&&call[1]==='CRITICAL!'));
+ assert(c.calls.some(call=>call[0]==='text'&&call[1]==='BAM!'));
  const end=ctx();drawDebateCombatEffects(end,{departures:[],tvEvent:{type:'debate',won:true,ttl:2.9,maxTtl:3.4}},3000);
- assert(end.calls.some(call=>call[0]==='text'&&call[1]==='DEBATE WON'));
+ assert(!end.calls.some(call=>call[0]==='text'&&call[1]==='DEBATE WON'),'KO only renders inside the physical TV');
 });
 
 test('camera feed is copied from the real crowd canvas, not atlas portraits',()=>{
@@ -112,7 +112,7 @@ test('live campaign offers expert default, relaxed hints and equal fourth debate
  assert(ui.includes('data-action="security" class="irl-security"')&&ui.includes('5 · DANGER'));
  assert(ui.includes('Digit4:\'debate\',Digit5:\'security\''));
  assert(css.includes('.irl-actions{grid-template-columns:repeat(5,minmax(0,1fr))}'));
- assert(ui.includes('irl-relaxed-hint')&&ui.includes('irl-suggested'));
+ assert(!ui.includes('irl-relaxed-hint')&&ui.includes('irl-suggested'),'relaxed mode only highlights the correct button');
 });
 
 test('admission gates close after a guest has cleared the scanner',()=>{

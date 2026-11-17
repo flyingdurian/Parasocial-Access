@@ -185,12 +185,12 @@ export function drawStageFanInteraction(ctx,event,t){
 
 export function drawDebateCombatEffects(ctx,event,t){
  const challenger=event?.departures?.find(g=>g.debater&&g.stageVisit==='exchange');
- const verdict=event?.tvEvent?.type==='debate'&&event.tvEvent.ttl>0?event.tvEvent:null;
  if(challenger){
   const pulse=challenger.clashPulse||0;
   if(pulse>0){
    const strength=challenger.clashPower||0,alpha=Math.min(1,pulse/.22);
-   const centerX=(event.hostX+challenger.x+61)/2,centerY=54;
+   // Vocal impacts travel as a comic effect, not as character lunges.
+   const centerX=(Math.floor((challenger.exchangeDuration-challenger.exchangeClock)/.69)%2?challenger.x+14:event.hostX+15),centerY=49;
    ctx.save();ctx.globalAlpha=alpha;
    ctx.strokeStyle=strength===2?'#ffe18e':strength===0?'#c0d4fa':'#fd9bb4';
    ctx.lineWidth=strength===2?2.2:1.2;
@@ -201,21 +201,25 @@ export function drawDebateCombatEffects(ctx,event,t){
    }
    ctx.fillStyle=strength===2?'#ffefb3':strength===0?'#c4d4ff':'#ffb6d9';
    ctx.font='900 '+(strength===2?9:6)+'px monospace';ctx.textAlign='center';
-   ctx.fillText(strength===2?'CRITICAL!':strength===0?'MISS':'CLASH!',centerX,centerY-13);
+   ctx.fillText(strength===2?'BAM!':strength===0?'...':'POW!',centerX,centerY-13);
    ctx.restore();
   }
  }
- if(verdict){
-  const age=verdict.maxTtl-verdict.ttl,enter=Math.min(1,age/.22),fade=Math.min(1,verdict.ttl/.42);
-  const alpha=enter*fade;
-  const x=202,y=46,w=127,h=29,accent=verdict.won?'#8affcb':'#ff79bb';
-  ctx.save();ctx.globalAlpha=alpha;
-  ctx.fillStyle='rgba(18,9,43,.93)';ctx.fillRect(x,y,w,h);
-  ctx.fillStyle=accent;ctx.fillRect(x,y,w,2.4);ctx.fillRect(x,y+h-2.4,w,2.4);
-  ctx.fillStyle='#fff3df';ctx.textAlign='center';ctx.font='900 8px monospace';ctx.fillText('⚔ BLOODSPORTS · K.O. ⚔',x+w/2,y+10);
-  ctx.shadowColor=accent;ctx.shadowBlur=6;ctx.fillStyle=accent;
-  ctx.font='900 '+Math.round(12+3*enter)+'px monospace';ctx.fillText(verdict.won?'DEBATE WON':'DEBATE LOST',x+w/2,y+25);
-  ctx.restore();
+}
+
+// Fictional, non-graphic slapstick intervention. Only triggered for a
+// correctly classified danger event; wrong calls never strike a bystander.
+export function drawSecurityComic(ctx,event,t){
+ for(const guard of event?.guardPositions||[]){
+  const task=guard.task;if(task?.phase!=='engage'||task.action!=='security')continue;
+  const guest=event.visitors.find(p=>p.id===task.guestId);
+  if(!guest||guest.type!=='security')continue;
+  const beat=Math.floor(task.remaining/.3),rise=Math.sin(t*.019+guest.serial)*2.6;
+  const x=guest.x+15,y=guest.y-7+rise;
+  ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*.007)*.13);
+  ctx.fillStyle=beat%2?'#f5d4fc':'#ffebb1';ctx.strokeStyle='#552a68';ctx.lineWidth=.85;
+  ctx.beginPath();for(let i=0;i<12;i++){const a=i*Math.PI/6-Math.PI/2,r=i%2?11:15;const px=Math.cos(a)*r,py=Math.sin(a)*r*.65;if(!i)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.textAlign='center';ctx.fillStyle='#48204b';ctx.font='900 8px system-ui';ctx.fillText(beat%2?'BONK!':'POW!',0,3);ctx.restore();
  }
 }
 

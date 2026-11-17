@@ -65,7 +65,7 @@ test('every physical booth completes a visible transaction; vending is absent',(
  assert(!event.stationActivity.photo.flashed,'camera waits until the subject is inside');
 });
 
-test('gate monitor patrols entry lanes while dedicated clerk remains at desk',()=>{
+test('gate monitor patrols entry lanes while dedicated clerk walks near the desk',()=>{
  const event=new IRLEvent(engine(),{level:0});event.begin();event.clock=500;event.nextArrival=999;
  const patrol=event.staff.filter(s=>s.gateMonitor);
  assert.equal(patrol.length,1);
@@ -81,7 +81,8 @@ test('gate monitor patrols entry lanes while dedicated clerk remains at desk',()
  }
  assert(different,'monitor patrols scanner lanes');
  assert(gateObserved,'monitor is visibly watching gates');
- assert.equal(event.ticketClerk.x,179,'ticket-processing clerk is stationed at the single-monitor desk');
+ assert(event.ticketClerk.x>=160&&event.ticketClerk.x<=212,'ticket clerk patrols behind the single-monitor desk');
+ assert.notEqual(event.ticketClerk.x,179,'ticket clerk is no longer pinned at her initial coordinate');
  for(const gate of Object.values(MODULAR_GATES)){
   const gap=gate.lane.right-gate.lane.left;
   assert(gap>=39&&gap<=43);

@@ -1,6 +1,6 @@
 import {VENUE_STATIONS,VENUE_STAGE,VENUE_GATES,isVenueWalkable,snapVenue,moveVenue,moveStageActor,moveVenueSerpentineQueue,venueQueueSpot,venueStageQueueSpot,venueRoamPoint,venueStationApproachPoint,venueDebateAudienceSpot} from './venue-nav.js';
 import {issueVenueTicket,hasVenueTicket,processVenueTicket} from './venue-tickets-v088h.js';
-import {IRL_LEVELS,IRL_ENDLESS,irlClampLevel,endlessWaveGuests,endlessArrivalInterval} from './irl-progression-v085.js';
+import {IRL_LEVELS,IRL_ENDLESS,irlClampLevel,endlessWaveGuests,endlessArrivalInterval,endlessLiveDecisions} from './irl-progression-v085.js';
 import {DESTINY_IRL_SCENARIOS,ambientLine} from './irl-lore-v082.js';
 import {DESTINY_LORE_CARDS,loreAmbientLine,loreStageLine} from './irl-lore-v084.js';
 import {stageAction,stagePosition} from './sprite-animation.js';
@@ -93,9 +93,9 @@ function arrange(run){const groups={};for(const raw of IRL_SCENARIOS){const s=is
  ];}
 export class IRLEvent {
  constructor(engine,options={}){this.engine=engine;this.session=options.mode==='endless'?'endless':'standard';this.levelIndex=irlClampLevel(options.level??0);this.config=IRL_LEVELS[this.levelIndex];this.wave=0;this.breakRemaining=0;this.congestionClock=0;this.safetyStrikes=0;this.highestWave=0;this.serial=0;this.mode='intro';this.elapsed=0;this.clock=this.session==='endless'?0:this.config.seconds;this.phase=1;this.score=0;this.vibe=76;this.errors=0;this.correct=0;this.lost=0;this.visitors=[];this.arrivals=[];this.finished=[];this.departures=[];this.stageCompleted=0;this.effects=[];this.focus=null;this.focusGrace=0;this.dispatchQueue=[];this.staff=[[170,145],[314,145],[270,142]].map(([x,y])=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null};});this.guardPositions=[[87,142],[310,106],[335,141]].map(([x,y],i)=>{const [sx,sy]=snapVenue(x,y);return {x:sx,y:sy,homeX:sx,homeY:sy,task:null,cooldown:0,patrolIndex:i,patrolDwell:i*.6};});this.nextArrival=1.2;this.paused=false;this.message='CONVENTION OPENING · Destiny is preparing for fans.';this.log=[];this.failure='';this.result=null;this.run=(engine.progress.irlRecords?.destinyMeet?.attempts||0);const deck=arrange(this.run+this.levelIndex*37);this.cards=this.session==='endless'?[]:Array.from({length:this.config.guests},(_,i)=>i<deck.length?deck[i]:arrange(this.run+this.levelIndex*37+Math.floor(i/deck.length))[i%deck.length]);this.next=0;this.hostMood='idle';this.hostUntil=0;this.hostX=198;this.hostY=32;this.hostWalking=false;this.incidentFade=0;this.arcadeFlash=0;this.lastVerdict=null;this.gateControllers={left:{openedAt:-10,openUntil:-10},right:{openedAt:-10,openUntil:-10}};this.cameraFlashes=[];this.tvEvent=null;this.debateChat=[];this.speechQuietUntil=7;
-  this.debateHistory=[];
-  // Dedicated stationary ticket operator, not part of the roaming staff pool.
-  this.ticketClerk={id:'checkin-clerk',name:'Ticket Clerk',x:179,y:153,processed:0,lastScanAt:-20,lastTicket:null};
+  this.debateHistory=[];this.combo=0;this.bestCombo=0;
+  // The desk clerk walks a short, real patrol behind the foreground counter.
+  this.ticketClerk={id:'checkin-clerk',name:'Ticket Clerk',x:179,y:153,processed:0,lastScanAt:-20,lastTicket:null,walking:false,patrolIndex:0,patrolDwell:.6,stepDistance:0,direction:'south'};
   this.crowd=Array.from({length:13},(_,i)=>{const seed=irlHash(this.run*4919+i*811+17);return {id:i,kind:[1,2,4,5,6,8,9,10,11][i%9],x:171+(seed%31)-15,y:169+(seed%13),station:'entrance',target:'entrance',dwell:i*.22,visits:0,walking:false,facing:1,emote:'',emoteTime:0};});
   const startingSpots=[[29,106],[74,119],[118,103],[146,109],[62,154],[326,153],[317,127],[343,123],[68,164],[109,138],[46,145],[124,165],[345,104]];
   this.crowd.forEach((person,i)=>{[person.x,person.y]=snapVenue(...startingSpots[i]);person.station='wander';person.target='wander';person.animation='idle';person.actionClock=0;person.speech='';});
@@ -371,7 +371,11 @@ export class IRLEvent {
   this.message=(this.dispatchQueue.some(o=>o.guestId===g.id)?'RESPONSE QUEUED':action==='security'?'SECURITY DISPATCHED':action==='redirect'?'STEWARD EN ROUTE':action==='check'?'PASS CHECK EN ROUTE':'GREETER EN ROUTE')+' · '+g.name;
   return true;
  }
- resolve(g,success,action){if(success){this.score+=g.type==='security'?260:120;this.vibe=irlClamp(this.vibe+(g.type==='welcome'||g.type==='debate'?3:1),0,100);this.correct++;this.mistakeStreak=0;this.message=g.type==='security'?'SAFETY INTERVENTION · Venue secured.':g.type==='check'?'TICKET VERIFIED · Welcome back.':g.type==='redirect'?'GUEST GUIDED · Aisle cleared.':g.type==='debate'?'DEBATE INVITE · The critic is headed to the stage.':'MEET & GREET · Another fan welcomed.';}else{this.errors++;this.mistakeStreak++;this.vibe=irlClamp(this.vibe-(action==='security'?9:5),0,100);this.score=Math.max(0,this.score-35);this.message=action==='security'?'FALSE ALARM · An innocent guest was inconvenienced.':g.type==='security'?'MISSED SAFETY WARNING · Event interrupted.':'MISMATCH · Guest needed a different response.';if(this.mistakeStreak>=2){this.recovery=5;this.mistakeStreak=0;this.message+=' · RECOVERY WINDOW: CROWD SLOWS.';}if(g.type==='security'){this.failure='A credible fictional safety warning was not escalated to event security.';if(this.session==='endless'){this.safetyStrikes++;this.vibe=irlClamp(this.vibe-15,0,100);if(this.safetyStrikes>=2)this.incidentFade=1.15;}else this.incidentFade=1.15;}}
+ resolve(g,success,action){if(success){this.score+=g.type==='security'?260:120;this.vibe=irlClamp(this.vibe+(g.type==='welcome'||g.type==='debate'?3:1),0,100);this.correct++;this.mistakeStreak=0;this.message=g.type==='security'?'SAFETY INTERVENTION · Venue secured.':g.type==='check'?'TICKET VERIFIED · Welcome back.':g.type==='redirect'?'GUEST GUIDED · Aisle cleared.':g.type==='debate'?'DEBATE INVITE · The critic is headed to the stage.':'MEET & GREET · Another fan welcomed.';}else{this.errors++;this.mistakeStreak++;this.vibe=irlClamp(this.vibe-(action==='security'?9:5),0,100);this.score=Math.max(0,this.score-35);this.message=action==='security'?'FALSE ALARM · An innocent guest was inconvenienced.':g.type==='security'?'MISSED SAFETY WARNING · Event interrupted.':'MISMATCH · Guest needed a different response.';if(this.mistakeStreak>=2){this.recovery=5;this.mistakeStreak=0;this.message+=' · RECOVERY WINDOW: CROWD SLOWS.';}if(g.type==='security'){this.failure='A credible fictional safety warning was not escalated to event security.';if(this.session==='endless'){this.safetyStrikes++;this.vibe=irlClamp(this.vibe-15,0,100);if(this.safetyStrikes>=IRL_ENDLESS.safetyWarnings)this.incidentFade=1.15;}else this.incidentFade=1.15;}}
+  if(success){this.combo++;this.bestCombo=Math.max(this.combo,this.bestCombo);if(this.combo%5===0){const bonus=this.combo*12;this.score+=bonus;this.effects.push({x:198,y:79,text:'COMBO ×'+this.combo+' +'+bonus,color:'#ffef9a',ttl:2.1});}}
+  else this.combo=0;
+  if(!success&&g.type==='security'&&this.session==='endless')this.message+=' · SAFETY WARNINGS '+this.safetyStrikes+'/'+IRL_ENDLESS.safetyWarnings;
+  if(success&&g.type==='security'&&this.session==='endless')this.safetyStrikes=Math.max(0,this.safetyStrikes-1);
   this.log.unshift({name:g.name,action,success});this.log=this.log.slice(0,4);
   this.effects.push({x:g.x+12,y:g.y-10,text:success?'✓ '+(action==='welcome'?'FAN GREETED':action==='debate'?'DEBATE INVITED':action==='check'?'VERIFIED':action==='redirect'?'GUIDED':'SECURED'):'✕ WRONG CALL',color:success?'#a0ffbb':'#ffb4a7',ttl:3.3});
   if(success&&action==='security')this.effects.push({x:267,y:40,text:'STAGE SECURE',color:'#a6ffe4',ttl:2.8});
@@ -398,7 +402,7 @@ export class IRLEvent {
   if(this.tvEvent){this.tvEvent.ttl-=dt;if(this.tvEvent.ttl<=0)this.tvEvent=null;}
   for(const effect of this.effects){effect.ttl-=dt;if(effect.kind!=='booth')effect.y-=dt*6;}this.effects=this.effects.filter(e=>e.ttl>0);
   if(!this.breatherActive)this.nextArrival-=dt;
-  if(this.nextArrival<=0&&this.next<this.cards.length&&this.visitors.length+this.arrivals.length<(this.session==='endless'?6:4)){
+  if(this.nextArrival<=0&&this.next<this.cards.length&&this.visitors.length+this.arrivals.length<(this.session==='endless'?endlessLiveDecisions(this.wave):4)){
    this.add({throughGate:true});this.nextArrival=(this.session==='endless'?endlessArrivalInterval(this.wave):this.config.arrival*(this.phase===3?.89:1))+(this.recovery>0?3:0);
   }
   for(const g of [...this.arrivals]){
@@ -418,10 +422,11 @@ export class IRLEvent {
   for(const g of [...this.visitors]){if(!g.pending){if(g.id===this.focus){if(this.focusGrace<=0)g.age+=dt;}else g.waitAge=(g.waitAge||0)+dt;}
    // The highlighted person stays in a readable location while ambient crowds
    // move around them. Arrival locations reflect the encounter's actual booth.
-   if(g.id===this.focus&&!g.pending&&g.age>=g.life){this.visitors=this.visitors.filter(x=>x!==g);this.lost++;this.vibe=irlClamp(this.vibe-(this.session==='endless'?11:7),0,100);this.message='VISIBLE GUEST TIMEOUT · Another attendee needs attention.';if(g.type==='security'){this.failure='The highlighted credible warning expired without a security response.';if(this.session==='endless'){this.safetyStrikes++;this.vibe=irlClamp(this.vibe-15,0,100);if(this.safetyStrikes>=2)this.incidentFade=1.15;}else this.incidentFade=1.15;if(this.incidentFade>0)break;}this.focus=null;this.promote();}}
+   if(g.id===this.focus&&!g.pending&&g.age>=g.life){this.visitors=this.visitors.filter(x=>x!==g);this.lost++;this.vibe=irlClamp(this.vibe-(this.session==='endless'?11:7),0,100);this.message='VISIBLE GUEST TIMEOUT · Another attendee needs attention.';if(g.type==='security'){this.failure='The highlighted credible warning expired without a security response.';if(this.session==='endless'){this.safetyStrikes++;this.message+=' · SAFETY WARNINGS '+this.safetyStrikes+'/'+IRL_ENDLESS.safetyWarnings;this.vibe=irlClamp(this.vibe-15,0,100);if(this.safetyStrikes>=IRL_ENDLESS.safetyWarnings)this.incidentFade=1.15;}else this.incidentFade=1.15;if(this.incidentFade>0)break;}this.focus=null;this.promote();}}
   if(this.session==='endless'){
    const pressure=this.visitors.filter(g=>!g.pending).length+this.arrivals.length;
-   this.congestionClock=pressure>=4?this.congestionClock+dt:Math.max(0,this.congestionClock-dt*2);
+   const overloadAt=endlessLiveDecisions(this.wave)+2;
+   this.congestionClock=pressure>=overloadAt?this.congestionClock+dt:Math.max(0,this.congestionClock-dt*2);
    if(this.congestionClock>=3){this.congestionClock=0;this.vibe=irlClamp(this.vibe-4,0,100);this.effects.push({x:169,y:70,text:'CROWD OVERLOAD -4',color:'#ffb2b2',ttl:1.5});}
    if(this.vibe<=0){this.failure='Endless crowd stability was exhausted.';this.end(false);return;}
   }
@@ -454,9 +459,9 @@ export class IRLEvent {
       const clashIndex=Math.floor(elapsed/.69);
       const swing=Math.max(0,Math.sin((elapsed/.69%1)*Math.PI));
       const hostStrike=clashIndex%2===0;
-      // Cartoon fighting-game steps: advance, 'strike', recoil, return.
-      // Both bodies stay on the actual stage floor, no teleport of the feet.
-      g.x=VENUE_STAGE.debate[0]+(hostStrike?5:-19)*swing;
+      // Static debate podiums: the impact is in the delivery, aura and audio.
+      // No physical lunging, rubber-banding or side-to-side stage shuffling.
+      g.x=VENUE_STAGE.debate[0];
       g.y=VENUE_STAGE.debate[1];
       if(g.clashIndex!==clashIndex){
        g.clashIndex=clashIndex;g.clashPower=(clashIndex+(g.serial||0))%5===0?0:(clashIndex+(g.serial||0))%4===0?2:1;
@@ -504,7 +509,7 @@ export class IRLEvent {
      g.stageVisit='leaveStage';g.exchangeAction='idle';g.toX=VENUE_STAGE.floor[0];g.toY=VENUE_STAGE.floor[1];g.ttl=25;this.hostMood='nod';this.hostUntil=this.elapsed+1;
      this.effects.push({x:202,y:93,text:loreStageLine(g,1),color:'#fff5c4',ttl:1.35});
      if(g.debater){const verdict=judgeStageDebate(this,g);g.debateOutcome=verdict;this.debateHistory.push({...verdict,guest:g.name});this.tvEvent={type:'debate',won:verdict.won,topicTitle:g.debateTopic.title,score:verdict.score,ttl:3.4,maxTtl:3.4};
-      this.effects.push({x:217,y:89,text:verdict.won?'⚔ DEBATE WON!':'⚔ DEBATE LOST!',color:verdict.won?'#adffe4':'#ffb1d8',ttl:2.2});
+      this.cameraFlashes.push({x:272,y:58,ttl:.27});
      }else this.tvEvent={type:g.fanKind==='autograph'?'autograph':'photo',guestKind:g.kind,ttl:1.9,maxTtl:1.9};
     }
    }else if(g.stageVisit==='leaveStage'){
@@ -512,12 +517,12 @@ export class IRLEvent {
    }else if(g.stageVisit==='leaveStairs'){
     if(moveStageActor(g,...VENUE_STAGE.floor,dt,26)){
      g.stageVisit='rejoin';g.toX=venueRoamPoint(g.serial*719+this.run*23)[0];g.toY=venueRoamPoint(g.serial*719+this.run*23)[1];g.ttl=24;this.stageCompleted++;
-     this.effects.push({x:g.x,y:g.y-10,text:'NEXT GUEST ↗',color:'#fbe8a5',ttl:1.3});
+     // The next fan is conveyed by actual walking, not a floating stage label.
     }
    }else{
     const arrived=moveVenue(g,g.toX,g.toY,dt,24);
     if(g.stageVisit==='rejoin'&&(arrived||g.ttl<=2)){this.rejoinCrowd(g);g.ttl=0;}
-    if(g.stageVisit==='evicted'){
+    if(g.stageVisit==='evicted'||g.stageVisit==='redirected'){
      // Keep the barrier open only while the escorted visitor physically uses
      // the lane. An idle scanner closes shortly after the visitor clears it.
      if(g.gate&&g.y<204&&g.y>133){
@@ -531,24 +536,40 @@ export class IRLEvent {
   this.departures=this.departures.filter(g=>g.ttl>0);
   for(const worker of [...this.staff,...this.guardPositions]){
    if(worker.task?.phase==='escort'){
-    const task=worker.task,security=task.action==='security';
-    const gate=security?(worker.homeX<190?VENUE_GATES.left:VENUE_GATES.right):null;
-    const [tx,ty]=security?gate.inside:IRL_STATIONS[task.departure.station];
+    const task=worker.task,security=task.action==='security',remove=security||task.action==='redirect';
+    const gate=remove?(worker.homeX<190?VENUE_GATES.left:VENUE_GATES.right):null;
+    const [tx,ty]=remove?gate.inside:IRL_STATIONS[task.departure.station];
     const arrived=moveVenue(worker,tx,ty,dt,48);
     // The visitor visibly follows the steward/guard, completing a destination-specific route.
     const guest=task.departure;guest.x+=(worker.x-guest.x)*Math.min(1,dt*5);guest.y+=(worker.y+11-guest.y)*Math.min(1,dt*5);
     if(arrived){guest.escorted=false;worker.task=null;if(this.guardPositions.includes(worker))worker.cooldown=2.5;
-     if(security){this.openGate(gate,.9);guest.gate=gate;guest.gateAccess=true;guest.stageVisit='evicted';guest.toX=gate.spawn[0];guest.toY=gate.spawn[1];guest.ttl=12;guest.tossTime=.6;this.score+=40;this.effects.push({x:tx,y:ty-9,text:'OUT! +40',color:'#fff4a3',ttl:1.6});}
+     if(remove){this.openGate(gate,.9);guest.gate=gate;guest.gateAccess=true;guest.stageVisit=security?'evicted':'redirected';guest.toX=gate.spawn[0];guest.toY=gate.spawn[1];guest.ttl=12;guest.tossTime=security?.6:.25;this.score+=security?40:20;this.effects.push({x:tx,y:ty-9,text:security?'OUT! +40':'EXIT ↗ +20',color:'#fff4a3',ttl:1.6});}
      else{this.rejoinCrowd(guest);guest.ttl=0;this.effects.push({x:tx,y:ty-5,text:task.action==='check'?'PASS OK':'ROUTE CLEAR',color:'#b9ffe0',ttl:1.8});}}
+    continue;
+   }
+   if(worker.task?.phase==='engage'){
+    const task=worker.task,guest=this.visitors.find(g=>g.id===task.guestId);
+    if(!guest){worker.task=null;continue;}
+    task.remaining-=dt;worker.walking=false;guest.walking=false;
+    guest.animation=task.action==='security'?'heckle':task.action==='redirect'?'point':'talk';
+    if(task.action==='security'){
+     task.pulse=(task.pulse||0)+dt;
+     if(task.pulse>=.45){task.pulse-=.45;this.cameraFlashes.push({x:guest.x+12,y:guest.y+7,ttl:.11});}
+    }
+    if(task.remaining<=0){worker.task=null;const success=task.action===guest.type;
+     this.resolve(guest,success,task.action);if(this.mode!=='playing')return;
+     if(success&&actionIsStaffEscort(task.action)){
+      const departing=this.departures[this.departures.length-1];departing.escorted=true;
+      worker.task={phase:'escort',departure:departing,action:task.action};
+     }else if(this.guardPositions.includes(worker))worker.cooldown=2.5;
+    }
     continue;
    }
    if(worker.task){const task=worker.task,guest=this.visitors.find(g=>g.id===task.guestId);if(!guest){worker.task=null;continue;}
     const arrived=moveVenue(worker,guest.x,guest.y,dt,105);
-    task.travel-=dt;if(task.travel<=0&&(arrived||Math.hypot(guest.x-worker.x,guest.y-worker.y)<12)){worker.task=null;const success=task.action===guest.type;this.resolve(guest,success,task.action);if(this.mode!=='playing')return;
-     if(success){const departing=this.departures[this.departures.length-1];
-      if(actionIsStaffEscort(task.action)){departing.escorted=true;worker.task={phase:'escort',departure:departing,action:task.action};}
-     }
-     else if(this.guardPositions.includes(worker))worker.cooldown=2.5;
+    task.travel-=dt;if(task.travel<=0&&(arrived||Math.hypot(guest.x-worker.x,guest.y-worker.y)<12)){
+     const duration=task.action==='security'&&task.action===guest.type?1.8:task.action==='check'?1.2:task.action==='redirect'?1.05:.25;
+     worker.task={...task,phase:'engage',remaining:duration,pulse:0};
     }
    }else if(this.guardPositions.includes(worker)){
     const route=[[78,143],[118,132],[201,129],[312,119],[310,167],[266,169],[101,166],[40,164]];
@@ -580,6 +601,16 @@ export class IRLEvent {
     }else worker.walking=false;
    }
   }
+  // Check-in host patrols actual walkable spots behind and beside the desk.
+  // Ticket scanning remains independent, so processing cannot pin her sprite.
+  const clerk=this.ticketClerk;
+  if(clerk){
+   const stops=[[165,149],[180,146],[207,148],[188,153],[171,153]];
+   clerk.patrolDwell=Math.max(0,(clerk.patrolDwell||0)-dt);
+   if(clerk.patrolDwell<=0){const [tx,ty]=stops[clerk.patrolIndex%stops.length];
+    if(moveVenue(clerk,tx,ty,dt,21)){clerk.patrolIndex=(clerk.patrolIndex+1)%stops.length;clerk.patrolDwell=.55+(clerk.patrolIndex%2)*.45;}
+   }else clerk.walking=false;
+  }
   this.dispatchOrders();
   const performance=stageAction(this.phase,this.elapsed,this.visitors.filter(g=>!g.pending).length,this.elapsed<this.hostUntil?this.hostMood:'idle');
   const fanSession=this.departures.find(g=>!g.debater&&['approach','climbStairs','exchange'].includes(g.stageVisit));
@@ -589,7 +620,7 @@ export class IRLEvent {
   if(liveBattle){
    const elapsed=liveBattle.exchangeDuration-liveBattle.exchangeClock;
    const clash=Math.floor(elapsed/.69),swing=Math.max(0,Math.sin((elapsed/.69%1)*Math.PI));
-   stageTarget.x=198+(clash%2===0?19:-4)*swing;stageTarget.y=36;
+   stageTarget.x=198;stageTarget.y=36;
   }
   const dx=stageTarget.x-this.hostX,dy=stageTarget.y-this.hostY,d=Math.hypot(dx,dy),step=Math.min(d,dt*(liveBattle?160:rendezvous?27:13));
   this.hostX+=d?dx/d*step:0;this.hostY+=d?dy/d*step:0;this.hostWalking=d>1.1;

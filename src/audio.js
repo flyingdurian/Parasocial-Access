@@ -102,6 +102,19 @@ export class RushAudio{
    this._debateActor=null;this._debateBeat=-1;
   }
  }
+ irlSecurityTick(event){
+  if(!event||event.paused)return;
+  if(this._securitySession!==event){this._securitySession=event;this._securityBeat='';}
+  const guard=event.guardPositions?.find(g=>g.task?.phase==='engage'&&g.task.action==='security');
+  const guest=guard&&event.visitors?.find(g=>g.id===guard.task.guestId);
+  if(!guest||guest.type!=='security'){this._securityBeat='';return;}
+  const beat=Math.floor(Math.max(0,guard.task.remaining)/.45),key=String(guest.id)+':'+beat;
+  if(key!==this._securityBeat){
+   this._securityBeat=key;
+   this.osc(48+beat*3,.085,0,'triangle',.08,'sfx',39);
+   this.osc(75-beat,.11,.035,'sine',.085,'sfx',57);
+  }
+ }
  irlDispatch(action){if(action==='security'){this.osc(53,.12,0,'triangle',.13);this.osc(65,.15,.09,'sine',.095);}
   else if(action==='debate'){this.osc(57,.08,0,'sawtooth',.075);this.osc(69,.09,.065,'triangle',.11);this.osc(81,.13,.14,'sine',.13);}
   else if(action==='check'){this.osc(82,.05,0,'sine',.095);this.osc(86,.06,.11,'sine',.09);}

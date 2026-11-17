@@ -215,21 +215,25 @@ export function drawDebateShout(ctx,person,layout=null){
  const max=1.85,elapsed=max-ttl;
  const message=String(person.debateSpeech);
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font='bold 5.5px system-ui,sans-serif';
- const width=Math.min(85,Math.max(43,ctx.measureText(message).width/2+10));
- const parts=wrapMeasuredText(ctx,message,width-10,Number.POSITIVE_INFINITY);
- const height=7+parts.length*7;
- const x=person.x+14,y=person.y-5-Math.min(6,elapsed*6);
+ const width=Math.min(78,Math.max(42,ctx.measureText(message).width/2+11));
+ const parts=wrapMeasuredText(ctx,message,width-13,Number.POSITIVE_INFINITY);
+ const height=8+parts.length*7;
+ const x=person.x+14,y=person.y-5-Math.min(4,elapsed*5);
  // Never bypass a declined collision placement: the fallback used to render
  // an unreserved shout on top of its speaker or the selected decision card.
  const box=layout?layout.placeNear(x,y,width,height):{x:Math.max(2,Math.min(382-width,x-width/2)),y:Math.max(1,y-height-3),w:width,h:height};
- if(!box){ctx.restore();return null;}
+ if(!box||Math.abs(box.x+box.w/2-x)>61||Math.abs(box.y+box.h-y)>46){ctx.restore();return null;}
  ctx.globalAlpha=Math.max(0,Math.min(1,ttl/.3));
  const angry=person.animation==='argue'||person.animation==='heckle';
- ctx.fillStyle=angry?'#fff0e5':'#f7f8ff';ctx.fillRect(box.x,box.y,width,height);
- ctx.strokeStyle=angry?'#ef6681':'#7ad5e3';ctx.lineWidth=1;ctx.strokeRect(box.x+.5,box.y+.5,width-1,height-1);
- ctx.fillStyle='#262a49';
- for(let i=0;i<parts.length;i++)ctx.fillText(parts[i],box.x+5,box.y+9+i*7,width-10);
- drawBubblePointer(ctx,box,x,y,angry?'#ef6681':'#7ad5e3');
+ const wobble=Math.sin(elapsed*22+(person.id||0))*.7,accent=angry?'#ed6996':'#67d8ed';
+ ctx.save();ctx.translate(box.x+width/2,box.y+height/2);ctx.rotate(wobble*.023);
+ const bw=width/2,bh=height/2;
+ ctx.beginPath();ctx.moveTo(-bw+3,-bh);ctx.lineTo(-bw+12,-bh-2);ctx.lineTo(0,-bh);ctx.lineTo(bw-7,-bh-2);ctx.lineTo(bw,-bh+3);ctx.lineTo(bw+2,0);ctx.lineTo(bw,bh-3);ctx.lineTo(bw-10,bh+2);ctx.lineTo(-bw+7,bh);ctx.lineTo(-bw-2,bh-4);ctx.lineTo(-bw,0);ctx.closePath?.();
+ ctx.fillStyle=angry?'#fff0e7':'#f5f8ff';ctx.fill();ctx.lineWidth=1.4;ctx.strokeStyle=accent;ctx.stroke();
+ // Ink-like radiating ticks make reactions energetic without floating labels.
+ for(let ray=0;ray<4;ray++){const sign=ray%2?1:-1,ry=(ray<2?-bh:bh)-sign;ctx.beginPath();ctx.moveTo(sign*(bw+2),ry);ctx.lineTo(sign*(bw+4+Math.sin(elapsed*21)*1.5),ry+(ray<2?-3:3));ctx.stroke();}
+ ctx.fillStyle='#262a49';for(let i=0;i<parts.length;i++)ctx.fillText(parts[i],-bw+6,-bh+9+i*7,width-12);
+ ctx.restore();drawBubblePointer(ctx,box,x,y,accent);
  ctx.restore();return box;
 }
 export function drawAmbientBubble(ctx,content,x,y,opacity=1,max=45,layout=null,mascot=null){

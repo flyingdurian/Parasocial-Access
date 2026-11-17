@@ -16,11 +16,9 @@ function canvas(){
 
 test('first-wave spectators surround stage apron, not the front check-in desk',()=>{
  const points=Array.from({length:19},(_,id)=>venueDebateAudienceSpot(id));
- assert(points.every(p=>p[0]>=160&&p[0]<=350&&p[1]<=125),'initial crowd must pack near stage');
- assert(points.some(p=>p[1]<94),'front row is close to performers');
- // v088p owner acceptance: concentrate the half-ellipse directly below the
- // stage, not in the broad left aisle / check-in space used in v088o.
- assert(points.every(p=>p[0]>=198&&p[0]<=335),'ring stays directly in front of the stage');
+ assert(points.every(p=>p[0]>=160&&p[0]<=350&&p[1]<=150),'all spectators stay within the stage pit');
+ assert(points.some(p=>p[1]<107),'inner arc is close to performers');
+ assert(Math.max(...points.map(p=>p[0]))-Math.min(...points.map(p=>p[0]))>125,'semicircle spans both ends of stage');
 });
 
 test('each stage dialogue bubble is horizontally tied to its own performer',()=>{

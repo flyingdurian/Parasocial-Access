@@ -11,7 +11,7 @@ import {drawStageAtmosphere,drawAmbientBubble,drawDebateShout,drawQueuedDecision
 import {VENUE_CELL,VENUE_OBSTACLES,isVenueWalkable} from './venue-nav.js';
 import {drawDggEmote,drawInlineDggL} from './dgg-emotes-v085.js';
 import {sound} from './audio.js';
-import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawDebateCombatEffects,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
+import {drawVenueGates,drawVenueScreens,drawVenueRush,drawCameraFlashes,drawStageConversation,reserveStageSpeech,drawStageFanInteraction,drawDebateCombatEffects,drawSecurityComic,drawStageQueueGuides,drawVenueFeedback,VENUE_LED_SCREEN} from './venue-effects-v086.js';
 
 const root=document.querySelector('#irl-harness');
 const q=(selector)=>root.querySelector(selector);
@@ -40,7 +40,7 @@ newCast.back.src='/assets/irl-cast%20new%20sheet%201.png';
 newCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
 newCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8p · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8q · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
@@ -93,26 +93,27 @@ function draw(t){
  const roomIsSpeaking=event.crowd.some(g=>g.speechTime>0);
  for(const {g,role,w,h} of actors){
   if(role==='mascot'){drawVenueMascot(ctx,modularVenue,event,t);continue;}
-  if(role==='visitor'&&g.id===event.focus){ctx.fillStyle='#fff0aa8b';ctx.beginPath();ctx.ellipse(g.x+w/2,g.y+h,20,7,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ffdd7a';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(g.x+w/2,g.y+h,17,6,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#fff9b4';ctx.font='bold 8px sans-serif';ctx.fillText('◉',g.x+14,g.y-8);}
   const kind=role==='guard'?3:role==='staff'?7:g.kind;
-  const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?'talk':g.type==='security'?'argue':g.type==='check'?'point':'idle'):role==='staff'?(g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):g.walking?'walk':'idle';
+  const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?(g.animation||'talk'):g.type==='security'?'argue':g.type==='check'?'point':'idle'):role==='staff'?(g.task?.phase==='engage'?'point':g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):role==='guard'&&g.task?.phase==='engage'?'argue':g.walking?'walk':'idle';
   const stageSpeaker=role==='depart'&&g.stageVisit==='exchange';
   // Render the actor's simulated position; keep the stage crowd's shadow at
    // the physical floor even while the visible sprite cheers and jumps.
    const jump=role==='crowd'?(g.hypeJump||0):0;
    const motion=jump>0?{...g,groundY:g.y}:g;
    sprite(kind,g.x+(stageSpeaker?2.5:0),g.y-jump,stageSpeaker?29:w,stageSpeaker?37:h,state,motion);
-   if(role==='crowd'&&g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){
-   if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;
-  }
-  if(role==='crowd'&&!g.debateWatching&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout,assets.dggl);ambient++;}
-  else if(role==='crowd'&&!g.debateWatching&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0)drawDggEmote(ctx,assets.emotes,g.emote,g.x+9,g.y-15,13,assets.dggl);
-  if(role==='visitor'&&g.pending){ctx.fillStyle='#77ffe2';ctx.fillRect(g.x+9,g.y-4,16,7);}
  }
- if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue);captureLiveAudienceFrame(ctx,liveAudienceFrame,event);}
+ if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue,event);captureLiveAudienceFrame(ctx,liveAudienceFrame,event);}
+ for(const g of event.crowd){
+  if(g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;}
+  else if(!g.debateWatching&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout,assets.dggl);ambient++;}
+  else if(!g.debateWatching&&!roomIsSpeaking&&g.speechTime<=0&&g.emoteTime>0)drawDggEmote(ctx,assets.emotes,g.emote,g.x+9,g.y-15,13,assets.dggl);
+ }
+ const selected=event.visitors.find(g=>g.id===event.focus);
+ if(selected){ctx.fillStyle='#fff0aa8b';ctx.beginPath();ctx.ellipse(selected.x+15,selected.y+38,20,7,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ffdd7a';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(selected.x+15,selected.y+38,17,6,0,0,Math.PI*2);ctx.stroke();}
  drawStageFanInteraction(ctx,event,t);
  drawStageConversation(ctx,event,bubbleLayout,assets.dggl);
  drawDebateCombatEffects(ctx,event,t);
+ drawSecurityComic(ctx,event,t);
  if(graphics.chaos){const waiting=event.visitors.filter(g=>!g.pending&&g.id!==event.focus).sort((a,b)=>(b.waitAge+(b.type==='security'?5:0))-(a.waitAge+(a.type==='security'?5:0))||a.serial-b.serial);for(let i=0;i<Math.min(2,waiting.length);i++)drawQueuedDecisionBubble(ctx,waiting[i].text,waiting[i].x+17,waiting[i].y,i,waiting[i].type,bubbleLayout,assets.dggl);}
  drawVenueFeedback(ctx,event.effects,assets.dggl);
  if(event.incidentFade){ctx.fillStyle='rgba(5,8,21,'+Math.min(1,1-event.incidentFade/1.15)+')';ctx.fillRect(0,0,384,216);}
@@ -162,7 +163,7 @@ function update(){
 let last=0,lastSpeechId=-1,lastSpeechCount=-1,lastSpeechAt=0;
 function loop(now){const dt=Math.min(.09,last?(now-last)/1000:0);last=now;
  if(event.mode==='playing'&&!event.paused)for(let i=0;i<speed;i++)event.tick(dt);
- sound.irlDebateTick(event);
+ sound.irlDebateTick(event);sound.irlSecurityTick(event);
  if(event.mode==='playing'&&!event.paused){
   sound.setMode(event.phase===2?'convention-peak':event.phase===3?'convention-qa':'convention');sound.tick();
   const speaker=event.crowd.find(g=>g.speechTime>0);

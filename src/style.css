@@ -536,7 +536,7 @@
 }
 
 /* v0.8.8p: integrated arcade telemetry and five equal decisions. */
-.irl-arcade-hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;
+.irl-arcade-hud{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;
  background:linear-gradient(90deg,#161b36,#352540 54%,#142f41);border-bottom:1px solid #a06e9e}
 .irl-arcade-hud span{border:0;border-right:1px solid #95749b60;border-radius:0;background:transparent;
  color:#bfe4f1;padding:8px 12px;font-size:11px;letter-spacing:.05em}
@@ -547,12 +547,6 @@
 .irl-actions .irl-debate strong{color:#fff1c5;text-shadow:0 0 8px #ff9ce1b0}
 .irl-actions button.irl-suggested{outline:3px solid #eaff95;outline-offset:-3px;
  box-shadow:0 0 0 2px #dfffaa,0 0 25px #efff8e77,inset 0 0 17px #ffe7c76c}
-.irl-relaxed-hint:not([hidden]){display:block;background:#e9fbd9;color:#203b37;
- font:900 12px ui-monospace,monospace;text-align:center;padding:8px;border-top:2px solid #c3f19c}
-.irl-relaxed-hint[data-action=security]{background:#ffdde6;color:#6b2544}
-.irl-relaxed-hint[data-action=debate]{background:#e7d8ff;color:#50236a}
-.irl-relaxed-hint[data-action=check]{background:#dce9ff;color:#244c7a}
-.irl-relaxed-hint[data-action=redirect]{background:#fff0d5;color:#805425}
 .irl-speed-row select{max-width:min(220px,48vw)}
 @media(max-width:660px){
  .irl-controls{bottom:0}
