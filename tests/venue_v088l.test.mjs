@@ -48,7 +48,12 @@ test('every physical booth completes a visible transaction; vending is absent',(
   assert(isVenueWalkable(actor.x,actor.y),'approach is collision-safe: '+station);
   actor.station='wander';actor.target=station;actor.dwell=0;
   const previous=event.boothTransactions[station]||0;
+  actor.routeTo=null;
   event.crowdTick(.1);
+  if(station==='photo'){
+   assert.equal(event.boothTransactions.photo,previous,'no shutter from doorway');
+   for(let i=0;i<50&&actor.photoPhase!=='pose';i++){event.elapsed+=.1;event.crowdTick(.1);}
+  }
   assert(event.boothTransactions[station]>previous,station+' purchase happened');
   assert(event.stationActivity[station].activeUntil>event.elapsed,station+' has live fixture animation');
   assert(event.effects.some(f=>f.kind==='booth'&&f.station===station),'receipt at '+station);
@@ -109,7 +114,7 @@ test('stage debate produces world-space meme bubbles while TV only films the peo
   }
   if(started&&debater.stageVisit!=='exchange')break;
  }
- assert(samples>=55&&samples<=125,'6-12 seconds of argument');
+ assert(samples>=148&&samples<=205,'15–20 seconds of argument');
  assert(audience>=3,'audience gathers around stage');
  assert(shouts>8,'actual NPCs shout debate memes');
  assert(Math.abs(h/samples-.25)<.075,'Destiny aura near 25% of round');
