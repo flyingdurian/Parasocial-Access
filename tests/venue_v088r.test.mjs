@@ -55,8 +55,8 @@ test('clerk frames crop transparent atlas margins to person-sized art',()=>{
  const image=c.calls.find(call=>call[0]==='image');
  assert(image);
  assert(image[4]<=44,'source is tightly cropped inside each 111px atlas cell');
- assert.equal(image[8],31);
- assert.equal(image[9],38);
+ assert.equal(image[8],22);
+ assert.equal(image[9],42);
  const ui=readFileSync('src/ui.js','utf8'),sandbox=readFileSync('src/irl-sandbox-v085.js','utf8');
  for(const src of [ui,sandbox])assert(src.includes("role:'guard',w:34,h:43"),'guards are 10-15% larger');
 });

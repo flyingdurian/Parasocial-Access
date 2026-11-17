@@ -83,12 +83,14 @@ export function drawTicketClerk(ctx,assets,event){
  if(assets.clerkWalk?.complete&&assets.clerkWalk.naturalWidth){
   const atlas=assets.clerkWalk,cellW=atlas.naturalWidth/4,cellH=atlas.naturalHeight/2;
   const rear=worker.walking&&worker.direction==='north';
-  // The sheet has 32px of art inside 111px cells. Drawing whole cells shrank
-  // her to a thin 9px silhouette; crop transparency before fitting 31×38.
+  // The sheet has ~32px of art inside 111px cells. Crop the padding, then
+  // preserve a human silhouette: widening 35×109 source to 31×38 made the
+  // clerk appear as an indistinct multi-limbed blob on the live canvas.
   const chosen=rear?Math.min(2,frame):frame;
   const sourceX=chosen===3?33:39,sourceWidth=chosen===3?44:35;
-  ctx.drawImage(atlas,chosen*cellW+sourceX,(rear?cellH:0)+1,sourceWidth,cellH-2,worker.x+dx-1,worker.y+bob-2,31,38);
- }else ctx.drawImage(assets.clerk,worker.x+dx-1,worker.y+bob-2,31,38);
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(atlas,chosen*cellW+sourceX,(rear?cellH:0)+1,sourceWidth,cellH-2,worker.x+dx+3.5,worker.y+bob-6,22,42);
+ }else ctx.drawImage(assets.clerk,worker.x+dx+3.5,worker.y+bob-6,22,42);
  if(scanned){
   const strength=Math.max(0,1-(t-worker.lastScanAt)/.6);
   ctx.globalAlpha=strength*.80;ctx.fillStyle='#b8fff2';

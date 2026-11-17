@@ -155,3 +155,14 @@ Owner must review:
 9. iPhone Safari layout and save/unlock flow remain usable; the clerk remains permanent and is not assigned general NPC tasks.
 
 **Next step:** run the new Node regression suite and inspect the v0.8.8l `/irl-sandbox` preview; obtain desktop/iPhone visual approval before promotion. Preserve earlier release history.
+
+## v0.8.8r — Stage-front positioning and stability (2026-11-17)
+
+- **Stage-front audience:** `src/venue-nav.js` now places 36 distinct audience targets along three staggered half-ellipse arcs directly below the stage/stairs. The targets are defined in **foot coordinates**, not sprite top-left coordinates, so people no longer stop halfway down the hall near the entrance. Preserve the red-rope dividers and restore each spectator's prior activity after the debate.
+- **Stage anchors:** Challenger's stage stop is aligned to Destiny's shoe baseline; colored targeting rings beneath both debaters are removed, retaining ambient light beams and shadows.
+- **Front gate:** The mistakenly installed full-height moving grilles were replaced by translucent retractable waist-high gate leaves. Narrow fixed metal infill bridges only the open gaps between planters, posts and desk. Scanner posts and side barriers do not move.
+- **Desk crew:** The dedicated purple clerk is rendered from `assets/irl-ticket-clerk-walk-v088q.webp` with frame crops and a proportional 22×42 canvas-space figure rather than distorted wide sprite cells. The separate entrance-monitor staff member has an independent patrol route to prevent overlapping silhouettes. Guards now display ~10–15% larger, with their feet still grounded.
+- **Dialogue/effects:** Debate comic bubbles wrap whole words. Effects that formerly painted teal UI marks over the TV/challenger are suppressed when a debate is active.
+- **Freeze safeguards:** `src/venue-frame-loop-v088r.js` keeps `requestAnimationFrame` scheduled after a render exception, throttles diagnostics, and rebases elapsed time on visibility changes. This addresses a possible source of intermittent freezes but is not proof that all client-side freezes are resolved.
+- **Regression:** 69 tests pass across `venue_v088r`, `venue_v088q`, `venue_v088p`, `venue_v088o`, `venue_v088n`, `venue_v088m`, `venue_v088l`, `venue_v088k` and `venue_modular_v088b`. Legacy tests were not used as the release criterion. Browser smoke harness in `tests/browser_v088r.mjs` requires a Chromium-capable environment.
+- **Release branch:** `feature/v088r-stage-front-crowd-gates-stability`. Deploy to Vercel and visually inspect `/irl-sandbox`, with particular focus on the desk clerk and the half-ellipse crowd, before promoting to production. Claw mechanism intentionally unchanged at owner's request. Six further cast members remain a future optional milestone, not a condition of v0.8.8r acceptance.
