@@ -78,9 +78,14 @@ test('all free spectators leave their activities and rush toward a dense stage r
  assert(e.crowd.every(p=>p.debateWatching),'all free spectators participate');
  assert(e.crowd.some(p=>p.animation==='argue'||p.animation==='cheer'));
  e.departures=[];
- for(let i=0;i<120;i++){e.elapsed+=.1;e.crowdTick(.1);}
- const back=e.crowd.filter((p,i)=>!p.returnFromDebate&&Math.hypot(p.x-old[i][0],p.y-old[i][1])<12).length;
- assert(back>=18,'returned toward previous activities: '+back);
+ const returned=new Set();
+ for(let i=0;i<120;i++){
+  e.elapsed+=.1;e.crowdTick(.1);
+  e.crowd.forEach((p,j)=>{
+   if(!p.returnFromDebate&&Math.hypot(p.x-old[j][0],p.y-old[j][1])<1.5)returned.add(p.id);
+  });
+ }
+ assert(returned.size>=18,'walked back to exact previous activity: '+returned.size);
 });
 
 test('debate durations are 15–20 seconds; final-boss aura and rapid meme chat persist',()=>{
