@@ -34,8 +34,12 @@ const extra=[assets.additionalA,assets.additionalB,assets.additionalC],walk4=[as
 assets.hall.src='/assets/irl-hall-open-v088.webp';
 assets.hall.onerror=()=>{assets.hall.onerror=()=>{assets.hall.onerror=null;assets.hall.src='/assets/irl-hall.webp';};assets.hall.src='/assets/irl-hall-open-v087.webp';};
 const poses={0:assets.pose0,1:assets.pose1,3:assets.pose3};
+const newCast={back:new Image(),walk:new Image(),react:new Image()};
+newCast.back.src='/assets/irl-cast%20new%20sheet%201.png';
+newCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
+newCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8j · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8n · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
@@ -76,7 +80,7 @@ function draw(t){
  if(!modern){ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);ctx.fillStyle='#dfc7f4';ctx.textAlign='center';ctx.font='bold 8px monospace';ctx.fillText('LOADING VENUE',192,107);}
  drawStageQueueGuides(ctx,event);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#91f9b868';for(let y=51;y<183;y+=VENUE_CELL)for(let x=8;x<359;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}
- const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box);drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack);};
+ const sprite=(kind,x,y,w,h,state,motion)=>{const box=venueSpriteGeometry(x,y,w,h,motion);drawContactShadow(ctx,box);drawVenueCharacter(ctx,assets.cast,poses[kind],kind,state,t,box.x,box.y,box.w,box.h,assets.walk,extra,walk4,motion,back4,stage,reactions,originalWalk,originalBack,newCast);};
  const mood=stageAction(event.phase,event.elapsed,event.visitors.length,event.elapsed<event.hostUntil?event.hostMood:'idle');
  sprite(0,event.hostX,event.hostY,31,39,event.hostWalking&&!event.departures.some(g=>g.stageVisit==='exchange')?'walk':mood);
  const actors=[...event.crowd.map(g=>({g,role:'crowd',w:27,h:34})),...event.arrivals.map(g=>({g,role:'arrival',w:30,h:38})),...event.visitors.map(g=>({g,role:'visitor',w:30,h:38})),...event.departures.map(g=>({g,role:'depart',w:30,h:38})),...event.staff.map(g=>({g,role:'staff',w:30,h:38})),...event.guardPositions.map(g=>({g,role:'guard',w:30,h:38})),...(event.mascot?[{g:event.mascot,role:'mascot',w:22,h:24}]:[])].sort((a,b)=>a.g.y+a.h-(b.g.y+b.h));
@@ -90,12 +94,12 @@ function draw(t){
   const kind=role==='guard'?3:role==='staff'?7:g.kind;
   const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?'talk':g.type==='security'?'argue':g.type==='check'?'point':'idle'):role==='staff'?(g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):g.walking?'walk':'idle';
   const stageSpeaker=role==='depart'&&g.stageVisit==='exchange';
-  const boothRemain=role==='crowd'?Math.max(0,(g.photoPoseUntil||0)-event.elapsed):0;
-  const photoMix=boothRemain>0?Math.max(0,Math.min(1,(2.4-boothRemain)/.5,boothRemain/.45)):0;
-  const drawX=g.x+(role==='crowd'?(344-g.x)*photoMix:0);
-  const drawY=g.y+(role==='crowd'?(57-g.y)*photoMix:0);
-  sprite(kind,drawX+(stageSpeaker?2.5:0),drawY-(role==='crowd'?(g.hypeJump||0):0),stageSpeaker?29:w,stageSpeaker?37:h,state,g);
-  if(role==='crowd'&&g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){
+  // Render the actor's simulated position; keep the stage crowd's shadow at
+   // the physical floor even while the visible sprite cheers and jumps.
+   const jump=role==='crowd'?(g.hypeJump||0):0;
+   const motion=jump>0?{...g,groundY:g.y}:g;
+   sprite(kind,g.x+(stageSpeaker?2.5:0),g.y-jump,stageSpeaker?29:w,stageSpeaker?37:h,state,motion);
+   if(role==='crowd'&&g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){
    if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;
   }
   if(role==='crowd'&&!g.debateWatching&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout,assets.dggl);ambient++;}
