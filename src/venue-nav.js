@@ -57,8 +57,24 @@ export function snapVenue(x,y,gateAccess=false){
 }
 export function venueRoute(x,y,toX,toY,gateAccess=false){
  const [startX,startY]=snapVenue(x,y,gateAccess),[endX,endY]=snapVenue(toX,toY,gateAccess);
- const from=key(Math.floor(startX/VENUE_CELL),Math.floor(startY/VENUE_CELL));
- const end=key(Math.floor(endX/VENUE_CELL),Math.floor(endY/VENUE_CELL));
+ // Coarse-grid cell centers can be blocked when an exact floor target is
+ // walkable (notably at y146, just above the 183px gate crossing).
+ const cellFor=(x,y)=>{
+  const cx=Math.floor(x/VENUE_CELL),cy=Math.floor(y/VENUE_CELL);
+  for(let radius=0;radius<=4;radius++){
+   let best=null,dist=Infinity;
+   for(let row=cy-radius;row<=cy+radius;row++)for(let col=cx-radius;col<=cx+radius;col++){
+    if(!passCell(col,row,gateAccess))continue;
+    const [px,py]=center([col,row]);
+    if(!venueSegmentClear(x,y,px,py,gateAccess))continue;
+    const d=(px-x)**2+(py-y)**2;
+    if(d<dist){dist=d;best=key(col,row);}
+   }
+   if(best!==null)return best;
+  }
+  return key(Math.floor(x/VENUE_CELL),Math.floor(y/VENUE_CELL));
+ };
+ const from=cellFor(startX,startY),end=cellFor(endX,endY);
  if(from===end)return [[endX,endY]];
  const queue=[from],seen=new Int32Array(C*R).fill(-1);seen[from]=from;
  const directions=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
