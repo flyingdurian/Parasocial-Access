@@ -80,7 +80,7 @@ function irlHash(n){let x=n>>>0;x^=x<<13;x^=x>>>17;x^=x<<5;return x>>>0;}
 // Coordinates use the 384×216 hall art. Stations are on walkable floor, not
 // inside the counter, stage or barrier artwork.
 const IRL_STATIONS=VENUE_STATIONS;
-const IRL_VISIBLE_CROWD_CAP=21;
+const IRL_VISIBLE_CROWD_CAP=31;
 const IRL_STATION_NAMES=Object.keys(IRL_STATIONS);
 function arrange(run){const groups={};for(const raw of IRL_SCENARIOS){const s=isDebateInvitation(raw)?['debate',...raw.slice(1)]:raw;(groups[s[0]]??=[]).push(s);}
  const shuffle=(group,seed)=>{let list=[...groups[group]];for(let i=list.length-1;i>0;i--){seed=irlHash(seed+0x9e3779b9);let j=seed%(i+1);[list[i],list[j]]=[list[j],list[i]];}return list};
@@ -99,6 +99,11 @@ export class IRLEvent {
   this.crowd=Array.from({length:13},(_,i)=>{const seed=irlHash(this.run*4919+i*811+17);return {id:i,kind:[1,2,4,5,6,8,9,10,11][i%9],x:171+(seed%31)-15,y:169+(seed%13),station:'entrance',target:'entrance',dwell:i*.22,visits:0,walking:false,facing:1,emote:'',emoteTime:0};});
   const startingSpots=[[29,106],[74,119],[118,103],[146,109],[62,154],[326,153],[317,127],[343,123],[68,164],[109,138],[46,145],[124,165],[345,104]];
   this.crowd.forEach((person,i)=>{[person.x,person.y]=snapVenue(...startingSpots[i]);person.station='wander';person.target='wander';person.animation='idle';person.actionClock=0;person.speech='';});
+  const newCastSpots=[[42,114],[85,148],[139,124],[293,146],[318,123],[345,153]];
+  for(let i=0;i<6;i++){
+   const [x,y]=snapVenue(...newCastSpots[i]);
+   this.crowd.push({id:13+i,kind:30+i,x,y,station:'wander',target:'wander',dwell:.4+i*.22,visits:0,walking:false,animation:'idle',facing:1,emote:'',emoteTime:0,speech:'',speechTime:0,speechProgress:0});
+  }
   this.staff.forEach((worker,i)=>{[worker.x,worker.y]=[[184,137],[304,137],[268,139]][i];worker.homeX=worker.x;worker.homeY=worker.y;worker.patrolIndex=0;worker.patrolDwell=1.2;});
   this.guardPositions.forEach((worker,i)=>{[worker.x,worker.y]=[[72,138],[311,116],[343,137]][i];worker.homeX=worker.x;worker.homeY=worker.y;});
   this.staff[0].gateMonitor=true;this.staff[0].monitoring=false;
@@ -166,6 +171,17 @@ export class IRLEvent {
    for(const g of nearby){g.animation=g.id%2?'point':'cheer';g.emote='♥';g.emoteTime=1.2;g.dwell=Math.max(g.dwell,.75);}
   }
  }
+ // Doorway travel updates world position, never just drawing coordinates.
+ movePhotoGuest(person,x,y,dt,speed=30){
+  const dx=x-person.x,dy=y-person.y,d=Math.hypot(dx,dy);
+  if(d<.8){person.x=x;person.y=y;person.walking=false;return true;}
+  const step=Math.min(d,dt*speed),vx=dx/d*step,vy=dy/d*step;
+  person.x+=vx;person.y+=vy;person.stepDistance=(person.stepDistance||0)+step;
+  person.walking=step>.01;
+  person.direction=Math.abs(vy)>Math.abs(vx)*.8?(vy<0?'north':'south'):(vx<0?'west':'east');
+  if(Math.abs(vx)>Math.abs(vy)*.7)person.facing=vx<0?-1:1;
+  return d-step<.8;
+ }
  // Nearby pairs sometimes stop to talk; stage and booth crowds change by phase.
  crowdTick(dt){const stageBusy=this.departures.some(g=>['queued','approach','climbStairs','exchange','leaveStairs'].includes(g.stageVisit));
    const liveDebate=this.departures.find(g=>g.debater&&g.stageVisit==='exchange');
@@ -188,19 +204,56 @@ export class IRLEvent {
     }
     continue;
    }
-   // Spectators converge on both flanks, keeping the stage ropes clear.
-   if(hypeDebate&&person.id%4!==0){
-    if(!person.debateWatching){person.debateWatching=true;person.target='debate';person.dwell=0;}
+   // Every free spectator rushes to the real stage semicircle and walks back
+   // to the exact location/activity saved before the debate.
+   if(hypeDebate&&!person.photoPhase){
+    if(!person.debateWatching){
+     person.beforeDebate={x:person.x,y:person.y,station:person.station,target:person.target,roamTo:person.roamTo};
+     person.debateWatching=true;person.target='debate';person.dwell=0;person.routeTo=null;
+    }
     const [tx,ty]=venueDebateAudienceSpot(person.id);
-    const arrived=moveVenue(person,tx,ty,dt,liveDebate?44:63);
+    const arrived=moveVenue(person,tx,ty,dt,liveDebate?58:80);
+    person.debateArrived=arrived;
     const wave=Math.floor(this.elapsed*3+person.id*1.4)%4;
     person.animation=arrived?['cheer','point','argue','laugh'][wave]:'walk';
     person.hypeJump=arrived&&wave===0?Math.abs(Math.sin(this.elapsed*10+person.id))*3.2:0;
-    person.station=arrived?'debate':person.station;
+    if(arrived)person.station='debate';
     if(arrived&&Math.floor(this.elapsed*3+person.id)%8===0){person.emote='♥';person.emoteTime=Math.max(person.emoteTime,.35);}
     continue;
    }
-   if(person.debateWatching){person.debateWatching=false;person.debateSpeechTime=0;person.hypeJump=0;person.station='wander';person.target='roam';person.roamTo=venueRoamPoint(this.run*541+person.id*127+person.visits*37);person.dwell=0;}
+   if(person.debateWatching){
+    person.debateWatching=false;person.debateArrived=false;person.debateSpeechTime=0;person.hypeJump=0;
+    person.returnFromDebate=person.beforeDebate||{x:person.x,y:person.y,station:'wander',target:'roam'};
+    person.beforeDebate=null;person.target='return';person.dwell=0;person.routeTo=null;
+   }
+   if(person.returnFromDebate){
+    const back=person.returnFromDebate;
+    const arrived=moveVenue(person,back.x,back.y,dt,48);
+    person.animation=arrived?'idle':'walk';
+    if(arrived){person.station=back.station;person.target=back.target;person.roamTo=back.roamTo;person.dwell=.4;person.returnFromDebate=null;}
+    continue;
+   }
+   if(person.photoPhase){
+    if(person.photoPhase==='enter'){
+     const arrived=this.movePhotoGuest(person,344,57,dt,30);
+     person.animation=arrived?'point':'walk';
+     if(arrived){
+      person.photoPhase='pose';person.photoPoseUntil=this.elapsed+2.4;person.dwell=0;
+      person.boothActivity='photo';this.boothTransactions.photo++;
+      this.stationActivity.photo={activeUntil:this.elapsed+2.4,guestId:person.id,variant:(person.id+person.visits)%3,flashed:false};
+      this.effects.push({kind:'booth',station:'photo',seed:person.id,x:person.x,y:person.y-7,ttl:1.15,maxTtl:1.15});
+     }
+    }else if(person.photoPhase==='pose'){
+     person.walking=false;person.animation='point';
+     if(this.elapsed>=person.photoPoseUntil)person.photoPhase='exit';
+    }else if(person.photoPhase==='exit'){
+     const [x,y]=person.photoDoor;
+     const arrived=this.movePhotoGuest(person,x,y,dt,28);
+     person.animation=arrived?'idle':'walk';
+     if(arrived){person.photoPhase=null;person.photoDoor=null;person.boothActivity=null;person.station='photo';person.target='photo';person.dwell=.5;person.routeTo=null;}
+    }
+    continue;
+   }
    // Idle ambient attendees never occupy the stage's waiting line.
    if(['line','signing','mic'].includes(person.target)){
     person.target='roam';person.roamTo=venueRoamPoint(this.run*929+person.id*81+person.visits*43);person.dwell=0;
@@ -219,11 +272,16 @@ export class IRLEvent {
     if(stageBusy&&['mic','signing','photo'].includes(person.target)&&person.x>260)person.target=person.id%2?'merch':'quiet';
     person.visits++;}
    const [tx,ty]=person.target==='roam'?person.roamTo:person.target==='line'?venueQueueSpot(person.id):venueStationApproachPoint(person.target,person.id,person.visits)||IRL_STATIONS[person.target];
-   const arrived=moveVenue(person,tx,ty,dt,15+(person.id%4)*4)||Math.hypot(person.x-tx,person.y-ty)<24;
+   const arrived=moveVenue(person,tx,ty,dt,18+(person.id%4)*5);
    person.animation=person.walking?'walk':person.animation==='walk'?'idle':person.animation;
    if(arrived){person.station=person.target;person.dwell=1.0+(irlHash(person.visits*149+person.id*13)%42)/12;
     const activity=person.station;
     person.boothActivity=['merch','claw','snacks','photo'].includes(activity)?activity:null;
+    if(activity==='photo'){
+     person.photoDoor=[person.x,person.y];person.photoPhase='enter';
+     person.boothActivity=null;person.animation='walk';person.dwell=0;person.routeTo=null;
+     continue;
+    }
     if(person.boothActivity){
      this.boothTransactions[activity]=(this.boothTransactions[activity]||0)+1;
       // Every physical station gets its own animated transaction window.
@@ -231,7 +289,7 @@ export class IRLEvent {
       if(activity==='snacks')this.boothTransactions.drinks++; // drinks served at the FOOD stall
      person.animation=activity==='photo'||activity==='claw'?'point':activity==='snacks'?'cheer':'talk';
      person.facing=activity==='photo'||activity==='claw'?1:person.x<IRL_STATIONS[activity]?.[0]?1:-1;
-     if(activity==='photo'){person.photoPoseUntil=this.elapsed+2.4;person.dwell=Math.max(2.8,person.dwell);}
+     
      person.dwell=Math.max(2.1,person.dwell);
      this.effects.push({kind:'booth',station:activity,seed:person.id,x:person.x,y:person.y-7,ttl:1.15,maxTtl:1.15});
      // Photo flash waits until the guest has visibly stepped into the booth.
@@ -248,14 +306,14 @@ export class IRLEvent {
     person.speechTime=maySpeak?person.speech.length/13+1.1:0;
     person.speechProgress=0;
     if(maySpeak){person.emoteTime=0;this.speechQuietUntil=this.elapsed+9;}
-    if((person.visits+person.id)%7===0){this.crowdMoments++;this.effects.push({x:person.x,y:person.y-8,text:person.station==='photo'?'FLASH!':person.station==='mic'?'NODDERS':'dggL',color:'#ffe6a7',ttl:1.3});if(person.station==='photo')person.photoPoseUntil=Math.max(person.photoPoseUntil||0,this.elapsed+2.4);}
+    if((person.visits+person.id)%7===0){this.crowdMoments++;this.effects.push({x:person.x,y:person.y-8,text:person.station==='photo'?'FLASH!':person.station==='mic'?'NODDERS':'dggL',color:'#ffe6a7',ttl:1.3});}
    }
   }
   // Before the challenger reaches the platform, the audience rushes in and
   // starts shouting from their actual positions. The LCD remains camera-only.
   if(hypeDebate&&!liveDebate&&this.elapsed>=this.preludeNextShoutAt){
    this.preludeNextShoutAt=this.elapsed+.68;
-   const watchers=this.crowd.filter(p=>p.debateWatching&&!p.entryPhase);
+   const watchers=this.crowd.filter(p=>p.debateWatching&&p.debateArrived&&!p.entryPhase);
    if(watchers.length){
     const beat=Math.floor(this.elapsed*1.7),who=watchers[(beat*7+(hypeDebate.serial||0))%watchers.length];
     who.debateSpeech=debateChatLine(hypeDebate,beat);who.debateSpeechTime=1.85;
@@ -384,7 +442,7 @@ export class IRLEvent {
      this.effects.push({x:200,y:93,text:loreStageLine(g,0),color:'#ffedb4',ttl:1.7});
     }
    }else if(g.stageVisit==='exchange'){
-    g.walking=false;g.exchangeClock-=dt;
+    g.walking=false;g.facing=g.debater?-1:1;g.direction='west';g.exchangeClock-=dt;
     if(g.debater){
      // Intentional duty cycles: Destiny ~25% of debate time; challenger ~10%.
       // Staggered by guest serial so there is no mandatory aura at round start.
@@ -404,7 +462,7 @@ export class IRLEvent {
       this.debateChat.push({text:line,ttl:1.95,maxTtl:1.95});this.debateChat=this.debateChat.slice(-3);
        // A different actual audience member shouts the line above their head.
        // This is world-space speech; the big stage TV is camera-only.
-       const viewers=this.crowd.filter(p=>p.debateWatching&&!p.entryPhase);
+       const viewers=this.crowd.filter(p=>p.debateWatching&&p.debateArrived&&!p.entryPhase);
        if(viewers.length){
         const order=(g.hypeBeat*7+(g.serial||0)*3)%viewers.length;
         const who=viewers[order];who.debateSpeech=line;who.debateSpeechTime=1.85;
@@ -415,7 +473,7 @@ export class IRLEvent {
      }
     }
     const beat=1-g.exchangeClock/g.exchangeDuration;
-    // The active 6–12s battle NEVER drops into neutral talk/nod/idle poses.
+    // The active 15–20s battle NEVER drops into neutral talk/nod/idle poses.
     // Authored argument, heckle and point poses alternate out of phase.
     const clash=Math.floor((g.exchangeDuration-g.exchangeClock)/.57);
     g.exchangeAction=g.debater?['argue','point','heckle'][clash%3]:(beat<.32?'cheer':beat<.7?'talk':'laugh');
@@ -475,7 +533,7 @@ export class IRLEvent {
    }else if(worker===this.staff[0]){
     // Distinct gate monitor watches scanner activity while the ticket clerk stays at the desk.
     worker.monitoring=Object.values(this.gateControllers).some(g=>g.openUntil>this.elapsed)||worker.patrolIndex%2===0;
-    const stops=[[113,137],[184,137],[238,137],[184,137]];
+    const stops=[[115,139],[184,137],[252,139],[184,137]];
     worker.patrolDwell=Math.max(0,(worker.patrolDwell||0)-dt);
     if(worker.patrolDwell<=0){
      if(moveVenue(worker,...stops[worker.patrolIndex%stops.length],dt,30)){
