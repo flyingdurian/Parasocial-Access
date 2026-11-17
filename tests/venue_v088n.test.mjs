@@ -118,8 +118,8 @@ test('entrance uses the original painted door and separate fixed gap barriers',(
  const ctx=context();
  drawModularVenue(ctx,assets,e,100,{});
  drawBakedForegroundOccluders(ctx,assets,e);
- const gateBands=ctx.calls.filter(c=>c[0]==='fillRect'&&Object.values(MODULAR_GATES).some(g=>c[1]>=g.lane.left-3&&c[1]<=g.lane.right+3&&c[2]>=g.lane.top-8&&c[2]<=g.lane.bottom));
- assert(gateBands.some(c=>c[4]>=20),'permanent metal infill remains between planters, posts and desk');
+ const gapBands=ctx.calls.filter(c=>c[0]==='fillRect'&&[70,138,237,311].some(x=>Math.abs(c[1]-x)<.1)&&c[4]===10);
+ assert(gapBands.length>=4,'four short waist-high infill pieces bridge only planter/scanner/desk gaps');
  for(const gate of Object.values(MODULAR_GATES)){
   const doors=ctx.calls.filter(c=>c[0]==='fillRect'&&c[1]>=gate.lane.left&&c[1]<gate.lane.right&&c[2]===gate.lane.top+5);
   assert(!doors.some(c=>c[4]>=16),'door itself has no replacement cage or glass sprite');

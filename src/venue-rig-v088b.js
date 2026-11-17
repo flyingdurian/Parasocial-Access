@@ -57,7 +57,9 @@ export function drawPaintedGate(ctx,plate,event,side,foreground=false){
   // It does not move, cover, or replace the two original painted gate rails.
   const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
   for(const [a,b] of segments){
-   const fenceTop=lane.top+1,fenceH=24;
+   // Bridge only the narrow gaps at the SAME waist-high silhouette as the
+   // painted rail; tall 24px grilles read as a second set of gate doors.
+   const fenceTop=railY-3,fenceH=10;
    ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,fenceTop,b-a,fenceH);
    ctx.fillStyle='#9db8c9';ctx.fillRect(a,fenceTop,b-a,1.3);
    ctx.fillStyle='#55677b';ctx.fillRect(a,fenceTop+fenceH-2,b-a,1.3);
