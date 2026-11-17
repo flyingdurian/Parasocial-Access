@@ -11,7 +11,7 @@ import {MODULAR_PROPS,MODULAR_GATES} from '../src/venue-geometry-v088b.js';
 const engine=()=>({progress:{irlRecords:{destinyMeet:{attempts:0}}}});
 function context(){
  const calls=[];
- return {calls,globalAlpha:1,save(){},restore(){},beginPath(){},rect(...a){calls.push(['rect',...a]);},clip(){},fill(){},stroke(){},ellipse(){},translate(){},scale(){},rotate(){},moveTo(){},lineTo(){},arc(){},fillRect(...a){calls.push(['fillRect',...a]);},strokeRect(){},drawImage(...a){calls.push(['image',...a]);},fillText(...a){calls.push(['text',...a]);},measureText(s){return {width:String(s).length*3}},createLinearGradient(){return {addColorStop(){}}},createRadialGradient(){return {addColorStop(){}}}};
+ return {calls,globalAlpha:1,save(){},restore(){},beginPath(){},rect(...a){calls.push(['rect',...a]);},clip(){},fill(){},stroke(){},ellipse(){},translate(){},scale(){},transform(){},rotate(){},moveTo(){},lineTo(){},arc(){},fillRect(...a){calls.push(['fillRect',...a]);},strokeRect(){},drawImage(...a){calls.push(['image',...a]);},fillText(...a){calls.push(['text',...a]);},measureText(s){return {width:String(s).length*3}},createLinearGradient(){return {addColorStop(){}}},createRadialGradient(){return {addColorStop(){}}}};
 }
 const assets={plate:{naturalWidth:1672,naturalHeight:941,complete:true},clerk:{naturalWidth:150,naturalHeight:190,complete:true},mascot:{naturalWidth:1220,naturalHeight:1289,complete:true}};
 
@@ -69,12 +69,12 @@ test('photo visitor enters physically, poses before shutter, then walks out to t
  assert(Math.hypot(person.x-start[0],person.y-start[1])<1,'physically walked back, no rubber band');
 });
 
-test('all 31 free spectators leave their activities and rush toward a dense stage ring, then walk back',()=>{
+test('all free spectators leave their activities and rush toward a dense stage ring, then walk back',()=>{
  const e=new IRLEvent(engine());e.departures=[{serial:4,debater:true,stageVisit:'exchange',exchangeClock:18}];
  const old=e.crowd.map(p=>[p.x,p.y]);
  for(let i=0;i<90;i++){e.elapsed+=.1;e.crowdTick(.1);}
  const reached=e.crowd.filter(p=>p.debateArrived).length;
- assert(reached>=19,'reached ring: '+reached+'/'+e.crowd.length);
+ assert(reached>=e.crowd.length-1,'reached ring: '+reached+'/'+e.crowd.length);
  assert(e.crowd.every(p=>p.debateWatching),'all free spectators participate');
  assert(e.crowd.some(p=>p.animation==='argue'||p.animation==='cheer'));
  e.departures=[];
