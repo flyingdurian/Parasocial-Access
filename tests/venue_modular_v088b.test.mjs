@@ -77,13 +77,15 @@ test('both gated lanes remain proportional and enforce physical admission',()=>{
  }};
  assert(drawModularVenue(ctx,assets,event,2,{}));
  assert.equal(ctx.depth,0);
- // The unified environment plate is rendered once; the worker is intentionally
- // depth-sorted after crowd actors but before the counter's baked occlusion.
- assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,1);
- const scene=ctx.calls.find(c=>c[0]==='drawImage');
+ // Every gate texture call MUST sample the original illustrated hall plate.
+ // No separately illustrated doors/panels may cover the existing baked gate.
+ const gateImages=ctx.calls.filter(c=>c[0]==='drawImage');
+ assert(gateImages.length>=3);
+ assert(gateImages.every(call=>call[1]===assets.plate));
+ const scene=gateImages[0];
  assert.deepEqual(scene.slice(2),[0,0,384,216]);
  drawTicketClerk(ctx,assets,event);
- assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,2);
+ assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,gateImages.length+1);
 });
 
 test('stage and queues remain navigable, with grounded on-plate geometry',()=>{
@@ -127,6 +129,7 @@ test('TV/photo feed is clipped to one on-plate screen; no opaque card',()=>{
  assert.equal(ctx.depth,0);
  assert.equal(ctx.calls.filter(c=>c[0]==='drawImage').length,2,'exactly one host, one fan');
  assert(ctx.calls.some(c=>c[0]==='clipRect'&&c[1]===0&&c[2]===0&&c[3]===100&&c[4]===56));
+ assert(ctx.calls.some(c=>c[0]==='clipRect'&&c[1]===1.5&&c[2]===3.5&&c[3]===97&&c[4]===50.5),'broadcast uses the full illustrated LCD interior');
  assert.equal(ctx.calls.filter(c=>c[0]==='fillRect'&&c[1]===0&&c[2]===0&&c[3]===100&&c[4]===56).length,1,'only the LCD base is full-size; no second opaque photo tile');
  const mask=paintContext();
  drawBakedForegroundOccluders(mask,assets);

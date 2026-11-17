@@ -1,7 +1,7 @@
 /* v0.8.8h unified plate, interactive TV, tickets, gate glass and dust motes. */
 import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_BLOCKERS} from './venue-geometry-v088b.js';
 
-const FILES=Object.freeze({plate:'Neon Convention Hall Claw Machine.png',clerk:'irl-ticket-clerk-v088h.webp',clerkWalk:'irl-ticket-clerk-walk-v088q.webp',mascot:'Adorable blue mascot clutching a red heart.png'});
+const FILES=Object.freeze({plate:'Neon Convention Hall Claw Machine.png',clerk:'irl-ticket-clerk-v088h.webp',clerkWalk:'irl-ticket-clerk-walk-v088s.webp',mascot:'Adorable blue mascot clutching a red heart.png'});
 export function loadModularVenueAssets(){
  const assets={};
  for(const [key,file] of Object.entries(FILES)){
@@ -33,38 +33,37 @@ function openness(event,side){
  if(!gate)return 0;
  return Math.max(0,Math.min(1,4*(event.elapsed-gate.openedAt),3*(gate.openUntil-event.elapsed)));
 }
-function drawGate(ctx,event,side){
- const open=openness(event,side),lane=MODULAR_GATES[side].lane;
- const span=lane.right-lane.left;
- const leaf=Math.max(0,(span/2+.5)*(1-open)),top=lane.top+5,height=16;
- // Actual waist-high optical turnstile doors: two translucent panels meet in
- // the middle when idle, then retract fully into the existing scanner posts.
- // They are NOT the metal fences used to seal scenery gaps at either side.
+export function drawPaintedGate(ctx,plate,event,side,foreground=false){
+ if(!plate?.naturalWidth)return;
+ const lane=MODULAR_GATES[side].lane,open=openness(event,side);
+ const span=lane.right-lane.left,railY=192.4,railH=6.2;
+ const sx=plate.naturalWidth/384,sy=plate.naturalHeight/216;
  ctx.save();
- for(let i=0;i<2;i++){
-  const x=i===0?lane.left:lane.right-leaf;
-  if(leaf>.05){
-   ctx.fillStyle='rgba(92,176,199,.22)';ctx.fillRect(x,top,leaf,height);
-   ctx.fillStyle='#accbd9';ctx.fillRect(x,top,leaf,1.25);ctx.fillRect(x,top+height-1.3,leaf,1.15);
-   ctx.fillStyle='rgba(203,234,245,.4)';ctx.fillRect(x+1,top+3,Math.max(0,leaf-2),1);
-   ctx.fillStyle=open>.6?'#7effda':'#d9eafb';ctx.fillRect(i===0?x+leaf-1.4:x,top+1,1.4,height-2);
-  }
+ if(!foreground){
+  // The ORIGINAL illustrated rail is baked into the venue plate. Restore
+  // carpet beneath it before revealing the left/right retracted portions.
+  // There are no extra shutter panels or separate gate sprites.
+  ctx.drawImage(plate,lane.left*sx,(railY-12)*sy,span*sx,railH*sy,lane.left,railY,span,railH);
  }
- const pulse=.65+.25*Math.sin((event?.elapsed||0)*8);
- ctx.fillStyle=open>.65?'rgba(92,255,191,'+pulse+')':'#efc076';
- ctx.fillRect(lane.left-2.6,lane.top+3,1.6,2.6);
- ctx.fillRect(lane.right+1,lane.top+3,1.6,2.6);
- // Bridge the small unguarded negative spaces between the illustrated
- // planters, scanner posts and check-in counter. Only the two ticketed lanes
- // remain traversable; their arms default CLOSED in the absence of a pass.
- const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
- for(const [a,b] of segments){
-  const fenceTop=lane.top+1,fenceH=24;
-  ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,fenceTop,b-a,fenceH);
-  ctx.fillStyle='#9db8c9';ctx.fillRect(a,fenceTop,b-a,1.3);
-  ctx.fillStyle='#55677b';ctx.fillRect(a,fenceTop+fenceH-2,b-a,1.3);
-  for(let bar=a+3;bar<b;bar+=3.1){ctx.fillStyle='#8da9bb';ctx.fillRect(bar,fenceTop+1,1,fenceH-3);}
-  ctx.fillStyle='#364b68';ctx.fillRect(a,fenceTop,1.5,fenceH);
+ const visible=Math.max(0,span*.5*(1-open));
+ if(visible>.1)for(const [x,w] of [[lane.left,visible],[lane.right-visible,visible]]){
+  ctx.beginPath();ctx.rect(x,railY,w,railH);ctx.clip();
+  ctx.drawImage(plate,0,0,plate.naturalWidth,plate.naturalHeight,0,0,384,216);
+  // Each half is clipped individually; never leave the second clip active.
+  ctx.restore();ctx.save();
+ }
+ if(foreground){
+  // Fixed fence infill belongs ONLY in gaps between planter, scanner and desk.
+  // It does not move, cover, or replace the two original painted gate rails.
+  const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
+  for(const [a,b] of segments){
+   const fenceTop=lane.top+1,fenceH=24;
+   ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,fenceTop,b-a,fenceH);
+   ctx.fillStyle='#9db8c9';ctx.fillRect(a,fenceTop,b-a,1.3);
+   ctx.fillStyle='#55677b';ctx.fillRect(a,fenceTop+fenceH-2,b-a,1.3);
+   for(let bar=a+3;bar<b;bar+=3.1){ctx.fillStyle='#8da9bb';ctx.fillRect(bar,fenceTop+1,1,fenceH-3);}
+   ctx.fillStyle='#364b68';ctx.fillRect(a,fenceTop,1.5,fenceH);
+  }
  }
  ctx.restore();
 }
@@ -73,24 +72,23 @@ function drawGate(ctx,event,side){
 export function drawTicketClerk(ctx,assets,event){
  if(!assets?.clerk?.naturalWidth||!event?.ticketClerk)return;
  const worker=event.ticketClerk;
- const t=event.elapsed||0,frame=Math.floor(t*(worker.walking?7:3))%4;
+ const t=event.elapsed||0;
  const scanned=t-worker.lastScanAt<.6;
+ const frame=worker.walking?Math.floor(t*5)%4:scanned?1:0;
  ctx.save();
- // Four subtle counter-service keyframes: check screen, scan pass, look up,
- // rest. The desk remains a fixed collision object.
- const bob=worker.walking?Math.abs(Math.sin(t*12))*.35:frame===2?-.25:0;
- const dx=worker.walking&&frame%2?.3:0;
+ // Keep the new full-resolution chibi's feet on the same desk-floor baseline.
+ const bob=worker.walking?Math.abs(Math.sin(t*9))*.30:0;
+ const dx=worker.walking&&frame%2?.2:0;
  if(assets.clerkWalk?.complete&&assets.clerkWalk.naturalWidth){
   const atlas=assets.clerkWalk,cellW=atlas.naturalWidth/4,cellH=atlas.naturalHeight/2;
   const rear=worker.walking&&worker.direction==='north';
-  // The sheet has ~32px of art inside 111px cells. Crop the padding, then
-  // preserve a human silhouette: widening 35×109 source to 31×38 made the
-  // clerk appear as an indistinct multi-limbed blob on the live canvas.
-  const chosen=rear?Math.min(2,frame):frame;
-  const sourceX=chosen===3?33:39,sourceWidth=chosen===3?44:35;
-  ctx.imageSmoothingEnabled=false;
-  ctx.drawImage(atlas,chosen*cellW+sourceX,(rear?cellH:0)+1,sourceWidth,cellH-2,worker.x+dx+3.5,worker.y+bob-6,22,42);
- }else ctx.drawImage(assets.clerk,worker.x+dx+3.5,worker.y+bob-6,22,42);
+  // The source has generously transparent 443px cells. Crop to the actual
+  // ~160px-wide body before downsampling; drawing entire cells looks tiny,
+  // and nearest-neighbor minification destroys facial and clothing detail.
+  const sourceX=frame===3?110:139,sourceWidth=frame===3?216:170;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(atlas,frame*cellW+sourceX,(rear?cellH:0)+16,sourceWidth,cellH-29,worker.x+dx+.5,worker.y+bob-7,28,43);
+ }else ctx.drawImage(assets.clerk,worker.x+dx+.5,worker.y+bob-7,28,43);
  if(scanned){
   const strength=Math.max(0,1-(t-worker.lastScanAt)/.6);
   ctx.globalAlpha=strength*.80;ctx.fillStyle='#b8fff2';
@@ -342,25 +340,25 @@ export function drawModularTV(ctx,event,t,streams={}){
  grad.addColorStop(0,'#19143c');grad.addColorStop(1,'#363373');
  ctx.fillStyle=grad;ctx.fillRect(0,0,100,56);
  // A second inset clip protects the upper bezel and suppresses edge artifacts.
- ctx.beginPath();ctx.rect(3,7,94,46);ctx.clip(); // no drawing across the top bezel
+ ctx.beginPath();ctx.rect(1.5,3.5,97,50.5);ctx.clip(); // use the whole painted LCD, preserving its narrow bezel
  ctx.textBaseline='alphabetic';ctx.textAlign='center';
  if(debate){
   const audience=(event.crowd||[]).filter(p=>p.debateWatching);
   // Camera director: genuinely different crops/zooms, not the same two-shot
   // with a changing label. Solo Destiny, solo critic, split-screen, crowd.
   const shot=Math.floor(t/1550)%5,crowdCam=shot===3&&audience.length>0;
-  ctx.fillStyle='rgba(7,10,35,.88)';ctx.fillRect(4,9,92,43);
+  ctx.fillStyle='rgba(7,10,35,.88)';ctx.fillRect(2,5,96,48);
   ctx.fillStyle='#ffc98f';ctx.font='bold 5.2px ui-monospace,monospace';
   const label=crowdCam?'AUDIENCE CLOSE-UP':shot===0||shot===4?'DESTINY CLOSE-UP':shot===1?'CHALLENGER CLOSE-UP':'BLOODSPORTS LIVE';
   ctx.fillText(label,50,15,87);
   ctx.fillStyle='#ff637b';ctx.fillRect(7,10,2.6,2);
-  ctx.save();ctx.beginPath();ctx.rect(6,17,88,29);ctx.clip();
+  ctx.save();ctx.beginPath();ctx.rect(3,16,94,32);ctx.clip();
   if(crowdCam){
    if(streams.audienceFrame?.width){
     // Frame from the *previous live canvas render*, filmed at the pit.
     // No model-portrait cutaways masquerading as a real audience camera.
-    ctx.drawImage(streams.audienceFrame,7,17,86,29);
-    ctx.strokeStyle='#d4b8fa';ctx.lineWidth=.7;ctx.strokeRect(7.3,17.3,85.4,28.4);
+    ctx.drawImage(streams.audienceFrame,3,16,94,32);
+    ctx.strokeStyle='#d4b8fa';ctx.lineWidth=.7;ctx.strokeRect(3.3,16.3,93.4,31.4);
    }else{
     const chosen=audience[Math.floor(t/1550)%audience.length];
     liveFanPortrait(ctx,streams,chosen.kind,50,15,40,38);
@@ -465,7 +463,7 @@ export function drawModularVenue(ctx,assets,event,t,streams={}){
   draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
   drawVenueDustMotes(ctx,t);
   drawStageDebateUplight(ctx,event,t);
-  for(const side of ['left','right'])drawGate(ctx,event,side);
+  for(const side of ['left','right'])drawPaintedGate(ctx,assets.plate,event,side);
   drawBoothActivity(ctx,event,assets);
   drawModularTV(ctx,event,t,streams);
   ctx.restore();
@@ -484,8 +482,8 @@ export function drawBakedForegroundOccluders(ctx,assets,event){
     draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
     ctx.restore();
   }
-  // The operational security grilles are foreground fixtures, too.
-  // Redraw after actors so nobody can visibly walk on top of the gates.
-  if(event)for(const side of ['left','right'])drawGate(ctx,event,side);
+  // Only the original painted gate rails and fixed small side-gap infill are
+  // foreground fixtures; never paint a second gate over the baked entrance.
+  if(event)for(const side of ['left','right'])drawPaintedGate(ctx,assets.plate,event,side,true);
 }
 export {FILES as MODULAR_VENUE_FILES};

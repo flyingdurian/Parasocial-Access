@@ -226,12 +226,12 @@ export function drawSecurityComic(ctx,event,t){
 // Shared bounded transaction/decision feedback; never overflow the hall LCD
 // or create a giant free-floating debug label at the edge of the scene.
 export function drawVenueFeedback(ctx,effects=[],mascot=null,event=null){
- const debateOnStage=event?.departures?.some(g=>g.debater&&['approach','climbStairs','exchange'].includes(g.stageVisit));
  for(const effect of effects){
   if(effect.kind==='booth')continue;
-  // Floating stage feedback cards were clipped by the TV and looked like
-  // orphan teal rectangles crossing the challenger. TV/audio own this beat.
-  if(debateOnStage&&effect.x>=185&&effect.y<=105)continue;
+  // Stage reactions live exclusively on the embedded TV. A debate can finish
+  // before an earlier feedback effect expires, so filter this region even
+  // after the challenger leaves; otherwise orphaned teal cards reappear.
+  if(effect.x>=185&&effect.y<=110)continue;
   const label=String(effect.text||'');if(!label)continue;
   ctx.save();
   ctx.font='900 5.6px ui-monospace,monospace';

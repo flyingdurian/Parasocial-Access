@@ -209,7 +209,12 @@ export class IRLEvent {
    // to the exact location/activity saved before the debate.
    if(hypeDebate&&!person.photoPhase){
     if(!person.debateWatching){
-     person.beforeDebate={x:person.x,y:person.y,station:person.station,target:person.target,roamTo:person.roamTo};
+     // A second debate can start before this attendee has finished returning
+     // from the first. Preserve their ORIGINAL activity rather than saving
+     // the transient 'return' destination, which has no physical station.
+     person.beforeDebate=person.returnFromDebate?{...person.returnFromDebate}:
+      {x:person.x,y:person.y,station:person.station,target:person.target,roamTo:person.roamTo};
+     person.returnFromDebate=null;
      person.debateWatching=true;person.target='debate';person.dwell=0;person.routeTo=null;
     }
     // Occupy the first ring row first. Person IDs are sparse (13+, 1000+),
@@ -233,7 +238,12 @@ export class IRLEvent {
     const back=person.returnFromDebate;
     const arrived=moveVenue(person,back.x,back.y,dt,48);
     person.animation=arrived?'idle':'walk';
-    if(arrived){person.station=back.station;person.target=back.target;person.roamTo=back.roamTo;person.dwell=.4;person.returnFromDebate=null;}
+    if(arrived){
+     person.station=back.station==='debate'?'wander':back.station||'wander';
+     person.target=back.target;person.roamTo=back.roamTo;
+     if(person.target==='debate'||person.target==='return')person.target='roam';
+     person.dwell=.4;person.returnFromDebate=null;
+    }
     continue;
    }
    if(person.photoPhase){
@@ -274,7 +284,15 @@ export class IRLEvent {
     if(person.target==='roam')person.roamTo=venueRoamPoint(seed*31+person.id*541);
     if(stageBusy&&['mic','signing','photo'].includes(person.target)&&person.x>260)person.target=person.id%2?'merch':'quiet';
     person.visits++;}
-   const [tx,ty]=person.target==='roam'?person.roamTo:person.target==='line'?venueQueueSpot(person.id):venueStationApproachPoint(person.target,person.id,person.visits)||IRL_STATIONS[person.target];
+   let destination=person.target==='roam'?person.roamTo:person.target==='line'?venueQueueSpot(person.id):
+    venueStationApproachPoint(person.target,person.id,person.visits)||IRL_STATIONS[person.target];
+   // An interrupted debate (or a stale saved activity) must NEVER kill the
+   // simulation with `const [tx,ty]=undefined`. Repair only invalid targets.
+   if(!Array.isArray(destination)||destination.length<2||!destination.every(Number.isFinite)){
+    person.target='roam';person.roamTo=venueRoamPoint(this.run*3001+person.id*751+person.visits*283);
+    person.routeTo=null;destination=person.roamTo;
+   }
+   const [tx,ty]=destination;
    const arrived=moveVenue(person,tx,ty,dt,18+(person.id%4)*5);
    person.animation=person.walking?'walk':person.animation==='walk'?'idle':person.animation;
    if(arrived){person.station=person.target;person.dwell=1.0+(irlHash(person.visits*149+person.id*13)%42)/12;

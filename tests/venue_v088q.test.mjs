@@ -48,9 +48,9 @@ test('ticket clerk walks an independently simulated patrol with a new transparen
  for(let i=0;i<230;i++)e.tick(.1);
  assert.notEqual(e.ticketClerk.x,start);
  assert(e.ticketClerk.x>=160&&e.ticketClerk.x<=215);
- assert(statSync('assets/irl-ticket-clerk-walk-v088q.webp').size>1000);
+ assert(statSync('assets/irl-ticket-clerk-walk-v088s.webp').size>1000);
  const src=readFileSync('src/venue-rig-v088b.js','utf8');
- assert(src.includes("clerkWalk:'irl-ticket-clerk-walk-v088q.webp'"));
+ assert(src.includes("clerkWalk:'irl-ticket-clerk-walk-v088s.webp'"));
 });
 
 test('VERIFY pauses for an in-person investigation before resolving',()=>{

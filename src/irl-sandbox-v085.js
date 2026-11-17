@@ -29,7 +29,7 @@ const liveAudienceFrame=document.createElement('canvas');
 
 const assets={};
 const modularVenue=loadModularVenueAssets();
-for(const [id,path] of Object.entries({hall:'irl-hall',cast:'irl-cast',walk:'irl-cast-walk',pose0:'irl-host-poses',pose1:'irl-photographer-poses',pose3:'irl-security-poses',additionalA:'irl-cast-set-a',additionalB:'irl-cast-set-b',additionalC:'irl-cast-set-c',walkA:'irl-cast-set-a-walk4',walkB:'irl-cast-set-b-walk4',walkC:'irl-cast-set-c-walk4',backA:'irl-cast-set-a-back4',backB:'irl-cast-set-b-back4',backC:'irl-cast-set-c-back4',stageA:'irl-cast-stage-a',stageB:'irl-cast-stage-b',reactionA:'irl-cast-set-a-react4',reactionB:'irl-cast-set-b-react4',reactionC:'irl-cast-set-c-react4',originalWalkA:'irl-cast-original-a-walk4',originalWalkB:'irl-cast-original-b-walk4',originalBackA:'irl-cast-original-a-back4',originalBackB:'irl-cast-original-b-back4',emotes:'irl-dgg-emotes6',dggl:'irl-dggl-v088e'})){
+for(const [id,path] of Object.entries({hall:'irl-hall',cast:'irl-cast',walk:'irl-cast-walk',pose0:'irl-host-poses',pose1:'irl-photographer-poses',pose3:'irl-security-poses',additionalA:'irl-cast-set-a',additionalB:'irl-cast-set-b',additionalC:'irl-cast-set-c',walkA:'irl-cast-set-a-walk4',walkB:'irl-cast-set-b-walk4',walkC:'irl-cast-set-c-walk4',backA:'irl-cast-set-a-back4',backB:'irl-cast-set-b-back4',backC:'irl-cast-set-c-back4',stageA:'irl-cast-stage-a',stageB:'irl-cast-stage-b',reactionA:'irl-cast-set-a-react4',reactionB:'irl-cast-set-b-react4',reactionC:'irl-cast-set-c-react4',originalWalkA:'irl-cast-original-a-walk4',originalWalkB:'irl-cast-original-b-walk4',originalBackA:'irl-cast-original-a-back4',originalBackB:'irl-cast-original-b-back4',emotes:'irl-dgg-emotes11-v088s',dggl:'irl-dggl-emote-v088s'})){
  const img=new Image();img.src='/assets/'+path+'.webp';assets[id]=img;
 }
 const extra=[assets.additionalA,assets.additionalB,assets.additionalC],walk4=[assets.walkA,assets.walkB,assets.walkC],back4=[assets.backA,assets.backB,assets.backC],stage=[assets.stageA,assets.stageB],reactions=[assets.reactionA,assets.reactionB,assets.reactionC],originalWalk=[assets.originalWalkA,assets.originalWalkB],originalBack=[assets.originalBackA,assets.originalBackB];
@@ -41,7 +41,7 @@ newCast.back.src='/assets/irl-cast%20new%20sheet%201.png';
 newCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
 newCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8r · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8s · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
@@ -130,7 +130,7 @@ function update(){
   const el=q(id),raw=String(value??'');if(el.dataset.richValue===raw)return;el.dataset.richValue=raw;
   const fragment=document.createDocumentFragment();
   for(const token of String(value??'').split(/(dggL)/g)){
-   if(token==='dggL'){const img=document.createElement('img');img.src='/assets/irl-dggl-v088e.webp';img.alt='dggL';img.className='irl-inline-emote';fragment.appendChild(img);}
+   if(token==='dggL'){const img=document.createElement('img');img.src='/assets/irl-dggl-emote-v088s.webp';img.alt='dggL';img.className='irl-inline-emote';fragment.appendChild(img);}
    else if(token)fragment.appendChild(document.createTextNode(token));
   }
   el.replaceChildren(fragment);

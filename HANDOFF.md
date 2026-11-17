@@ -1,9 +1,19 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8r stage-front foot-space semicircle, clerk sizing, gate glass, dialogue and animation recovery; q is the prior preview.
-**Working branch:** `feature/v088r-stage-front-crowd-gates-stability` (forked from `feature/v088q-concert-pit-arcade-interactions`).
+**Current candidate:** v0.8.8s TypeError crowd-recovery patch, source-painted gate animation, transparent 11-emote library, new full-resolution clerk and enlarged live stage broadcast. v0.8.8r is the previous preview.
+**Working branch:** `feature/v088s-freeze-gates-assets` (forked from `feature/v088r-stage-front-crowd-gates-stability`).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8r targeted/current Node regression sweep **69/69 passing** (`venue_v088r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Local Chromium visual smoke was blocked by the executor's `socket(): Operation not permitted` sandbox restriction; Vercel preview browser/mobile visual acceptance remains outstanding.
+**Verification:** v0.8.8s targeted/current Node regression sweep **74/74 passing** (`venue_v088s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Local Chromium smoke fails to start due to executor `socket(): Operation not permitted`, unrelated to game code; Vercel preview browser/mobile visual acceptance remains outstanding.
+
+## v0.8.8s — owner review candidate
+
+- **Confirmed freeze root cause:** The owner's browser stack points to `IRLEvent.crowdTick`, not permissions-policy console warnings or favicon 404. Back-to-back debates could save a transitional `target:'return'` as an attendee's permanent destination, eventually attempting to destructure `undefined`. Preserve original activity across rapid debate transitions, repair stale `debate`/`return` targets, and validate all crowd movement destinations before unpacking. New tests reproduce overlapping debates, invalid target payloads and successful recovery; the existing RAF loop only handled symptoms.
+- **Illustrated gate only:** Remove the replacement glass/metal moving-door graphics. Animate the actual gate rail from the single baked plate by restoring its underlying carpet and clipping visible original rail portions on either side as it opens/closes. Separate *permanent* fence infill appears only in the small non-door gaps between planters/scanners/counter; these sections do not move with the gate.
+- **11 newly illustrated transparent community emotes:** A 4×3 WebP atlas adds `DuckerZ`, `AngelThump`, `ShrimpleAs`, `COPIUM`, and `Abathur` to the previous six. Rebuilt `dggL` uses a heart-hugging avatar rather than an external screenshot. Circular backing/masks/outlines are removed; chat-inline token uses a standalone transparent WebP cutout.
+- **Ticket clerk quality:** New transparent 1774×887 4×2 full-resolution walking/idle/rear sheet, cropped to opaque character area and rendered with quality minification at 28×43 game units, improving proportion and fidelity while retaining the simulated gate-desk patrol and scan beat.
+- **Stage artifacts & broadcast:** Floating stage feedback cards remain suppressed *after* debate ends, preventing delayed teal strips over the challenger. Debate live camera expands its image region to the interior bezel of the illustrated TV; audience shot remains captured from the actual world before AR dialogue/selection overlays.
+- **Not changed:** Claw mechanics, stage-crowd arc geometry, game difficulty and permanent production. Reserved for future discussion: mini-boss guest debaters with their own introductions, unique dialogue and stage showdown.
+- **QA / release:** `tests/venue_v088s.test.mjs` plus updated affected entrance/clerk tests. Run `node --test tests/venue_v088{...}.test.mjs tests/venue_modular_v088b.test.mjs`, review `/irl-sandbox` on desktop and iPhone, and update this handoff when owner approves. The earlier integrated gate/TV tests were intentionally revised to reject duplicate door panels rather than insist on the obsolete separate glass overlays.
 
 ## v0.8.8r — active candidate, owner playtest required
 

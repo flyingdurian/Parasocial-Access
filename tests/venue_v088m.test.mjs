@@ -100,14 +100,14 @@ test('claw arm lifts a real dggL art sprite and drops it through prize chute',()
  assert(delivered.calls.some(x=>x[0]==='image'&&x[1]===assets.mascot&&x[3]>=cabinet.y+34),'real prize exits in cabinet chute');
 });
 
-test('sliding optical doors close both lanes at idle without full-height cages',()=>{
+test('original painted rail remains the only animated door in both idle lanes',()=>{
  const c=context();
  const event={elapsed:6,clawMachine:{activeUntil:0},gateControllers:{left:{openedAt:-1,openUntil:0},right:{openedAt:-1,openUntil:0}},departures:[]};
  drawModularVenue(c,assets,event,6000,{});
  for(const gate of Object.values(MODULAR_GATES)){
   const lane=gate.lane;
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[2]===lane.top+5&&x[3]>5&&x[4]===16),'waist-high left glass closes lane');
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2-.5))<1.2&&x[2]===lane.top+5&&x[3]>5&&x[4]===16),'waist-high right glass closes lane');
+  assert(c.calls.some(x=>x[0]==='image'&&x[1]===assets.plate&&x.length===10),'plate fragments animate original painted door');
+  assert(!c.calls.some(x=>x[0]==='rectFill'&&x[1]>=lane.left&&x[1]<lane.right&&x[4]>=16),'no extra glass or grille overlay is drawn');
  }
 });
 
@@ -117,7 +117,8 @@ test('ticket support staff really walk and clerk animates multiple service poses
  for(let i=0;i<180;i++){event.tick(.1);walked||=Math.abs(worker.x-startX)>3;}
  assert(walked,'staff walks via existing directional atlas frames');
  const c1=context(),c2=context();
- const clerk={ticketClerk:{x:179,y:153,lastScanAt:-20},elapsed:.1};
- drawTicketClerk(c1,assets,clerk);clerk.elapsed=.7;drawTicketClerk(c2,assets,clerk);
+ const clerk={ticketClerk:{x:179,y:153,lastScanAt:-20,walking:true,direction:'south'},elapsed:.1};
+ const illustrated={...assets,clerkWalk:{naturalWidth:1774,naturalHeight:887,complete:true}};
+ drawTicketClerk(c1,illustrated,clerk);clerk.elapsed=.7;drawTicketClerk(c2,illustrated,clerk);
  assert.notDeepEqual(c1.calls.filter(x=>x[0]==='image'),c2.calls.filter(x=>x[0]==='image'),'counter worker has changing keyframe offsets');
 });
