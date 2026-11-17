@@ -519,3 +519,18 @@
 
 /* v0.8.8f: mobile and desktop focus cards avoid the live stage speaker. */
 .irl-world-speech.irl-detached:after{display:none}
+
+/* v0.8.8o: on narrow screens the full decision is a readable card under the
+   uncropped stage, while the focused actor keeps its in-world head marker. */
+.irl-mobile-review{display:none;background:#fff5e3;color:#302740;padding:10px 12px;margin:0;border-top:2px solid #e8aeae;font:700 12px/1.35 ui-monospace,monospace}
+.irl-mobile-review[hidden]{display:none!important}
+.irl-mobile-review>div{display:flex;align-items:baseline;justify-content:space-between;gap:9px}
+.irl-mobile-review strong{font-size:13px}.irl-mobile-review b{font-size:11px;color:#8d416d}
+.irl-mobile-review p{font-weight:850;margin:4px 0;font-size:12px;line-height:1.4}
+.irl-mobile-review small{color:#746177;font-size:10px}
+@media(max-width:660px){
+ .irl-canvas-wrap{aspect-ratio:384/216}
+ .irl-canvas-wrap #irl-canvas{position:static;width:100%!important;height:100%;max-width:100%;left:auto!important}
+ .irl-world-speech{display:none!important}
+ .irl-mobile-review:not([hidden]){display:block}
+}

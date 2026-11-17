@@ -1,9 +1,19 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8n movement, crowd, booth, gate, cast and debate polish.  
-**Working branch:** `feature/v088n-movement-crowd-cast` (forked from `recovery/v088i-arcade-debates` at `53e47d79`).  
+**Current candidate:** v0.8.8o mobile dialogue and staged fan-interaction polish; n remains the prior preview.
+**Working branch:** `feature/v088o-mobile-stage-interactions` (forked from `feature/v088n-movement-crowd-cast` at `7b2030d`).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** 37/37 focused venue checks passing (v088b, k, l, m, n). Legacy full suite has not been claimed green. Git-integrated Vercel preview deployments are enabled for this feature branch.
+**Verification:** v0.8.8n focused 37/37, v0.8.8o additional 5/5. Some superseded v082–v087 tests still assert old stage/queue geometry and fail; the entire historic suite is **not** green. Git-integrated Vercel preview deployments are enabled for this feature branch.
+
+## v0.8.8o — mobile-owner QA corrections, pending device acceptance
+
+- **Mobile decision legibility:** On narrow iPhones, the selected visitor has a bright *in-world* head marker, while the full decision text and cue appear in a dedicated readable card immediately below the uncropped venue canvas and above the action buttons. Both `/irl-sandbox` and the full game use this split; prompts no longer cover the entrance/gates. Existing desktop world-space card behavior is unchanged. The isolated sandbox's graphics and chat-mute toggles now sit in the normal layout instead of floating across the score HUD.
+- **Stage speech ownership:** Removed the 140–210 hard-clamped horizontal speech lane. Debater and Destiny each get their own card centered just above their actual head, with correct pointers; TV bezel avoidance moves the card upward (not sideways). Speaker placement is pre-reserved before ambient/debate shouts to prevent collisions. If a spectator shout has no valid nearby position it is omitted rather than painted over a reserved prompt.
+- **Actual stage crowd:** 31 concert-style targets sit directly at the real stage apron and wings. The first nineteen occupy tight front and second rows (roughly y83–124), not the entrance floor y150–172. Movement, enthusiastic poses, return-to-prior-activities and 15–20-second debates persist.
+- **Fan events:** Autograph (5.1 s) moves Destiny to `autographHost=[221,29]` next to `autographGuest=[244,29]`, with a drawn signed print and moving pen; joint photo (5.4 s) places them at `[259,27]` and `[283,27]`, behind the baked stage tripod, with posing and a delayed camera flash. Both begin approaching one another while the fan is still climbing the stairs. Stage TV receipts remain at completion.
+- **Claw chute:** The single collectible's *center*, release gripper, and gravity fall now share the artwork's center dispenser x≈179, from glass down to slot. No second toy copy remains in the cabinet.
+- **QA:** `tests/venue_v088o.test.mjs` covers audience geometry, head ownership and TV overlap, stage-duration/duo positions, plush centerline and responsive cards. 5/5 passing. Historic venue test sweep: 70/78 pass, 8 pre-existing outdated assertions (v082–v087 old plate, queue, timing), not suitable as release gate. Targeted v088b, k, l, m, n regressions still 37/37. Browser on-device visual verification not yet accepted.
+- **Gate:** Do not promote production before owner inspects iPhone stage dialogue, entrance review placement, crowd congregation, duo signing/photos and physical claw-slot fall.
 
 ## v0.8.8n — implemented, awaiting visual acceptance
 

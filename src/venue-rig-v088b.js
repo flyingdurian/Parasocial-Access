@@ -255,14 +255,18 @@ function drawBoothActivity(ctx,event,assets){
   const cabinet=MODULAR_PROPS.claw;
   const glass={x:cabinet.x+2,y:cabinet.y+9,w:cabinet.w-4,h:22};
   const p=Math.max(0,Math.min(1,1-(event.clawMachine.activeUntil-event.elapsed)/2.3));
-  const pickupX=glass.x+glass.w*.47,dropX=cabinet.x+17;
-  const headX=pickupX+(p>.58?Math.min(1,(p-.58)/.20)*(glass.w*.28):0);
+  // The pictured center chute is centered at roughly x=179 in 384-space.
+  // Both the moving claw and the falling plush share that same centerline;
+  // drawing the toy at x=182 had placed its CENTER outside the chute.
+  const toyW=6.4,chuteCenterX=cabinet.x+cabinet.w*.51;
+  const pickupX=glass.x+glass.w*.30,dropX=chuteCenterX-toyW/2;
+  const headX=pickupX+(p>.58?Math.min(1,(p-.58)/.20)*(chuteCenterX-pickupX):0);
   const headY=p<.20?glass.y+3:p<.40?glass.y+3+(p-.20)/.20*12:p<.58?glass.y+15-(p-.40)/.18*12:glass.y+3;
   const carried=p>=.40&&p<.78;
   ctx.save();ctx.beginPath();ctx.rect(glass.x,glass.y,glass.w,glass.h);ctx.clip();
   ctx.fillStyle='rgba(147,251,255,.12)';ctx.fillRect(glass.x+1,glass.y+1,glass.w-2,glass.h-2);
   if(p<.78&&assets?.mascot?.naturalWidth){
-   const toyX=carried?headX-3:pickupX-3,toyY=carried?headY+4:glass.y+glass.h-7;
+   const toyX=carried?headX-toyW/2:pickupX-toyW/2,toyY=carried?headY+4:glass.y+glass.h-7;
    ctx.drawImage(assets.mascot,toyX,toyY,6.4,7);
   }
   const grip=carried?1.6:3.1;
@@ -272,9 +276,10 @@ function drawBoothActivity(ctx,event,assets){
   ctx.fillRect(headX+2.1-grip*.38,headY+2,1.2,2.8);
   ctx.restore();
   if(p>=.78&&assets?.mascot?.naturalWidth){
-   ctx.save();ctx.beginPath();ctx.rect(cabinet.x+6,cabinet.y+34,cabinet.w-9,12);ctx.clip();
-   const fall=Math.min(1,(p-.78)/.18),dropY=cabinet.y+33+fall*6;
-   ctx.drawImage(assets.mascot,dropX,dropY,6.4,7);
+   ctx.save();ctx.beginPath();ctx.rect(cabinet.x+5,cabinet.y+7,cabinet.w-10,39);ctx.clip();
+   const fall=Math.min(1,(p-.78)/.20),gravity=fall*fall*(3-2*fall);
+   const dropY=glass.y+8+gravity*(cabinet.y+39-(glass.y+8));
+   ctx.drawImage(assets.mascot,dropX,dropY,toyW,7);
    ctx.restore();
   }
  }

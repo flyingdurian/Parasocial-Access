@@ -217,8 +217,14 @@ export function venueStationApproachPoint(name,id=0,visit=0){
  }
  return station;
 }
-// A floor-level semicircular ring around the stage, avoiding the real rope and stairs.
-const DEBATE_AUDIENCE_SPOTS=Object.freeze([[157,102],[168,114],[182,129],[197,139],[214,146],[230,151],[246,154],[263,153],[279,149],[295,144],[311,135],[325,121],[337,111],[341,98],[178,116],[317,111],[146,115],[159,133],[173,150],[192,161],[214,169],[233,172],[252,171],[273,165],[293,159],[312,149],[330,137],[343,124],[350,109],[152,96],[335,101]]);
+// Concert-style standing room immediately at the STAGE APRON, not a loose
+// audience at the front check-in desk. First 19 slots fill the closest two
+// bands so the crowd visibly converges even in the first level.
+const DEBATE_AUDIENCE_SPOTS=Object.freeze([
+ [168,83],[184,95],[203,91],[221,99],[240,94],[259,101],[278,94],[297,102],[316,94],[335,103],[345,83],
+ [175,112],[193,122],[213,116],[233,124],[253,116],[273,124],[293,116],[313,124],
+ [333,122],[159,102],[187,134],[207,137],[227,139],[247,137],[267,140],[287,137],[307,139],[327,137],[348,116],[152,88]
+]);
 export function venueDebateAudienceSpot(index){
  const point=DEBATE_AUDIENCE_SPOTS[((index%DEBATE_AUDIENCE_SPOTS.length)+DEBATE_AUDIENCE_SPOTS.length)%DEBATE_AUDIENCE_SPOTS.length];
  return isVenueWalkable(...point)?[...point]:snapVenue(...point);

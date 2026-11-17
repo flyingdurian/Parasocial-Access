@@ -204,7 +204,7 @@ export class IRLEvent {
     }
     continue;
    }
-   // Every free spectator rushes to the real stage semicircle and walks back
+   // Every free spectator rushes to the stage-front concert ring and walks back
    // to the exact location/activity saved before the debate.
    if(hypeDebate&&!person.photoPhase){
     if(!person.debateWatching){
@@ -435,8 +435,8 @@ export class IRLEvent {
    if(g.stageVisit==='approach'){
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,24))g.stageVisit='climbStairs';
    }else if(g.stageVisit==='climbStairs'){
-    if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:g.fanKind==='photo'?VENUE_STAGE.photoGuest:VENUE_STAGE.exchange),dt,23)){
-     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):3.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.38;g.exchangeAction=g.debater?'argue':'cheer';g.walking=false;g.facing=g.debater?-1:1;
+    if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:g.fanKind==='photo'?VENUE_STAGE.photoGuest:VENUE_STAGE.autographGuest),dt,23)){
+     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):g.fanKind==='photo'?5.4:5.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.38;g.exchangeAction=g.debater?'argue':g.fanKind==='autograph'?'point':'cheer';g.walking=false;g.facing=g.debater?-1:1;
      this.hostMood=g.debater?'argue':'talk';this.hostUntil=this.elapsed+g.exchangeClock;
      this.effects.push({x:217,y:78,text:g.debater?'LIVE DEBATE!':g.fanKind==='autograph'?'✦ AUTOGRAPH!':'♥ PHOTO OP!',color:'#ffeaa5',ttl:1.5});
      this.effects.push({x:200,y:93,text:loreStageLine(g,0),color:'#ffedb4',ttl:1.7});
@@ -476,9 +476,9 @@ export class IRLEvent {
     // The active 15–20s battle NEVER drops into neutral talk/nod/idle poses.
     // Authored argument, heckle and point poses alternate out of phase.
     const clash=Math.floor((g.exchangeDuration-g.exchangeClock)/.57);
-    g.exchangeAction=g.debater?['argue','point','heckle'][clash%3]:(beat<.32?'cheer':beat<.7?'talk':'laugh');
-    this.hostMood=g.debater?['point','argue','heckle'][clash%3]:(beat<.3?'cheer':beat<.78?'talk':'nod');this.hostUntil=this.elapsed+.3;
-    if(!g.debater&&g.fanKind==='photo'&&beat>.68&&!g.photoTaken){
+    g.exchangeAction=g.debater?['argue','point','heckle'][clash%3]:g.fanKind==='autograph'?(beat<.72?'point':'cheer'):(beat<.27?'point':beat<.77?'cheer':'laugh');
+    this.hostMood=g.debater?['point','argue','heckle'][clash%3]:g.fanKind==='autograph'?(beat<.72?'point':'nod'):(beat<.8?'cheer':'nod');this.hostUntil=this.elapsed+.3;
+    if(!g.debater&&g.fanKind==='photo'&&beat>.73&&!g.photoTaken){
      g.photoTaken=true;this.cameraFlashes.push({x:VENUE_STAGE.tripod[0]+14,y:VENUE_STAGE.tripod[1]+8,ttl:.34},{x:g.x+14,y:g.y+5,ttl:.22});
     }
     if(g.exchangeClock<=0){
@@ -555,9 +555,10 @@ export class IRLEvent {
   }
   this.dispatchOrders();
   const performance=stageAction(this.phase,this.elapsed,this.visitors.filter(g=>!g.pending).length,this.elapsed<this.hostUntil?this.hostMood:'idle');
-  const photoSession=this.departures.some(g=>g.stageVisit==='exchange'&&g.fanKind==='photo');
-  const stageTarget=photoSession?{x:VENUE_STAGE.photoHost[0],y:VENUE_STAGE.photoHost[1]}:stagePosition(performance,this.elapsed,this.departures.some(g=>['approach','climbStairs','exchange'].includes(g.stageVisit)));
-  const dx=stageTarget.x-this.hostX,dy=stageTarget.y-this.hostY,d=Math.hypot(dx,dy),step=Math.min(d,dt*13);
+  const fanSession=this.departures.find(g=>!g.debater&&['approach','climbStairs','exchange'].includes(g.stageVisit));
+  const rendezvous=fanSession?(fanSession.fanKind==='photo'?VENUE_STAGE.photoHost:VENUE_STAGE.autographHost):null;
+  const stageTarget=rendezvous?{x:rendezvous[0],y:rendezvous[1]}:stagePosition(performance,this.elapsed,this.departures.some(g=>['approach','climbStairs','exchange'].includes(g.stageVisit)));
+  const dx=stageTarget.x-this.hostX,dy=stageTarget.y-this.hostY,d=Math.hypot(dx,dy),step=Math.min(d,dt*(rendezvous?27:13));
   this.hostX+=d?dx/d*step:0;this.hostY+=d?dy/d*step:0;this.hostWalking=d>1.1;
   if(this.session==='standard'&&this.clock<=0&&this.mode==='playing'&&!decisionsDone){this.failure='The event ended with an unresolved guest queue.';this.end(false);}
   if(this.mode==='playing'&&decisionsDone&&!this.departures.some(g=>g.stageVisit&&g.stageVisit!=='depart')){

@@ -4,7 +4,9 @@
 export const MODULAR_VENUE_W=384;
 export const MODULAR_VENUE_H=216;
 export const MODULAR_STAGE=Object.freeze({
- staging:[253,78],stairs:[249,61],exchange:[253,44],debate:[285,32],photoGuest:[247,44],photoHost:[207,32],floor:[185,120],tripod:[300,61]
+ staging:[253,78],stairs:[249,61],exchange:[253,44],debate:[285,32],
+ autographGuest:[244,29],autographHost:[221,29],
+ photoGuest:[283,27],photoHost:[259,27],floor:[185,120],tripod:[300,61]
 });
 export const MODULAR_GATES=Object.freeze({
  left:Object.freeze({id:'left',spawn:[92,225],check:[92,176],inside:[92,137],crossing:[92,178],panel:[92,196],art:{x:71,y:180,w:68,h:36},lane:{left:85,right:124,top:183,bottom:216}}),

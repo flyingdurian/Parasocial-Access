@@ -109,23 +109,18 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  const guest=event.departures?.find(g=>g.stageVisit==='exchange');
  const dialogue=stageDialogueBeat(guest);if(!dialogue)return null;
  const person=dialogue.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
- // Stage speech is a dedicated overlay, always within a short pointer distance
- // of its owner. The generic avoidance solver previously sent it to x=3.
+ // A stage speaker owns the bubble ABOVE THEIR OWN HEAD. The earlier hard
+ // clamp to x=140..210 teleported the challenger dialogue across the set.
  const anchorX=person.x+16,anchorY=person.y+(dialogue.speaker==='destiny'?1:5),w=60;
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';
  ctx.font='bold 4.6px sans-serif';
  const lines=wrapMeasuredText(ctx,dialogue.text,w-8,2);
  const h=11+Math.max(1,lines.length)*6;
- const placed={
-  // Use the left-of-TV speech lane. It stays above the speaker but avoids
-  // both the live LCD and the heads of stage guests.
-  x:clamp(anchorX-w+8,140,210),
-  y:clamp(anchorY-h-7,2,216-h-3),w,h
- };
- // A guest on stage stands partly in front of the LCD. Put their speech
- // above its bezel instead of painting a white card over the broadcast.
+ const placed={x:clamp(anchorX-w/2,2,382-w),y:clamp(anchorY-h-8,2,213-h),w,h};
+ // Use the narrow strip ABOVE the screen bezel when a raised-stage actor
+ // stands directly in front of the televised backdrop.
  if(placed.x<MODULAR_TV_BOUNDS.x+MODULAR_TV_BOUNDS.w&&placed.x+placed.w>MODULAR_TV_BOUNDS.x&&placed.y<MODULAR_TV_BOUNDS.y+MODULAR_TV_BOUNDS.h&&placed.y+placed.h>MODULAR_TV_BOUNDS.y){
-  placed.y=Math.max(2,MODULAR_TV_BOUNDS.y-placed.h-2);
+  placed.y=Math.max(2,MODULAR_TV_BOUNDS.y-placed.h-3);
  }
  // Reserve only for later speech, never let TV/ambient overlays displace a speaker.
  layout?.reserve(placed);
@@ -143,6 +138,49 @@ export function drawStageConversation(ctx,event,layout=null,mascot=null){
  drawBubblePointer(ctx,{x,y,w,h},anchorX,anchorY,background);
  ctx.restore();
  return placed;
+}
+
+// Reserve the actual speaker's area before canvas crowd/chat bubbles place
+// themselves; drawing the stage conversation later keeps it above sprites.
+export function reserveStageSpeech(layout,event){
+ const guest=event?.departures?.find(g=>g.stageVisit==='exchange');
+ if(!guest||!layout)return null;
+ const turn=stageDialogueBeat(guest);
+ const speaker=turn?.speaker==='destiny'?{x:event.hostX,y:event.hostY}:guest;
+ if(!speaker)return null;
+ const ax=speaker.x+16,ay=speaker.y+(turn.speaker==='destiny'?1:5);
+ const rect={x:clamp(ax-30,2,322),y:clamp(ay-31,2,180),w:60,h:26};
+ if(rect.x<MODULAR_TV_BOUNDS.x+MODULAR_TV_BOUNDS.w&&rect.x+rect.w>MODULAR_TV_BOUNDS.x&&rect.y<MODULAR_TV_BOUNDS.y+MODULAR_TV_BOUNDS.h&&rect.y+rect.h>MODULAR_TV_BOUNDS.y)rect.y=2;
+ return layout.reserve(rect);
+}
+
+// Diegetic, unmistakably different 5-second fan encounters: an actual print
+// and pen for signing, a posed duo facing the physical tripod for photos.
+export function drawStageFanInteraction(ctx,event,t){
+ const guest=event?.departures?.find(g=>g.stageVisit==='exchange'&&!g.debater);
+ if(!guest)return false;
+ const progress=Math.max(0,Math.min(1,1-guest.exchangeClock/Math.max(.1,guest.exchangeDuration)));
+ const cx=(event.hostX+guest.x+30)/2,cy=Math.max(event.hostY,guest.y)+21;
+ ctx.save();
+ if(guest.fanKind==='autograph'){
+  const x=cx-7,y=cy;
+  ctx.save();ctx.translate(x,y);ctx.rotate(-.09);
+  ctx.fillStyle='#fff2de';ctx.fillRect(0,0,14,10);
+  ctx.strokeStyle='#80587b';ctx.lineWidth=.65;ctx.strokeRect(.4,.4,13.2,9.2);
+  ctx.strokeStyle='#6c3a9c';ctx.beginPath();ctx.moveTo(3,5);
+  ctx.quadraticCurveTo(4+progress*4,2,9,4+Math.sin(progress*9)*1.2);ctx.stroke();
+  ctx.restore();
+  if(progress<.8){ctx.save();ctx.translate(x+11-progress*7,y-5+progress*4);ctx.rotate(.3);ctx.fillStyle='#f6dc7e';ctx.fillRect(0,0,1.3,10);ctx.fillStyle='#253053';ctx.fillRect(0,7,1.3,3);ctx.restore();}
+  if(progress>.78){ctx.fillStyle='#f9d7a5';ctx.font='bold 5px sans-serif';ctx.fillText('SIGNED ✦',cx-13,cy-8);}
+ }else{
+  ctx.textAlign='center';ctx.fillStyle='#fdf1b8';ctx.font='bold 6px sans-serif';
+  if(progress>.26&&progress<.91)ctx.fillText('♥ SAY CHEESE ♥',cx,Math.min(event.hostY,guest.y)-5);
+  // The venue plate already depicts the tripod at stage right; only animate
+  // its record light, never spawn a second hovering camera asset.
+  ctx.fillStyle=progress>.71&&progress<.81?'#fff6d3':'#ef6d96';
+  ctx.fillRect(VENUE_LED_SCREEN.x+81,56,2,2);
+ }
+ ctx.restore();return true;
 }
 
 // Shared bounded transaction/decision feedback; never overflow the hall LCD

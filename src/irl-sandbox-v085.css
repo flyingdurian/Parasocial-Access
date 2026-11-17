@@ -54,3 +54,15 @@ body.irl-sandbox{background:#0d1224;color:#fff1df;font-family:system-ui,sans-ser
 
 /* v0.8.8f: when a focus card must dodge an active speaker, omit a misleading tail. */
 .harness-prompt.irl-detached:after{display:none}
+
+/* v0.8.8o: the review stays readable near the thumb controls on iPhone;
+   the highlighted actor still owns an in-world ◉ above their head. */
+.harness-mobile-prompt{display:none;background:#fff5e3;color:#302740;border:2px solid #cd9cbd;border-radius:9px;padding:9px 12px;margin:7px 0 0;box-shadow:0 3px 0 #53385c;font-size:12px;line-height:1.35}
+.harness-mobile-prompt[hidden]{display:none!important}
+.harness-mobile-prompt>div{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.harness-mobile-prompt b{font-weight:900}.harness-mobile-prompt span{color:#854b72;font-weight:850;white-space:nowrap}
+.harness-mobile-prompt p{margin:4px 0;font-weight:800}.harness-mobile-prompt small{font-size:11px;color:#67576d}
+.harness-mobile-prompt .irl-inline-emote{height:1em;width:1em;object-fit:contain;vertical-align:-.2em}
+body.irl-sandbox #irl-graphics-shell{position:relative;top:auto;right:auto;margin:0 0 9px;max-width:100%;display:flex;justify-content:flex-end;z-index:40}
+body.irl-sandbox #irl-graphics-panel{top:calc(100% + 3px)}
+@media(max-width:650px){.harness-prompt{display:none!important}.harness-mobile-prompt:not([hidden]){display:block}.harness-controls{margin-top:12px}}

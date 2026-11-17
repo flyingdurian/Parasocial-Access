@@ -203,7 +203,9 @@ export function drawDebateShout(ctx,person,layout=null){
  ctx.save();ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.font='bold 5.5px system-ui,sans-serif';
  const width=Math.min(85,Math.max(...parts.map(s=>ctx.measureText(s).width))+10),height=7+parts.length*7;
  const x=person.x+14,y=person.y-5-Math.min(6,elapsed*6);
- const box=layout?.place(x,y,width,height)||{x:Math.max(2,Math.min(382-width,x-width/2)),y:Math.max(1,y-height-3),w:width,h:height};
+ // Never bypass a declined collision placement: the fallback used to render
+ // an unreserved shout on top of its speaker or the selected decision card.
+ const box=layout?layout.place(x,y,width,height):{x:Math.max(2,Math.min(382-width,x-width/2)),y:Math.max(1,y-height-3),w:width,h:height};
  if(!box){ctx.restore();return null;}
  ctx.globalAlpha=Math.max(0,Math.min(1,ttl/.3));
  const angry=person.animation==='argue'||person.animation==='heckle';
