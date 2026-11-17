@@ -76,6 +76,8 @@ test('photo guest physically poses inside the booth before camera flashes',()=>{
  [guest.x,guest.y]=venueStationApproachPoint('photo',guest.id,guest.visits);
  guest.station='wander';guest.target='photo';guest.dwell=0;
  event.crowdTick(.1);
+ assert.equal(guest.photoPhase,'enter','doorway engagement does not instantly trigger camera');
+ for(let i=0;i<50&&guest.photoPhase!=='pose';i++){event.elapsed+=.1;event.crowdTick(.1);}
  assert(guest.photoPoseUntil>event.elapsed);
  assert(event.stationActivity.photo&&!event.stationActivity.photo.flashed);
  assert(!event.cameraFlashes.some(f=>f.x===360),'no picture of empty booth');
@@ -98,14 +100,14 @@ test('claw arm lifts a real dggL art sprite and drops it through prize chute',()
  assert(delivered.calls.some(x=>x[0]==='image'&&x[1]===assets.mascot&&x[3]>=cabinet.y+34),'real prize exits in cabinet chute');
 });
 
-test('metal gate frames attach to scanner boundaries while opening fully',()=>{
+test('gate scanner arms remain low and retract into fixed pictured posts',()=>{
  const c=context();
  const event={elapsed:6,clawMachine:{activeUntil:0},gateControllers:{left:{openedAt:-1,openUntil:0},right:{openedAt:-1,openUntil:0}},departures:[]};
  drawModularVenue(c,assets,event,6000,{});
  for(const gate of Object.values(MODULAR_GATES)){
   const lane=gate.lane;
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.left-2))<.2&&x[3]<=4),'fixture has left scanner connector');
-  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-.8))<.2&&x[3]<=4),'fixture has right scanner connector');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-lane.left)<.2&&x[3]<=4),'fixture has left scanner connector');
+  assert(c.calls.some(x=>x[0]==='rectFill'&&Math.abs(x[1]-(lane.right-(lane.right-lane.left)/2+1))<1.2&&x[3]<=4),'fixture has right scanner connector');
  }
 });
 
