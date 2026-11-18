@@ -1,224 +1,48 @@
-# FeedFall: Rush Hour — Active Engineering Handoff
+# FeedFall — ACTIVE HANDOFF (read this first)
+Updated: 2026-11-17. Keep this file under 120 lines. Replace outdated status; do not append a changelog.
 
-## v0.8.9 Rival Invasions lab — separate, unmerged handoff
+## Branches and release safety
+- Accepted game baseline: `feature/v088v-sprite-tv-polish` at `6afc2c2` (v0.8.8v).
+- Isolated rival prototype: `feature/v089-rival-invasion-lab` at `8645558`.
+- This documentation-only cleanup candidate: `chore/context-hygiene-v089` (forked from rival lab). **Not merged or deployed**.
+- Do not infer that `main` is equivalent to the accepted v0.8.8v baseline. Do not merge/publish without owner approval.
 
-The independent branch `feature/v089-rival-invasion-lab` is fast-forwarded to the
-accepted v0.8.8v source (`6afc2c2`) and adds **only** the isolated battle lab:
-`RIVAL_INVASIONS_V089.md`, six original transparent PNG 4×4 rival atlases under
-`assets/rivals/v089/`, one battle-stage concept image, a deterministic battle
-engine, standalone `rival-lab.html` browser prototype, and v0.8.9 lab tests.
+## Current goal
+Lead developer integrates the six-rival v0.8.9 invasion/battle prototype **only after visual QA and explicit feature-flag control**. Preserve all v0.8.8v mechanics, venue art, and behavior. The rival lab is NOT connected to the live hall.
 
-**Not integrated into the venue, not merged, not production deployed.** No
-v0.8.8v gameplay, gate, stage camera, sound or save-code changes were made.
-The lead developer should begin with `RIVAL_INVASIONS_V089.md` for the precise
-roster, relationship boundaries (friends compete hard; Hasan is scorched-earth),
-mechanics, venue freeze/return contract, assets, and pre-merge acceptance gates.
-Run the standalone lab via `python3 -m http.server` and `/rival-lab.html`.
-Current combined focused Node regression: **99/99 pass**. Browser rendering is
-unverified here because Chromium cannot open its process socket; the lead
-developer must complete desktop and iPhone visual QA before integration.
+## Minimal file map
+- `index.html`, `src/`: full game.
+- `irl-sandbox.html`, `src/irl-sandbox-v085.js`: isolated hall.
+- `rival-lab.html`, `src/rival-lab-v089.js`, `src/rival-lab-v089.css`: isolated rival battle demo.
+- `src/rival-invasions-v089.js`: deterministic fight engine + roster.
+- `assets/rivals/v089/`: six 4×4 transparent PNG rival atlases and one arena concept.
+- `RIVAL_INVASIONS_V089.md`: **single v0.8.9 design / integration spec**.
+- `tests/rival_invasions_v089.test.mjs`: lab regression checks.
+- `tests/venue_v088v.test.mjs`: latest accepted venue regression checks; keep older tests for regression reference.
 
-**Current candidate:** v0.8.8v debate-cam and sprite-bleed correction preview, based on v0.8.8u `926562e`. The owner's accepted painted gate door design and existing cosplayer sheets remain unchanged.
-**Working branch:** `feature/v088v-sprite-tv-polish` (parent: v0.8.8u `926562e`; remote parent `6429aa1`).
-**Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8v targeted/current Node regression sweep **87/87 passing** (`venue_v088v/u/t/s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Desktop/iPhone visual acceptance still required before production promotion.
+## Nonnegotiable design
+- Rival physically enters by authorized gate and walks to stage, waits until stage interaction clears.
+- Full-screen dramatic VS → dedicated sharp audience-side battle arena → six timed beats (~18s) with player counter buttons and meter special → result → safely restore hall state.
+- Friends Foodshops, Dan Saltman and MrMouton argue competitively with boundaries; Hasan encounter is scorched-earth antagonism, no warm reconciliation.
+- Fictional satirical exchanges only; do not invent real quotes or assert actual results.
+- Keep hall timer/selection/queues immutable during arena; restore once even on errors.
+- Preserve sharp sprite cropping, human-scale stage TV, audience movement, sound mute and touch controls.
 
-## v0.8.8v — stage-front broadcast and sprite cell contamination repair (owner review)
+## Verified at lab commit
+- Six sprite PNGs, arena concept, battle engine, standalone demo and spec committed.
+- Prior handoff reports **99/99 focused Node tests passing**. This is a historical report, NOT fresh verification on this hygiene branch.
+- Browser/iPhone visual QA and hall integration remain **unverified / incomplete**.
 
-- **Readable stage-front live camera:** Stop compressing the entire full-body spectator semicircle into a 94×32-pixel screen. A 376×128 offscreen frame now shows exactly THREE of the SAME currently watching guests from a simulated camera on the stage, using their frontal reaction frames as large waist-up close-ups. Early live QA caught that 11 layered miniatures still collapsed into a pixel blob, so background miniatures were removed. The camera drifts slowly left/right over the 2.7-second broadcast shot. Other camera angles, wide floor camera, host/rival shots, and randomized directing remain intact. No decision/HUD overlays are filmed.
-- **Prelude LCD:** The `DEBATE STARTING SOON` heading is now only a shallow 8-pixel top strip; rival and host broadcast portraits begin at y15 inside a 33-pixel-high clip rather than starting at y24 inside an 18-pixel-high clip. The previous crop was literally chopping off their top heads.
-- **Confirmed source-frame defects:** Auditing transparent character atlases found 18 anomalous top-edge alpha islands in `irl-cast-set-c-back4.webp` (previous row's boots leaking above the new heads), 11 right-edge fragments in `irl-cast-set-b-walk4.webp` (next column leaking), plus extra original-stage-A guard-column sign artifacts. `src/sprite-animation.js` now isolates the affected opaque disconnected frame fragments at atlas load and removes only those pixels in a cached offscreen copy. The immutable source WebPs and proper costumes, held props, hair and frame timing stay intact; no whole-row cropping and no new cast sheet.
-- **Reproducible QA:** `scripts/audit_sprite_cells.py` reports orphaned alpha islands per sprite frame without modifying art; `tests/venue_v088v.test.mjs` asserts removal-target detection on synthetic cases, higher-resolution live B-roll, and complete smaller LCD prelude. **87/87 current focused tests pass.** No Rival Invasions work has been integrated; retain separation until owner accepts the v0.8.8 venue baseline.
+## Minimal verification and reporting
+1. Inspect `git status --short` and focused diff before any edit.
+2. Use scoped tests first: `node --test tests/rival_invasions_v089.test.mjs tests/venue_v088v.test.mjs`.
+3. Broader tests only for impacted modules; capture output to a file and report only totals + failures, NOT full passing logs.
+4. For UI: browser-check `/rival-lab.html` and `/irl-sandbox.html` at desktop + iPhone sizes before marking visual work accepted.
+5. Report only changed files, test summary, blockers, preview URL, commit and branch. Never dump whole files into chat.
+6. Update this short status IN PLACE on each milestone; detailed design changes belong in the relevant spec, not here.
 
-## v0.8.8u — front-depth, clerk silhouette, stage TV director (owner review)
-
-- **Approved doors unchanged:** Original painted rails retain the v0.8.8t opening/closing positions, clipping and animation. The separate small *stationary* metal infill segments now draw on the background plane before walkers, instead of covering characters in the last foreground pass. Painted scanner-post fronts still mask normal interior walkers; ticketed arrivals whose feet are outside the y200 threshold are deferred until after the gate overlay so they appear correctly on the nearer side before crossing.
-- **Foreground counter:** Thin foreground cutout masks for the actual source-painted desk monitor, pens, papers, scanner, sanitizer and plant redraw those physical objects at original plate coordinates (including monitor top above y181). People walk behind desk amenities instead of on top of them.
-- **Clerk fidelity:** Preserve the original full-resolution walking atlas but display at **19×35** rather than the distorted 22×31 shape. The source is tall and narrow; this is a proportion/aspect correction at equivalent human height, not a new character or extra sprite layer.
-- **Stage-facing actors:** The challenger and fan guests explicitly face Destiny (west) while on-stage exchanging debate lines, signing or taking photos. Broadcast challenger camera portraits mirror towards the host.
-- **Live TV:** Replace fixed 1.55-second shot cycle with per-rival deterministic variation changing every ~2.7 seconds, mixing host/rival/two-shots with **stage-front faces-of-crowd** live camera, left/right stage-front sweeps, and the existing wide live floor crop. The new stage-front feed reprojects actual current spectators using their front sprite states without decision rings or speech HUD. Prelude LCD heading is smaller to keep stage heads clear. Photo/autograph end cards persist 4.6 seconds versus 1.9, remaining on the *existing painted TV*.
-- **QA:** New `tests/venue_v088u.test.mjs` checks near/far gate layering, background-only fixed infill, clerk proportions, topmost desk fixtures, stage-facing fan interactions, persistence and live broadcast changes. Previous fixed-angle camera/clerk-size tests were updated. **83/83 focused current tests passed.** No Rival Invasions assets or source merged into this branch.
-- **Rival Invasions integration:** Do NOT merge the co-architect's branch into this candidate before accepting v0.8.8u. After acceptance, branch `feature/v089-rival-invasions` from the accepted base, inspect the architect's exact branch/commit and cherry-pick only the isolated rival-art, cast-registry and battle-system commits. Adapt conflicting shared renderer/venue files manually behind feature flags and run combined tests. Do not force-merge or reset either worktree.
-
-## v0.8.8t — entrance, wave urgency and six cosplay cast (owner review)
-
-- **Clerk:** Draw the existing high-resolution atlas at **22×31** instead of **28×43** projected units; cropped source/scan animation remains, but the clerk no longer dwarfs the 27×34 visitors.
-- **Gate:** Continue using the **source-painted rail** with no additional door sprites. Each half retracts into its scanner and reconstructs a taller 15.9-unit leaf from sampled original rail pixels plus subtle glass; the baked original rail is erased under the moving mechanism, and only the foreground draws the leaf. Permanent infill between fixtures stays distinct from the moving doors.
-- **Mascot:** The earlier global `scale(-1,1)` was still applied when drawing hearts after a left-facing mascot, throwing the hearts to the far opposite screen edge. Sprite flipping now uses a nested save/restore; heart positions stay at mascot world x/y. Patrol stops stay on walkable hall floor and y is constrained away from the stage riser.
-- **Pink strips and bubble collision:** Retired the exact stray phase-3 `fillRect(276,44,12,2)` and `fillRect(300,50,6,2)` in the main renderer (they persisted indefinitely across post-debate scenes). Removed redundant guard/staff task bars. Stage conversation now separates the `DESTINY` speaker label from the body by a larger, separately clipped text area.
-- **Larger live stage screen:** Projection increases to x232/y30.8 and 72×~33 inside the painted bezel; no detached monitor. The verdict's stray top accent stripe is also suppressed.
-- **Wave arrival:** Endless starts with 10 instead of 9 decisions, bounded at 34 per wave and at nine simultaneous cases; for 3–4.5s after a new wave, more ticketed arrivals enter rapidly from the gate spawn points, with a bold 3.15s on-scene `WAVE N — INCOMING!` slate. An original 172-BPM seven-second `convention-wave` score with an entrance stinger emphasizes the transition, then reverts to the existing music. This is a modest pacing bump, not doubling the simultaneous task ceiling.
-- **Cosplay expansion:** Six new original anime/video-game-style cosplay characters `kind 36..41`, visible from session start, each with **four four-row transparent WebP atlases**: side walk, rear walk, front walk and front reactions. All six columns share identities and 4-step frames; sprites load in both full game and isolated `/irl-sandbox`. Assets `assets/irl-cosplay-six-{walk,back,front,react}-v088t.webp`.
-- **QA:** `tests/venue_v088t.test.mjs` covers all direction/frame routing, asset signatures, mirrored hearts, mascot stage exclusion, painted gate height/sampling, clerk scale, wave bursts/density/audio and removal of stale bars. Four prior expectations were updated to the new owner-specified size/count/leaf behavior. **79/79 current focused tests green.** No Rival Invasions code is included in this stabilization pass. Preview branch only; visual inspection of gate and TV on iPhone/desktop is required.
-
-## v0.8.8s — owner review candidate
-
-- **Confirmed freeze root cause:** The owner's browser stack points to `IRLEvent.crowdTick`, not permissions-policy console warnings or favicon 404. Back-to-back debates could save a transitional `target:'return'` as an attendee's permanent destination, eventually attempting to destructure `undefined`. Preserve original activity across rapid debate transitions, repair stale `debate`/`return` targets, and validate all crowd movement destinations before unpacking. New tests reproduce overlapping debates, invalid target payloads and successful recovery; the existing RAF loop only handled symptoms.
-- **Illustrated gate only:** Remove the replacement glass/metal moving-door graphics. Animate the actual gate rail from the single baked plate by restoring its underlying carpet and clipping visible original rail portions on either side as it opens/closes. Separate *permanent* fence infill appears only in the small non-door gaps between planters/scanners/counter; these sections do not move with the gate.
-- **11 newly illustrated transparent community emotes:** A 4×3 WebP atlas adds `DuckerZ`, `AngelThump`, `ShrimpleAs`, `COPIUM`, and `Abathur` to the previous six. Rebuilt `dggL` uses a heart-hugging avatar rather than an external screenshot. Circular backing/masks/outlines are removed; chat-inline token uses a standalone transparent WebP cutout.
-- **Ticket clerk quality:** New transparent 1774×887 4×2 full-resolution walking/idle/rear sheet, cropped to opaque character area and rendered with quality minification at 28×43 game units, improving proportion and fidelity while retaining the simulated gate-desk patrol and scan beat.
-- **Stage artifacts & broadcast:** Floating stage feedback cards remain suppressed *after* debate ends, preventing delayed teal strips over the challenger. Debate live camera expands its image region to the interior bezel of the illustrated TV; audience shot remains captured from the actual world before AR dialogue/selection overlays.
-- **Not changed:** Claw mechanics, stage-crowd arc geometry, game difficulty and permanent production. Reserved for future discussion: mini-boss guest debaters with their own introductions, unique dialogue and stage showdown.
-- **QA / release:** `tests/venue_v088s.test.mjs` plus updated affected entrance/clerk tests. Run `node --test tests/venue_v088{...}.test.mjs tests/venue_modular_v088b.test.mjs`, review `/irl-sandbox` on desktop and iPhone, and update this handoff when owner approves. The earlier integrated gate/TV tests were intentionally revised to reject duplicate door panels rather than insist on the obsolete separate glass overlays.
-
-## v0.8.8r — active candidate, owner playtest required
-
-- **Stage crowd correction, third-pass root cause:** Earlier semicircles measured targets from sprite TOP-LEFT, shifting every spectator's actual feet ~35 canvas units toward the entrance. New formation is explicitly specified at FOOT CONTACT, 36 separate slots in three interleaved semicircular rows, foot x=189..341 and foot y=101..137, running side-to-side along the stage apron/stairs. The short gold/velvet stage rail stays. Each watcher faces the stage and resumes the prior activity after debate.
-- **Human-scale attendees:** Crop the actual opaque body from each 111×111 ticket-clerk walk atlas cell (previously only 32px of character art, which was being squeezed to a ~9px pencil silhouette). Draw at 31×38. Guards are 34×43 (approximately +12%) but retain their original contact-foot locations.
-- **Browser-found occlusion:** The first live v0.8.8r preview revealed a second *different* problem: gate monitor staff #0 patrolled through the exact same desk point as the clerk (x184,y137 versus clerk x180,y153), generating a mangled multi-sprite silhouette. Monitor now patrols exclusively between the left scanner and the left desk edge, never on top of the clerk.
-- **Grounded debate actors:** Right-side challenger stage location y=40 (previously 32), keeping his foot contact within 4 units of Destiny's. Remove outlined spotlight targeting ellipses entirely while keeping soft stage-light beams and meaningful contact shadows.
-- **Readable stage effects:** Comic audience bubbles keep words whole on line breaks; stage overlay status cards are suppressed during live debates so their thin teal strips cannot intersect the TV or challenger. Win/loss remains on LCD only.
-- **Entrances:** Replace the wrongly implemented prison-style moving metal grille with clear waist-height optical doors that meet at idle and retract at ticketed crossings. Independent fixed **metal infill only** bridges gaps between plant boxes/scanners and the check-in counter. Posts and furniture are unchanged.
-- **Animation recovery:** Shared `createResilientAnimationLoop` schedules the next RAF in `finally`, reports throttled runtime errors, and resets frame deltas on tab visibility changes so a single thrown renderer error no longer freezes play indefinitely. This is a resilience fix; any particular browser-only intermittent trigger still requires live repro/logs.
-- **Deferred:** Claw model rework stays untouched per owner instruction; any *additional* six-character expansion is a follow-up after accepting this correction pass.
-- **QA:** `tests/venue_v088r.test.mjs` covers actual feet in the stagefront arc, challenger footing, full-word comic text, ring removal, trimmed clerk frames, no stage feedback bars and RAF recovery. `tests/browser_v088r.mjs` is a desktop/phone Chrome visual smoke fixture, subject to browser permissions in the execution environment.
-
-## v0.8.8q — current candidate, owner playtest required
-
-- **Owner's concert semicircle:** Three navigable nested half-ellipses sweep the entire stage frontage, including left and right wings and the central stairs. Participants rush into unique ordered slots, face the stage with rear-view frames, then return to saved activities. The earlier compact clump has been replaced by a broader U-shaped audience arrangement.
-- **Clean broadcast & dialogue:** Capture the live audience *before* painting spectator chat, focus/decision markers, and other user-only overlays. World-space debate bubbles now use small kinetic comic bursts, reject placements far from their speakers, and prioritize readable stage dialogue. No `NEXT UP`, `LIVE EXCHANGE`, or head-mounted red timer ring. The live stage TV exclusively owns the debate win/loss graphic; its idle slate now uses a centered animated DGG LIVE identity.
-- **Still debate actors, stronger sound:** The debaters stay in their stage corners; no more physical forward/back lunges. Vocal synth banter and distinct POW/BAM/miss impact cues continue, with dramatic rotating stage lights, single TV verdict, original synthesized outro. A short non-graphic comic-book security scuffle adds visual/audio impact before the guard escorts a credible danger case out.
-- **Contextual staff actions:** VERIFY has a visible inspection hold, REDIRECT has a talking hold and escorted exit via a valid gate lane, SECURITY has a cartoon confrontation and removal. Only a correctly classified danger event triggers the scuffle. The ticket clerk now walks a small route near the front desk with a distinct transparent 4×2 walk/rear-view WebP atlas. The full-height metal gate grilles render in front of characters and remain shut at idle; illustrated counter masks remain foreground.
-- **Relaxed/arcade:** Remove the redundant standalone answer cue strip; keep only glowing action-button guidance. Five action buttons remain a single equal-priority row. Add cumulative arcade combo to the live HUD (bonus each five correct). Chaos layered decision bubbles are enabled by default with an off toggle in Graphics.
-- **Endless fairness:** Bounded exponential wave sizes, later-wave concurrent decision cap from 4 to 9, and a 3-warning threshold for credible safety misses (successful security interventions reduce outstanding warnings). End still triggers at zero Vibe; make post-run reason explicit in results. Neither a 100% Vibe nor a high guest count guarantees survival if a credible threat is missed.
-- **Out of scope:** Claw visuals deliberately unchanged; a fully modeled grabber is deferred. Production promotion awaits actual mobile/desktop playtest feedback.
-
-## v0.8.8p — current candidate, awaiting owner visual acceptance
-
-- **Actual pit formation:** Spectator placement now consumes consecutive 0-based crowd slots rather than sparse NPC IDs (13+, 1000+); the earlier bug skipped front-row targets. 33 walkable half-ellipse positions are concentrated around the stage apron (first 19 y82–112), with smaller spectator-separation impulses, rear-view walking/poses facing the actual stage, and return to preserved previous activities afterward. Browser preview exposed a last-mile renderer issue: cheering/pointing still selected *front* reaction sheets after arrival. Stage-watching reactions now select rear-view frames consistently across all three cast families.
-- **Speaker-owned chatter:** Ambient speech never slices the source sentence into `I brought a sig…`; wrapped text renders in its entirety. Debate/ambient bubbles search only speaker-adjacent collision-free slots; if none fit, defer the bubble rather than teleport it to another side of the arena. Stage dialogue boxes have more width/lines for complete exchanges.
-- **Fan grounding:** Signing duet moved to x243/264,y38 and joint photo to x270/293,y36 (on the stage floorboards, closer to the tripod). Shadows use foot-contact geometry, two-layer softness and animated directional offset that responds to stage lighting vs ambient hall illumination.
-- **Live audience television:** The stage LCD's audience cutaway copies the active rendered world-space crowd near stage from the same frame, instead of presenting disconnected portrait sprites.
-- **Arcade bloodsports:** Contestants lunge and recoil on exchange beats, with miss/normal/critical impact variations, stage/effect flashes, rotating concentrated spotlights and dramatic full-sized `DEBATE WON` / `DEBATE LOST` KO overlays. Original synthesized SFX respect mute.
-- **Closed entrance:** Gate leaf animation is idle-closed; admissions get a short timed open window refreshed while an authorized person physically crosses, and security exits hold only while the escorted person remains in the lane. Decorative permanent infill rails cover dead gaps between fixed scanners, planters and front desk.
-- **Live difficulty & HUD:** Expert remains default with no correct-answer cue. Relaxed mode exposes a clear case-type cue and emphasizes only the matching action, without changing decision duration, pace or score. A compact in-venue arcade telemetry strip shows score, vibe, time and guest count; guard counters are removed. All five decisions form one cluster, including Debate at #4 and Security #5, responsive on phones; number keys match the visual order.
-- **Code / QA:** Targeted coverage in `tests/venue_v088p.test.mjs`, plus current v088o/n/m/l/k/modular tests. Claw machine mechanics intentionally untouched in p per owner. Preserve browser-launchable `/irl-sandbox`; preview branch only until owner signs off.
-
-## v0.8.8o — mobile-owner QA corrections, pending device acceptance
-
-- **Mobile decision legibility:** On narrow iPhones, the selected visitor has a bright *in-world* head marker, while the full decision text and cue appear in a dedicated readable card immediately below the uncropped venue canvas and above the action buttons. Both `/irl-sandbox` and the full game use this split; prompts no longer cover the entrance/gates. Existing desktop world-space card behavior is unchanged. The isolated sandbox's graphics and chat-mute toggles now sit in the normal layout instead of floating across the score HUD.
-- **Stage speech ownership:** Removed the 140–210 hard-clamped horizontal speech lane. Debater and Destiny each get their own card centered just above their actual head, with correct pointers; TV bezel avoidance moves the card upward (not sideways). Speaker placement is pre-reserved before ambient/debate shouts to prevent collisions. If a spectator shout has no valid nearby position it is omitted rather than painted over a reserved prompt.
-- **Actual stage crowd:** 31 concert-style targets sit directly at the real stage apron and wings. The first nineteen occupy tight front and second rows (roughly y83–124), not the entrance floor y150–172. Movement, enthusiastic poses, return-to-prior-activities and 15–20-second debates persist.
-- **Fan events:** Autograph (5.1 s) moves Destiny to `autographHost=[221,29]` next to `autographGuest=[244,29]`, with a drawn signed print and moving pen; joint photo (5.4 s) places them at `[259,27]` and `[283,27]`, behind the baked stage tripod, with posing and a delayed camera flash. Both begin approaching one another while the fan is still climbing the stairs. Stage TV receipts remain at completion.
-- **Claw chute:** The single collectible's *center*, release gripper, and gravity fall now share the artwork's center dispenser x≈179, from glass down to slot. No second toy copy remains in the cabinet.
-- **QA:** `tests/venue_v088o.test.mjs` covers audience geometry, head ownership and TV overlap, stage-duration/duo positions, plush centerline and responsive cards. 5/5 passing. Historic venue test sweep: 70/78 pass, 8 pre-existing outdated assertions (v082–v087 old plate, queue, timing), not suitable as release gate. Targeted v088b, k, l, m, n regressions still 37/37. Browser on-device visual verification not yet accepted.
-- **Gate:** Do not promote production before owner inspects iPhone stage dialogue, entrance review placement, crowd congregation, duo signing/photos and physical claw-slot fall.
-
-## v0.8.8n — implemented, awaiting visual acceptance
-
-- **Navigation correctness:** `moveVenue` cannot report arrival on a blocked route. The grid router now handles walkable targets whose coarsened 8px cell center falls inside the gate/floor collision boundary; previous false arrivals and stranded stage visitors were caused by this mismatch.
-- **Grounded movement:** Character artwork scales by physical floor depth while contact shadows remain at actual foot positions, even on hopping/cheering frames. No renderer-only photo booth translations.
-- **Photo engagement:** A guest walks to the doorway, physically enters x344/y57, poses, then triggers a delayed shutter and exits to the precise doorway position. A photo is not counted, animated or flashed until the guest is actually inside. Merch, food and claw trigger only on exact reached interaction positions, not within a broad 24px radius.
-- **Crowd debates:** Every free spectator rushes to the clear stage semicircle during challenger prelude/exchange, with distinct point, cheer and argument poses. Their original world position and intended activity are saved; on completion they walk back before resuming their routine. Grid-boundary routing regression fixed for all 19 starting spectators in simulation.
-- **15–20-second bloodsports:** Opponent faces Destiny to stage left throughout exchange. Existing split TV camera direction, original synthesized impact audio, rapid lore/meme chat, Destiny blue/gold aura (~25% duty) and challenger crimson/purple (~10%) preserved.
-- **Gates and staff:** Giant gridded shutter planes replaced with waist-height retracting scanner arms; physical admission remains ticket-controlled. Gate monitor patrol cycles left gate, desk, right gate and desk; the one-monitor clerk remains visible as stationary desk service.
-- **Claw:** The single real dggL plush travels from floor through gripping/lift/transport then falls into the cabinet chute. It no longer respawns in the glass after release.
-- **New cast:** `assets/irl-cast new sheet 1.png`, `2.png`, `3.png` are 1536×1024 RGBA six-column/four-row transparent sheets. Their rear walk, lateral walk and front reaction poses are loaded in both main world and isolated harness. All six IDs 30–35 appear in the crowd immediately. Remaining art work: dedicated front walking and stronger separate argument frames; do not claim these are authored yet.
-- **Harness parity and versioning:** Both `src/ui.js` and `src/irl-sandbox-v085.js` use real positions, grounded shadows and the new cast. HTML headers display v0.8.8n. `/irl-sandbox` is the direct playtest entry; 2× is the intended production speed cap (the isolated harness still offers higher developer fast-forward modes).
-- **Acceptance gate:** Test on iPhone and desktop: 31-guest high-pressure scene, first 6 new actors distinct in every orientation, photo doorway in/out, stage crowd front-of-stage ring and return, 15–20s opponent-facing battle, both gate scanner animations, ticket monitor patrol, dggL claw chute, and no floating sprite feet. Production stays untouched until owner approves.
-
-## v0.8.8m — visual-correction pass after owner's annotated screenshot
-
-- **Quiet stage queue until countdown:** Ambient roam selection excludes the stage waiting corridor (x160–312, y92–162) and normal crowds stop choosing the signing/mic/queue targets. Once a challenger approaches or climbs the stairs, non-ticketed spectators sprint toward a stage semicircle (63 px/s initially) and animate cheers, jumps, arguments, and actual world-space DGG lore shouts every ~0.68s. They disperse again after the round.
-- **Stage duel:** Destiny's home performance moves to x198–206, y32, well onto stage left. Challenger climbs to x285, y32 on stage right, faces left toward Destiny; removed an extra 5px downward draw offset that previously left them visually on the steps.
-- **TV:** A visible "DEBATE IS ABOUT TO BEGIN..." broadcast slate plays during challenger approach, then a camera director changes every ~1.55s between dramatic *solo zooms* of Destiny/challenger, two-shot and a close audience cam. Lore/meme text stays on the actual spectators, never on LCD.
-- **Live attractions:** Photo guests walk to booth threshold and visibly move inside (display pose at x344,y57) before a delayed shutter flash; no empty-room photo flashes. Claw uses the **actual transparent dggL sprite** (the same already uploaded PNG) as the collectible plush: grapple descends, grips, lifts, carries and deposits the illustrated toy in the cabinet's prize chute. Merch/food guests continue to approach and face their physical counters.
-- **Entry cohesion:** Sliding slotted gates now mount flush to scanner edges with permanent crossrails aligned y183–210. Authorized gate clearance remains 39/43px. Check-in clerk has subtle four-keyframe nod/scan motions; idle support staff use existing directional walk animation while pacing nearby.
-- **QA:** 34/34 focused Node assertions passing across v088, v088b, v088k, v088l, v088m; current preview `/irl-sandbox` READY; image assets both 200. Legacy six-suite run exceeded the temporary runner time budget, outcome unknown.\n- **Approval:** Do not promote to production until owner confirms visible performer separation, crowd prelude/quiet normal queue, occupied photo booth, real plush pickup, gate alignment, and mobile performance.
-
-## v0.8.8l — prior accepted preview
-
-**Asset wiring:** The only hall backdrop is `assets/Neon Convention Hall Claw Machine.png` (1672×941). Walking dggL is a separate alpha sprite `assets/Adorable blue mascot clutching a red heart.png` (1220×1289), independently depth-sorted, reacting with decorative hearts and no player rewards. The clerk continues to use `irl-ticket-clerk-v088h.webp`.
-
-**Physical fixtures:** Merch x18–93, food/drinks x94–165, claw x165–193, booth x338–384, front desk x149–237; all four service points are autonomous NPC destinations with an activity window, visible transaction pixels, receipts, and physical collision. The claw glass grapple and prize drop are clipped within the baked machine's physical glass x167–191; the old x21–50 floating claw and imaginary vending station are removed.
-
-**Gate behavior:** Left scanner gap 39px, right gap 43px; the short slotted metal/glass shutter leaves telescope into the fixed scanners when an authorized ticket is inspected. One permanent scan clerk stands at the single monitor; a separate roaming `gateMonitor` patrols the gate zone while two other worker sprites remain dispatchable.
-
-**Stage:** The plate has one short red velvet rope at x233–287, y98; remove invisible zigzag barriers and route to stairs along a short matching approach. Around active debaters, stage spectators form a crowd ring, alternate point/argue/cheer/jump, and speak meme lines as animated world-space speech bubbles. Do NOT print lore/meme phrases on the stage TV: the screen cuts between close-ups of Destiny/challenger and the actual venue audience. Hide content beneath the upper TV bezel to prevent rough edge bleed.
-
-**Debate effects:** Aggressive sprite poses for both actors; round 6–12s. Destiny blue/gold aura active ~25% of each round and challenger red/purple aura active ~10%, with vibe/camera-flash spikes only when a surge begins. Retro boxer-style syllables are original synthesized SFX played at dialogue beats, never recordings, never every animation frame, respecting mute.
-
-**Acceptance:** Compare v0.8.8l sandbox on iPhone and desktop to prior k: verify non-ghost claw at x165, actual booth visitors and award graphics, dggL independent traversal, shutter motion, gate monitor, stage crowd floating speech, camera cuts and rare glow phases. Do not merge to release without owner visual approval.
-
-## v0.8.8k historical notes — superseded by v0.8.8l
-
-- **Boss FX:** blue/gold final-boss and crimson/purple challenger glow built from three additive halos, stepped flame tongues, jagged electric arcs and capped rising particles. All animation timebase values normalize browser milliseconds to seconds; TV switches Destiny's live close-up between authored combat pose cells.
-- **Combat animation:** no neutral talk/nod/idle while a debate runs. Challenger and Destiny alternate authored argue, point and heckle stances every ~0.57s, including during high queue pressure.
-- **Chat & audio:** 75+ deterministic fictional community chat lines including the exact owner-requested phrases; ~0.72–0.89s interval, up to three recent chat items. New original synthesized clash intro, beat impacts and win/loss stingers play once per scripted event on both main convention route and /irl-sandbox, honoring the global SFX toggle.
-- **Ghost claw containment:** the existing machine animates only when occupied, and grapple/prize pixels are strictly clipped to a glass rectangle computed from the *same* cabinet bounds used by navigation. No independent machine texture is introduced. The glass coordinates **must be visually recalibrated** after the new image is mounted.
-- **Gate/check-in:** v0.8.8j's 39–43px traversal width, shutters, clerical operator and roaming greeter are unchanged.
-- **Required asset inputs (BLOCKER):** exact `Neon Convention Hall Claw Machine.png` unified plate, and exact `Adorable blue mascot clutching a red heart.png` dggL cutout. Neither filename appears in connected saved assets or the current GitHub branch. The current `assets/irl-venue-baked-v088h.webp` stays active, and no independent walking mascot is yet rendered. Once supplied: inspect dimensions/transparency; convert to optimized WebP; wire scene and independent sprite; realign claw/glass/colliders; add mascot crowd reaction route; visual regression + iPhone QA.
-- **Verification:** `tests/venue_v088k.test.mjs` covers cabinet containment, live aura draw calls, frequent banter/aggressive host and challenger poses, and debounce of debate audio. Focused Node suite passed **20/20** on the 1-vCPU remote sandbox; Vercel branch preview served `/irl-sandbox` successfully. Browser visual/phone acceptance pending.
-  
-## Purpose
-
-The v0.8.8b–f hall rebuilds introduced prop-scale drift, floating stage pieces, undersized gates, crowded paths, and bulky overlays. v0.8.8g replaced detached prop layers with a **single coherent 384×216 pixel-projected plate**. v0.8.8h preserves that architecture, rerenders the same view with brighter woven purple carpet, only two ceiling ambient fixtures, localized booth/photo lights, integrated stage-floor uplights, physical tripod, enlarged asymmetrical plants and a three-row serpentine velvet rope queue. A dedicated stationary ticket clerk and two dynamic glass-panel gates remain interactive overlays. Keep the evening indigo/purple/magenta/amber palette, fictional comet convention branding and dggL banners; no Twitch or rainbow-striping branding.
-
-## v0.8.8j additive implementation
-
-- **Entrance:** independent slotted steel/glass shutter leaves retract horizontally into fixed scanner pillars. All 39–43px collision-safe lanes remain fully open after admission; the exterior check-in position is `y176` (feet before crossing), gate closing is delayed until the admitted sprite clears, and unauthorized actors have no lane bypass.
-- **Check-in:** one dedicated operator stays at the one-monitor counter. A distinct mobile greeter (`staff[0]`) patrols both gated approaches and returns to the desk when not dispatched.
-- **Booths:** existing merch, snack, vending and photo visit/receipt/flash loops remain; the left-aisle baked claw cabinet now has an interaction station, solid footprint, moving grapple, animated prize, and tracked prize transactions. Art alignment needs a visual check because the scene plate is unchanged.
-- **Boss stage:** critic exchanges run deterministically for 6–11.8 seconds according to topic difficulty, guest serial and level. Ambient onlookers move to safe front-flank audience points without stepping through stage ropes. Destiny gets the blue/gold final-boss pixel aura; challengers get pink/purple energy.
-- **Stage TV:** still clips to one measured in-plate LCD with an inset bezel clip; during live debates it shows two close-up opponents, health-bar styling, countdown and rotating *fictional* chat banter. Results animate as pixel-arcade K.O. boards with score; photos/autographs use brief white flash/ink reveals.
-- **Lore:** fictional chat reactions include `COPIUM`, `ShrimpleAs`, `AngelThump`, `Abathur`, `REFUTE THE TIMELINE.`, `Let him cook!`, `Where's the fact-check?!` and more. They are not real transcripts or claims about historical outcomes.
-- **Testing:** `tests/venue_modular_v088b.test.mjs` now includes greeter patrol, claw-prize usage, and long boss exchange/TV regression coverage (**12/12 passed**, Node 22). The current `tests/venue_v088b.test.mjs` also passed. Earlier `venue_v082`–`venue_v088` suites assert pre-unified art/queue geometry and are no longer valid release gates. The 100-seed v0.7 simulation is CPU-heavy in a 1-vCPU sandbox; one complete 20-guest perfect session passed with 3 stars.
-
-## Scene ownership and key files
-
-| File | Responsibility |
-| --- | --- |
-| `assets/irl-venue-baked-v088h.webp` | Single rerendered fixed 16:9 stage/booths/stairs/floor/planters/scanners/rope/tripod environment. |
-| `assets/irl-ticket-clerk-v088h.webp` | Dedicated front-desk employee, transparent sprite, integrated with the counter's occlusion mask. |
-| `src/venue-geometry-v088b.js` | Immutable 384×216 collision/interaction geometry and LCD transform aligned to the plate; visually invisible. |
-| `src/venue-rig-v088b.js` | Draw one plate, clipped dynamic LCD, booth receipts, retractable stationary gate glass, atmospheric dust motes, reactive debate uplights, permanent clerk and foreground occlusion. |
-| `src/venue-nav.js` | Sprite-feet collision and 39–43-unit admission lanes, four separate rope solid segments, S-curve distance-based lineup, distinct ambient crowd stations. |
-| `src/venue-tickets-v088h.js` | Issue unique one-use tickets to all arriving scripted/ambient attendees; consume precisely once at inside crossing, count clerk scans. |
-| `src/irl-v07.js` | Live meet-and-greet state, fixed admission staff, consumption at crossing, 21 ambient crowd cap, multi-stop switchback guest movement, tripod-based fan photo and TV output. |
-| `src/irl-atmosphere-v083.js` | Smaller queued chatter and focused text boxes; selected guest stays legible. |
-| `src/venue-effects-v086.js` | Short speech cards near speaking heads; LCD-safe speech placement; queue indicators. |
-| `src/sprite-animation.js` | Perspective scale narrowed to 0.91–1.05 for consistent sprite proportions. |
-| `src/ui.js`, `src/irl-sandbox-v085.js` | Main and isolated harness render same venue, actors then foreground occlusion. Legacy broken plate is never displayed while loading. |
-
-## Coordinates and invariants
-
-- Local canvas: `384×216`. Every stage/fixture coordinate, NPC sprite foot position, gate lane and TV transform uses this single space.
-- Stage: fixed illustrated footprint approximately `x188..338, y19..95`; stairs at upper-right hall center; no dynamic stage furniture. Destiny's animation target is restricted to `x204..212,y44`, always left of the LCD broadcast title.
-- TV LCD: `x233,y32,w70,h32`; the runtime feed is clipped to the screen. A photo moment renders exactly **one Destiny portrait and one guest** plus signature, not two Destinys.
-- Front counter: `x149,y180,w88,h36`; human-scale relative to ~30×38 NPC sprites (waist-high, not miniature).
-- Left gate lane `x85..124` (39 units); right gate `x254..297` (43 units). This is narrower visually than the g plate but still fits the 30px sprites and a margin. The posts and enlarged planters are fixed solid obstacles; only translucent glass shutters retract, not pillars.
-- Every incoming guest (including scheduled ambient crowds) gets one distinct numbered ticket. A check-in pauses to verify it, opening the corresponding gate. `processVenueTicket` subtracts precisely one only upon successfully reaching the gate's inside waypoint, never on an animation tick or at the exterior desk. Gate access remains required for the crossing.
-- Merch, claw, snacks, vending and photo have colliders and active standing/interaction stations. They are artwork baked into the image, not static gameplay.
-- Crowds may use open floor but cannot walk through stage riser, furniture, scanners, planters or ropes. Queue positions are distinct. Stage guests enter a **distance-parameterized 12-waypoint switchback corridor** along the painted velvet rope runs, advancing in order as earlier guests leave.
-- The tripod sits at stage-right approximately `x309..325,y59..83`, aimed at `photoHost=[214,44]` and `photoGuest=[247,44]`; stage photo flashes come from this position. Keep one host/one guest on the dynamically clipped LCD.
-- Dust motes are at seven light anchors, non-colliding and strictly cosmetic; stage-floor light bloom intensifies only while a debater is exchanging arguments.
-- Preserve v0.8.7-style compact decision controls and the five-button Invite to Debate action; do not reintroduce oversized scrollable cards or arbitrary star/music emote tiles.
-
-## Verification and release gate
-
-Focused regression coverage: `tests/venue_modular_v088b.test.mjs` checks both valid WebPs, solid/scaled lane routes, 18 ambient queue positions, S-line advancement with directional changes, TV clipping/two distinct portraits, stage pacing, and ticket issuance/one-time consumption for scripted and ambient guests, plus an end-to-end stage photo through the tripod. **9/9 passing at the earlier v0.8.8h checkpoint; 12/12 current v0.8.8j focused cases passed.** Verify full repository tests and browser-test `/irl-sandbox` at desktop and mobile dimensions.
-
-Owner must review:
-
-1. Empty-room plate visibly opens up the floor; stage feet/risers share the floor grid.
-2. 30×38 sprites pass through both 39–43-unit lanes without clipping; shutters retract but posts stay fixed, no lateral bypass.
-3. Unauthorized entrants do not go through gates; scanner posts never move.
-4. Boothes trigger visit/receipt activity and stay solid.
-5. A visible clockwise/counter-clockwise serpentine queue guides stage fans to the stairs without cutting ropes; a stage-right tripod photographs one host and one fan.
-6. The TV plays photo/debate events cleanly; no doubled Destiny or text collisions.
-7. Chatter and decision cards never obstruct the active visitor.
-8. No old plate flashes while the new asset is loading.
-9. iPhone Safari layout and save/unlock flow remain usable; the clerk remains permanent and is not assigned general NPC tasks.
-
-**Next step:** run the new Node regression suite and inspect the v0.8.8l `/irl-sandbox` preview; obtain desktop/iPhone visual approval before promotion. Preserve earlier release history.
-
-## v0.8.8r — Stage-front positioning and stability (2026-11-17)
-
-- **Stage-front audience:** `src/venue-nav.js` now places 36 distinct audience targets along three staggered half-ellipse arcs directly below the stage/stairs. The targets are defined in **foot coordinates**, not sprite top-left coordinates, so people no longer stop halfway down the hall near the entrance. Preserve the red-rope dividers and restore each spectator's prior activity after the debate.
-- **Stage anchors:** Challenger's stage stop is aligned to Destiny's shoe baseline; colored targeting rings beneath both debaters are removed, retaining ambient light beams and shadows.
-- **Front gate:** The mistakenly installed full-height moving grilles were replaced by translucent retractable waist-high gate leaves. Narrow fixed metal infill bridges only the open gaps between planters, posts and desk. Scanner posts and side barriers do not move.
-- **Desk crew:** The dedicated purple clerk is rendered from `assets/irl-ticket-clerk-walk-v088q.webp` with frame crops and a proportional 22×42 canvas-space figure rather than distorted wide sprite cells. The separate entrance-monitor staff member has an independent patrol route to prevent overlapping silhouettes. Guards now display ~10–15% larger, with their feet still grounded.
-- **Dialogue/effects:** Debate comic bubbles wrap whole words. Effects that formerly painted teal UI marks over the TV/challenger are suppressed when a debate is active.
-- **Freeze safeguards:** `src/venue-frame-loop-v088r.js` keeps `requestAnimationFrame` scheduled after a render exception, throttles diagnostics, and rebases elapsed time on visibility changes. This addresses a possible source of intermittent freezes but is not proof that all client-side freezes are resolved.
-- **Regression:** 69 tests pass across `venue_v088r`, `venue_v088q`, `venue_v088p`, `venue_v088o`, `venue_v088n`, `venue_v088m`, `venue_v088l`, `venue_v088k` and `venue_modular_v088b`. Legacy tests were not used as the release criterion. Browser smoke harness in `tests/browser_v088r.mjs` requires a Chromium-capable environment.
-- **Release branch:** `feature/v088r-stage-front-crowd-gates-stability`. Deploy to Vercel and visually inspect `/irl-sandbox`, with particular focus on the desk clerk and the half-ellipse crowd, before promoting to production. Claw mechanism intentionally unchanged at owner's request. Six further cast members remain a future optional milestone, not a condition of v0.8.8r acceptance.
+## Context hygiene
+- Default read budget: `AGENTS.md` + this file + a specifically relevant source/test/spec; inspect filenames/tree metadata before opening content.
+- DO NOT recursively read all docs, old changelogs, past chat history, test logs, asset bytes or every test file.
+- Historical release notes are available in pre-hygiene Git history / `feature/v089-rival-invasion-lab`; do not restore to active root merely for handoff.
+- No base64 art, dist bundles, generated previews or temporary logs in Git.

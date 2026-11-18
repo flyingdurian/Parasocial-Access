@@ -1,12 +1,12 @@
-# Keep source modular. Generated single-file builds never belong in Git.
-**/dist/
-**/previews/
-**/*-Play-Now.html
-**/*.log
-**/.vercel/
-**/node_modules/
-**/.DS_Store
-*.zip
-.env
-.env.*
-!.env.example
+# Keep generated artifacts out of the repository
+dist/
+previews/
+coverage/
+node_modules/
+*.log
+*.tmp
+*.tsbuildinfo
+.DS_Store
+__pycache__/
+.pytest_cache/
+*-Play-Now.html
