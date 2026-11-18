@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>FeedFall — Four Debate Arena Concepts</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#f9f3ff;background:#0b0b1c;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#252044,#0a0918 74%);min-height:100vh}
+main{max-width:1120px;margin:auto;padding:14px 12px 42px}header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+h1{font-size:clamp(22px,4vw,34px);margin:4px 0;letter-spacing:-.03em}h1 small{display:block;font-size:11px;color:#e7aaed;letter-spacing:.19em}
+.sub{font-size:12px;color:#bbb0d7;max-width:610px;line-height:1.5}
+.pill{border:1px solid #9874bb;padding:7px 10px;border-radius:30px;font-size:10px;color:#ddd0f5}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:17px 0 8px}
+button,select{font:inherit;color:inherit}button{cursor:pointer;touch-action:manipulation}
+.tab{border:1px solid #5b487e;border-radius:12px;background:#211b37;padding:12px 5px;min-height:54px;font-weight:850;font-size:clamp(10px,2.1vw,14px)}
+.tab.active{background:#7540b6;border-color:#f4b7ff;box-shadow:0 0 0 1px #c68bf5}
+.tab b{display:block;font-size:11px;color:#ffda92}
+.setup{display:flex;align-items:center;gap:9px;margin:12px 0;flex-wrap:wrap;font-size:12px}
+.setup select,.setup button{background:#2a2245;border:1px solid #665587;border-radius:9px;padding:10px 11px;min-height:43px}
+.setup button{font-weight:850;background:linear-gradient(110deg,#e65b95,#9356d7)}
+.setup label{display:flex;align-items:center;gap:8px}
+.frame{position:relative;border:2px solid #7452a4;overflow:hidden;border-radius:15px;box-shadow:0 10px 42px #0008;background:#141128;aspect-ratio:16/9}
+canvas{width:100%;height:100%;display:block;image-rendering:auto}
+.overlay{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:15px;background:linear-gradient(115deg,#153f6ce6 0 47%,#1c0b31e8 50%,#9c2348e8 53% 100%);z-index:2}
+.overlay.show{display:flex}.overlay h2{font-size:clamp(34px,9vw,92px);font-style:italic;margin:5px;text-shadow:5px 5px #1a102b}
+.overlay p{font-weight:800;letter-spacing:.1em}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:12px 0}
+.hp b{display:flex;justify-content:space-between;gap:5px;font-size:12px}.track{height:12px;border:1px solid #6f5885;background:#181024;border-radius:20px;overflow:hidden;margin-top:4px}.track span{display:block;height:100%;background:linear-gradient(90deg,#17c8f0,#b4f8f7);width:100%;transition:width .35s}.hp.right .track span{background:linear-gradient(90deg,#fe6b7d,#ffbf80)}.beat{font-size:12px;font-weight:900;color:#ffdea3;text-align:center}
+.panel{background:#18132c;border:1px solid #554273;border-radius:14px;padding:13px}
+.cue{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:950;font-size:clamp(14px,3vw,20px)}
+.timer{height:6px;border-radius:10px;background:#3f2b4b;margin:11px 0;overflow:hidden}.timer>div{height:100%;width:100%;background:linear-gradient(90deg,#68daff,#ffb16d)}
+.hint{font-size:13px;color:#e2cee8;min-height:21px;margin:7px 0 12px}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.actions button{border-radius:11px;border:1px solid #8361ad;background:linear-gradient(#46315d,#2a2142);min-height:73px;padding:9px 4px;font-weight:900;font-size:clamp(11px,2vw,15px)}
+.actions button:disabled{opacity:.4;cursor:not-allowed}.actions button:not(:disabled):active{transform:scale(.97)}
+.actions button.suggest{border:2px solid #ffd17b;box-shadow:inset 0 0 16px #f7aa392a}
+.actions button.finish{background:linear-gradient(#85402f,#422139);border-color:#d99d70}
+.actions span{display:block;font-size:10px;font-weight:500;opacity:.75;margin-top:4px}
+.log{margin-top:11px;color:#ffdfac;font-size:13px;font-weight:750;min-height:20px}
+.note{margin:15px 0;font-size:13px;color:#bcafd5;line-height:1.55}.compare{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.compare article{background:#211a38;border:1px solid #48365f;border-radius:9px;padding:9px}.compare b{font-size:12px}.compare p{font-size:11px;line-height:1.4;margin:5px 0;color:#c9bbdf}
+footer{text-align:center;color:#8a7d9f;font-size:11px;margin:16px}
+@media(max-width:610px){main{padding:9px 8px 30px}.tab{min-height:56px}.setup{gap:7px}.actions{grid-template-columns:repeat(2,1fr)}.actions button{min-height:58px}.compare{grid-template-columns:repeat(2,1fr)}.hp b{font-size:10px}.beat{font-size:10px}.frame{border-radius:9px}.panel{padding:10px}.cue{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.track span{transition:none}}
+</style></head>
+<body><main>
+<header><div><h1><small>FEEDFALL · v0.8.9 · DESIGN COMPARISON</small>Rival Debate — Four Playable Concepts</h1>
+<div class="sub">Same challenger, actions, health and scoring in four different presentations. Use the highlighted counter before the timer runs out. Correct answers deal damage without hidden chip damage.</div></div><span class="pill">ISOLATED LAB · NOT IN PRODUCTION</span></header>
+<nav class="tabs" id="tabs" aria-label="Presentation style"><button class="tab active" data-style="a"><b>A</b>Broadcast Clash</button><button class="tab" data-style="b"><b>B</b>Debate Assault</button><button class="tab" data-style="c"><b>C</b>Stage Spectacle</button><button class="tab" data-style="d"><b>D</b>Hybrid Director's Cut</button></nav>
+<div class="setup"><label>Rival <select id="rival"></select></label><button id="start">START MATCH / RESTART</button><label><input type="checkbox" id="assist" checked> Show recommended counter</label></div>
+<div class="frame"><canvas width="960" height="540" id="scene"></canvas><div class="overlay" id="overlay"><p id="overlayTop"></p><h2 id="overlayTitle"></h2><p id="overlayBottom"></p></div></div>
+<div class="hud"><div class="hp"><b><span>DESTINY</span><span id="myNum">100/100</span></b><div class="track"><span id="myHp"></span></div></div><div class="beat" id="round">READY</div><div class="hp right"><b><span id="rivalName">RIVAL</span><span id="rivalNum">100/100</span></b><div class="track"><span id="rivalHp"></span></div></div></div>
+<section class="panel"><div class="cue"><span id="cue">Choose a rival and START MATCH</span><span id="clock">—</span></div><div class="timer"><div id="timebar"></div></div><div class="hint" id="hint">No secret timing window: correct counters work throughout each 4-second beat.</div>
+<div class="actions"><button data-action="define_terms">DEFINE TERMS<span>Keyboard 1</span></button><button data-action="show_receipts">SHOW RECEIPTS<span>Keyboard 2</span></button><button data-action="read_room">READ THE ROOM<span>Keyboard 3</span></button><button data-action="special" class="finish">FINISHING ARGUMENT<span id="energy">0 / 60 energy · Space</span></button></div>
+<div class="log" id="log" aria-live="polite">Waiting for the next challenger.</div></section>
+<p class="note" id="description"></p>
+<div class="compare"><article><b>A · Broadcast</b><p>Big close-up cut-ins, onscreen lower-thirds, readable acting.</p></article><article><b>B · Assault</b><p>Comic-book claims fly in; counters shatter arguments with impact.</p></article><article><b>C · Spectacle</b><p>Wide concert lighting, stronger crowd motion, kinetic venue energy.</p></article><article><b>D · Hybrid</b><p>Grounded podiums, broadcast portraits, crowd energy and punchy counters.</p></article></div>
+<footer>Reuses current v0.8.8v cosplay crowd-back sheet and v0.8.9 rival artwork. Fictional satirical game outcomes. No live venue or save integration.</footer>
+</main><script type="module">
+import {RIVALS_V089,RIVAL_BY_ID_V089} from './src/rival-invasions-v089.js';
+const el=id=>document.getElementById(id),c=el('scene'),g=c.getContext('2d'),W=960,H=540;
+const rivalSel=el('rival'),actions=[...document.querySelectorAll('[data-action]')];
+RIVALS_V089.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rivalSel.append(o)});
+const pics={},load=(key,path)=>{let i=new Image;i.src='./'+path;pics[key]=i};
+load('stage','assets/rivals/v089/arena-stage-concept.png');load('host','assets/irl-host-poses.webp');load('crowd','assets/irl-cosplay-six-back-v088t.webp');
+RIVALS_V089.forEach(r=>load(r.id,r.asset.path));
+let style='a',battle=null,beatStart=0,freezeUntil=0,frame=0,flash=null,token=0;
+const styles={
+ a:'Broadcast Clash: larger waist-up debaters in live-TV split shots with reactive camera movement and a colorful back-facing audience.',
+ b:'Debate Assault: an intentionally more abstract Phoenix Wright / Danganronpa-inspired visual language. Brief claim fragments, fast argument attacks, and big counter impacts replace long dialogue.',
+ c:'Stage Spectacle: a broad theater stage, powerful moving lights, visible floor, and crowd-wave animation. The room—not text—is your reward.',
+ d:'Hybrid Director’s Cut: dramatic broadcast portraits anchored by real stage podiums, comic hit feedback and foreground cast reactions. This is the proposed long-term candidate.'
+};
+function rect(x,y,w,h,color){g.fillStyle=color;g.fillRect(x,y,w,h)}
+function txt(t,x,y,size=24,color='#fff',align='left'){g.textAlign=align;g.font='900 '+size+'px system-ui';g.fillStyle=color;g.shadowColor='#090516';g.shadowBlur=8;g.fillText(t,x,y);g.shadowBlur=0;g.textAlign='left'}
+function round(x,y,w,h,r,fill){g.fillStyle=fill;g.beginPath();g.roundRect(x,y,w,h,r);g.fill()}
+function cut(img,cols,rows,row,col,x,y,w,h,flip=false){
+ if(!img?.complete||!img.naturalWidth)return;
+ const a=img.naturalWidth/cols,b=img.naturalHeight/rows;
+ g.save();if(flip){g.translate(x+w,0);g.scale(-1,1);x=0}
+ g.drawImage(img,col*a,row*b,a,b,x,y,w,h);g.restore()
+}
+function imgCover(img,x,y,w,h){if(!img?.naturalWidth){rect(x,y,w,h,'#281a45');return}const scale=Math.max(w/img.width,h/img.height),sw=w/scale,sh=h/scale;g.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,x,y,w,h)}
+function crowd(t,top=438,scale=1,high=false){
+ const im=pics.crowd;g.save();
+ const n=17,step=60;
+ for(let j=0;j<n;j++){
+  const idx=(j*5)%6,x=j*step-22;
+  const bounce=battle?.phase==='active'?Math.sin(t*.004+j*1.4)*7:Math.sin(t*.002+j)*2;
+  const y=top+((j%3)-1)*8+bounce+(high?0:16);
+  const s=(67+(j%4)*7)*scale;
+  g.fillStyle='#080a1ca0';g.beginPath();g.ellipse(x+s*.46,y+s*.85,s*.37,12,0,0,7);g.fill();
+  if(im?.naturalWidth)cut(im,6,4,(Math.floor(t/240)+j)%4,idx,x,y,s,s*1.5);
+  else {round(x+10,y,45,60,20,['#a456b9','#448dd4','#df6b80','#e8ba7d'][j%4]);}
+  if(battle?.phase==='active'&&j%4===0){g.strokeStyle=['#ed80f2','#60ceff','#ffd36f'][j%3];g.lineWidth=6;g.beginPath();g.moveTo(x+s*.73,y+s*.7);g.lineTo(x+s*.82,y+18+bounce);g.stroke()}
+ }
+ g.restore();
+}
+function podium(x,y,w=190){g.fillStyle='#0d0e25';g.beginPath();g.ellipse(x+w/2,y+103,w*.5,14,0,0,7);g.fill();round(x,y,w,107,10,'#17152d');round(x+8,y+10,w-16,14,4,'#9164c1');round(x+20,y+30,w-40,64,6,'#30234e');txt('DEBATE',x+w/2,y+72,17,'#edd2ff','center')}
+function actor(which,x,y,w,h,pose=0,flip=false){
+ const img=pics[which],r=which==='host'?2:4,cols=4,row=which==='host'?0:(pose===0?0:3),col=pose%4;
+ g.fillStyle='#06071ba0';g.beginPath();g.ellipse(x+w/2,y+h-4,w*.37,13,0,0,7);g.fill();
+ cut(img,cols,r,row,col,x,y,w,h,flip)
+}
+function background(t,muted=false){imgCover(pics.stage,0,0,W,H);rect(0,0,W,H,muted?'#05071986':'#0808203c');}
+function lights(t,amp=1){for(let j=0;j<5;j++){const x=100+j*187+Math.sin(t*.0006+j)*60*amp;g.fillStyle=['#ed6a9a18','#5ac8ff20','#ffd27c19'][j%3];g.beginPath();g.moveTo(480,35);g.lineTo(x-95,440);g.lineTo(x+95,440);g.fill();}}
+function actorPose(side){return flash?.side===side?2:battle?.phase==='active'?Math.floor(frame/480)%2:0}
+function broadcast(t){
+ background(t,true);rect(0,0,W,66,'#090921d9');txt('FEEDFALL LIVE • DEBATE NIGHT',28,43,25,'#f5d3ff');txt('● LIVE',870,42,19,'#ff607b','center');
+ g.save();g.beginPath();g.rect(8,74,462,386);g.clip();imgCover(pics.stage,0,80,470,385);rect(8,74,462,386,'#131a3988');actor('host',67,75,337,410,actorPose('host'));g.restore();
+ g.save();g.beginPath();g.rect(490,74,462,386);g.clip();imgCover(pics.stage,485,80,470,385);rect(490,74,462,386,'#31112b8b');actor(battle?.id||rivalSel.value,572,78,325,408,actorPose('rival'),true);g.restore();
+ rect(470,74,20,386,'#fae2aa');rect(16,405,440,48,'#101b3dda');rect(501,405,439,48,'#311127e5');txt('DESTINY',35,436,26,'#a9ecff');txt((RIVAL_BY_ID_V089[battle?.id||rivalSel.value]?.name||'RIVAL').toUpperCase(),518,436,24,'#ffc2ce');
+ crowd(t,455,.71,true)
+}
+function assault(t){
+ background(t,true);rect(0,0,W,H,'#11092170');
+ g.save();g.translate(480,270);g.rotate(-.12);rect(-23,-280,46,560,'#ffdc84');g.restore();
+ round(15,76,430,360,12,'#192947db');round(515,76,430,360,12,'#4e1a37dc');
+ actor('host',59,89,322,344,actorPose('host'));actor(battle?.id||rivalSel.value,596,89,310,344,actorPose('rival'),true);
+ txt('OBJECTION!',26,105,29,'#7ee9ff');txt('REBUTTAL!',688,105,29,'#ffa1b3');
+ const progress=battle?.phase==='active'?Math.min(1,(performance.now()-beatStart)/4000):0;
+ if(battle?.phase==='active'){g.save();g.translate((1-progress)*850+50,255);g.rotate(-.11);round(0,0,236,100,8,'#f6dcb0');txt((['DEFINE THE CLAIM','CHECK THE SOURCE','TURN THE ROOM'][battle.beat%3]),12,58,17,'#3b2756');g.restore();}
+ crowd(t,470,.68,true)
+}
+function spectacle(t){
+ background(t);lights(t,2.3);rect(0,400,960,140,'#100a2f80');
+ txt('BLOODSPORTS • LIVE!',480,73,44,'#ffe6ac','center');
+ g.strokeStyle='#ffbb8a';g.lineWidth=7;g.beginPath();g.moveTo(65,396);g.lineTo(896,396);g.stroke();
+ actor('host',165,161,231,283,actorPose('host'));actor(battle?.id||rivalSel.value,576,157,231,286,actorPose('rival'),true);
+ round(411,337,138,83,10,'#282249');txt('VS',480,387,39,'#ffd688','center');
+ crowd(t,425,1.12,true);rect(0,0,W,18,'#d278f555')
+}
+function hybrid(t){
+ background(t,true);lights(t,1.2);rect(0,0,W,54,'#0c0b24dd');txt('THE DEBATE ARENA',480,37,24,'#ffdca4','center');
+ actor('host',99,84,287,345,actorPose('host'));actor(battle?.id||rivalSel.value,567,84,284,345,actorPose('rival'),true);
+ podium(146,331,220);podium(595,331,220);
+ rect(418,110,125,190,'#17102aa6');txt('VS',480,221,63,'#ffe7b0','center');
+ crowd(t,455,.9,true)
+}
+function drawEffects(t){
+ if(!flash||t-flash.time>1000)return;
+ const age=(t-flash.time)/1000;g.save();g.globalAlpha=1-age;
+ const cx=flash.side==='rival'?690:265;
+ if(flash.good){g.strokeStyle='#fff1bb';g.lineWidth=7;for(let k=0;k<11;k++){const theta=k*Math.PI*2/11;g.beginPath();g.moveTo(cx+Math.cos(theta)*(28+age*55),240+Math.sin(theta)*(28+age*55));g.lineTo(cx+Math.cos(theta)*(95+age*100),240+Math.sin(theta)*(95+age*100));g.stroke()}}
+ round(240,190,480,113,13,flash.good?'#1b4b63dd':'#79253ce8');
+ txt(flash.label,480,248,39,flash.good?'#d5fbff':'#ffe1df','center');
+ txt(flash.detail,480,277,16,'#fff','center');g.restore()
+}
+function draw(t){frame=t;g.clearRect(0,0,W,H);({a:broadcast,b:assault,c:spectacle,d:hybrid})[style](t);drawEffects(t);
+ if(battle?.phase==='active'){
+ const left=Math.max(0,4000-(t-beatStart));el('clock').textContent=(left/1000).toFixed(1)+'s';el('timebar').style.width=(left/40)+'%';
+ if(!left)resolve(null);
+ }
+ requestAnimationFrame(draw)}
+function cueData(){return [{label:'DEFINITION SHIFT',action:'define_terms',visual:'DEFINE'}, {label:'SOURCE CHALLENGE',action:'show_receipts',visual:'RECEIPT'}, {label:'CROWD SWING',action:'read_room',visual:'CROWD'}][(battle.beat + RIVALS_V089.findIndex(r=>r.id===battle.id))%3]}
+function refresh(){
+ const r=RIVAL_BY_ID_V089[battle?.id||rivalSel.value];el('description').textContent=styles[style];
+ el('rivalName').textContent=r.name.toUpperCase();
+ el('myNum').textContent=(battle?.my??100)+'/100';el('rivalNum').textContent=(battle?.other??r.maxHp)+'/'+r.maxHp;
+ el('myHp').style.width=(battle?.my??100)+'%';el('rivalHp').style.width=((battle?.other??r.maxHp)/r.maxHp*100)+'%';
+ el('round').textContent=battle?.phase==='active'?'BEAT '+(battle.beat+1)+'/6':battle?.phase==='result'?'RESULT':'READY';
+ const active=battle?.phase==='active';
+ el('cue').textContent=active?cueData().label:!battle?'Choose a rival and START MATCH':battle.phase==='result'?'MATCH COMPLETE':'NEXT EXCHANGE';
+ el('hint').textContent=active?(el('assist').checked?'Recommended: '+cueData().action.replaceAll('_',' ').toUpperCase()+' — answer anytime before 0.0s':'Identify the cue and counter it before 0.0s'):'Every correct counter deals 27 HP, wrong or timed-out choices take 20 HP. Finish costs 60 energy and deals 43 HP.';
+ el('energy').textContent=(battle?.energy||0)+'/60 energy · Space';
+ for(let b of actions){b.disabled=!active||(b.dataset.action==='special'&&battle.energy<60);b.classList.toggle('suggest',active&&el('assist').checked&&cueData().action===b.dataset.action)}
+}
+function showOverlay(top,title,bottom){el('overlayTop').textContent=top;el('overlayTitle').textContent=title;el('overlayBottom').textContent=bottom;el('overlay').classList.add('show')}
+function begin(){token++;const myToken=token,r=RIVAL_BY_ID_V089[rivalSel.value];battle={id:r.id,phase:'intro',my:100,other:r.maxHp,energy:0,beat:0,hits:0,misses:0};flash=null;refresh();showOverlay('RIVAL INVASION','DESTINY VS '+r.name.toUpperCase(),'THE STAGE IS YOURS');el('log').textContent='Entering the debate arena…';
+ setTimeout(()=>{if(myToken!==token)return;el('overlay').classList.remove('show');next()},900)}
+function next(){if(!battle)return;if(battle.beat>=6||battle.my<=0||battle.other<=0){end();return}battle.phase='active';beatStart=performance.now();flash=null;el('log').textContent='Incoming: '+cueData().label+' • Choose your counter';refresh()}
+function resolve(action){
+ if(battle?.phase!=='active')return;
+ const expected=cueData().action,good=action===expected||action==='special'&&battle.energy>=60;
+ const special=good&&action==='special',damage=special?43:27;
+ if(good){battle.other=Math.max(0,battle.other-damage);battle.energy=Math.min(100,battle.energy+(special?-60:23));battle.hits++;flash={time:performance.now(),side:'rival',good:true,label:special?'FINISHING ARGUMENT!':'DIRECT HIT!',detail:'Rival −'+damage+' HP · No counterattack'};el('log').textContent=(special?'FINISHER':'CORRECT COUNTER')+' • Rival −'+damage+' HP, Destiny −0 HP'}
+ else{battle.my=Math.max(0,battle.my-20);battle.energy=Math.min(100,battle.energy+7);battle.misses++;flash={time:performance.now(),side:'host',good:false,label:action===null?'TIME OUT!':'WRONG COUNTER!',detail:'Destiny −20 HP · Expected '+expected.replaceAll('_',' ').toUpperCase()};el('log').textContent='Missed! Expected '+expected.replaceAll('_',' ')+' • Destiny −20 HP'}
+ battle.beat++;battle.phase='pause';el('clock').textContent='—';refresh();
+ const myToken=token;setTimeout(()=>{if(myToken===token&&battle?.phase==='pause')next()},1150)
+}
+function end(){battle.phase='result';refresh();const r=RIVAL_BY_ID_V089[battle.id],win=battle.my>0&&(battle.other===0||battle.my/100>battle.other/r.maxHp);showOverlay('DEBATE COMPLETE',win?'VICTORY!':'DEFEAT','YOU '+(win?'WON':'LOST')+' • '+battle.hits+' successful counters / '+battle.misses+' misses');el('log').textContent='Score: '+battle.hits+' correct, '+battle.misses+' missed. '+(win?'Stage won.':'Try again with visible counters.');}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{style=b.dataset.style;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));refresh()});
+el('start').onclick=begin;rivalSel.onchange=refresh;el('assist').onchange=refresh;
+actions.forEach(b=>b.onclick=()=>resolve(b.dataset.action));
+window.addEventListener('keydown',e=>{if(e.repeat||['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;const a={'1':'define_terms','2':'show_receipts','3':'read_room',' ':'special'}[e.key];if(a){e.preventDefault();resolve(a)}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&battle?.phase==='active'){battle.pausedAt=performance.now()}else if(battle?.pausedAt&&battle.phase==='active'){beatStart+=performance.now()-battle.pausedAt;delete battle.pausedAt}});
+refresh();requestAnimationFrame(draw);
+</script></body></html>
