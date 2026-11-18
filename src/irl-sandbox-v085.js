@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,drawVenueMascot,captureLiveAudienceFrame,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,drawVenueMascot,captureLiveAudienceFrame,captureLiveAudienceFrontFrame,isNearSideGateArrival,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 /* Fast isolated IRL harness: imports no main game engine, world art or UI.
    This is an additive dev route; it does not alter production save keys. */
@@ -26,6 +26,7 @@ let event=new IRLEvent(engine,{mode,level});
 let graphics=loadGraphics();
 let speed=Math.min(8,Math.max(1,Number(params.get('speed'))||1));
 const liveAudienceFrame=document.createElement('canvas');
+const liveAudienceFrontFrame=document.createElement('canvas');
 
 const assets={};
 const modularVenue=loadModularVenueAssets();
@@ -43,7 +44,7 @@ newCast.walk.src='/assets/irl-cast%20new%20sheet%202.png';
 newCast.react.src='/assets/irl-cast%20new%20sheet%203.png';
 for(const direction of ['walk','back','front','react'])cosplayCast[direction].src='/assets/irl-cosplay-six-'+direction+'-v088t.webp';
 
-root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8t · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
+root.innerHTML=`<header class="harness-head"><div><small>FEEDFALL · v0.8.8u · ISOLATED TEST ROUTE</small><h1>Destiny Meet & Greet / Venue Harness</h1></div><a href="/">← Full Game</a></header>
  <div class="harness-stats"><span>SESSION<b id="h-session"></b></span><span>TIME<b id="h-time"></b></span><span>GUESTS<b id="h-guests"></b></span><span>CROWD VIBE<b id="h-vibe"></b></span><span>SCORE<b id="h-score"></b></span><span>WAVE<b id="h-wave"></b></span></div>
  <div class="harness-stage" id="h-stage"><canvas id="h-canvas" width="384" height="216" aria-label="Interactive convention hall isolated test canvas"></canvas><div class="harness-prompt" id="h-speech" hidden><b id="h-name"></b><p id="h-text"></p><small id="h-cue"></small><small id="h-timer"></small></div><div class="harness-start" id="h-start"><h2>Direct Venue Test</h2><p>No other worlds or main menus are loaded. Choose a mode below or start the selected session.</p><button id="h-begin">▶ OPEN CONVENTION</button></div></div>
  <div class="harness-caption" id="h-caption"></div>
@@ -81,7 +82,7 @@ function draw(t){
  const canvas=q('#h-canvas'),ctx=setupGraphicsCanvas(canvas,graphics);
  if(!ctx)return;
  const useCamera=modularVenueReady(modularVenue);if(useCamera){ctx.save();applyModularVenueCamera(ctx);}
- const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,poses,cast:assets.cast,extra,audienceFrame:liveAudienceFrame});
+ const modern=drawModularVenue(ctx,modularVenue,event,t,{host:assets.pose0,poses,cast:assets.cast,extra,audienceFrame:liveAudienceFrame,audienceFrontFrame:liveAudienceFrontFrame});
  if(!modern){ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);ctx.fillStyle='#dfc7f4';ctx.textAlign='center';ctx.font='bold 8px monospace';ctx.fillText('LOADING VENUE',192,107);}
  drawStageQueueGuides(ctx,event);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);ctx.fillStyle='#91f9b868';for(let y=51;y<183;y+=VENUE_CELL)for(let x=8;x<359;x+=VENUE_CELL)if(isVenueWalkable(x,y))ctx.fillRect(x,y,1,1);}
@@ -94,8 +95,9 @@ function draw(t){
  reserveStageSpeech(bubbleLayout,event);
  let ambient=0,debateBubbles=0;
  const roomIsSpeaking=event.crowd.some(g=>g.speechTime>0);
- for(const {g,role,w,h} of actors){
-  if(role==='mascot'){drawVenueMascot(ctx,modularVenue,event,t);continue;}
+ const nearSideArrivals=[];
+ const paintActor=({g,role,w,h})=>{
+  if(role==='mascot'){drawVenueMascot(ctx,modularVenue,event,t);return;}
   const kind=role==='guard'?3:role==='staff'?7:g.kind;
   const state=role==='crowd'?(g.walking?'walk':g.animation):role==='depart'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='visitor'?(g.pending?(g.animation||'talk'):g.type==='security'?'argue':g.type==='check'?'point':'idle'):role==='staff'?(g.task?.phase==='engage'?'point':g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):role==='guard'&&g.task?.phase==='engage'?'argue':g.walking?'walk':'idle';
   const stageSpeaker=role==='depart'&&g.stageVisit==='exchange';
@@ -104,8 +106,17 @@ function draw(t){
    const jump=role==='crowd'?(g.hypeJump||0):0;
    const motion=jump>0?{...g,groundY:g.y}:g;
    sprite(kind,g.x+(role==='guard'?-2:stageSpeaker?2.5:0),g.y-(role==='guard'?5:0)-jump,stageSpeaker?29:w,stageSpeaker?37:h,state,motion);
+ };
+ for(const actor of actors){
+  if(isNearSideGateArrival(actor.g,actor.role,actor.h)){nearSideArrivals.push(actor);continue;}
+  paintActor(actor);
  }
- if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue,event);captureLiveAudienceFrame(ctx,liveAudienceFrame,event);}
+ if(modern){drawTicketClerk(ctx,modularVenue,event);drawBakedForegroundOccluders(ctx,modularVenue,event);}
+ for(const actor of nearSideArrivals)paintActor(actor);
+ if(modern){
+  captureLiveAudienceFrame(ctx,liveAudienceFrame,event);
+  captureLiveAudienceFrontFrame(liveAudienceFrontFrame,event,{cast:assets.cast,poses,walk:assets.walk,extra,walk4,back4,stage,reactions,originalWalk,originalBack,newCast,cosplay:cosplayCast},t);
+ }
  for(const g of event.crowd){
   if(g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;}
   else if(!g.debateWatching&&!ambient&&g.speechTime>0){drawAmbientBubble(ctx,g.speech.slice(0,Math.floor(g.speechProgress||0)),g.x+13,g.y,.86,45,bubbleLayout,assets.dggl);ambient++;}

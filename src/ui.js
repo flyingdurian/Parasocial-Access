@@ -1,4 +1,4 @@
-import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,drawVenueMascot,captureLiveAudienceFrame,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
+import {loadModularVenueAssets,modularVenueReady,drawModularVenue,drawBakedForegroundOccluders,drawTicketClerk,drawVenueMascot,captureLiveAudienceFrame,captureLiveAudienceFrontFrame,isNearSideGateArrival,MODULAR_CAMERA_SCALE,applyModularVenueCamera,venueCameraPoint,venueCameraUnproject} from './venue-rig-v088b.js';
 import {MODULAR_TV_BOUNDS} from './venue-geometry-v088b.js';
 import {engine,UPGRADES,WORLD_DEFS,GENERATOR_STATS,SURFACES,CONTRACTS,OPERATOR_UPGRADES,CREATORS,NETWORK_CREATORS,CREATOR_EVENTS,CREATOR_UPGRADES} from './engine.js';
 import {sound} from './audio.js';
@@ -26,6 +26,7 @@ try{const saved=Number(localStorage.getItem('feedfall-destiny-speed'));if([1,1.5
 let irlDifficulty='expert';
 try{if(localStorage.getItem('feedfall-destiny-difficulty')==='relaxed')irlDifficulty='relaxed';}catch{}
 const liveAudienceFrame=document.createElement('canvas');
+const liveAudienceFrontFrame=document.createElement('canvas');
 const irlImages={hall:new Image(),cast:new Image()};
 const modularVenue=loadModularVenueAssets();
 irlImages.hall.src=globalThis.__IRL_HALL||'assets/irl-hall-open-v088.webp';
@@ -96,7 +97,7 @@ function creatorHub(){
  <section class="network-detail" style="--creator-accent:${c.accent}">
  ${c.loreTags?'<div class="network-lore-tags">'+c.loreTags.map(tag=>'<span>'+esc(tag)+'</span>').join('')+'</div>':''}
  <div class="network-identity"><div class="network-portrait"><span>${esc(c.glyph)}</span><small>SIMULATED<br>CHANNEL</small></div><div class="network-summary"><span class="eyebrow">${esc(c.genre)} · ${c.real?'REAL CREATOR REFERENCE':'FICTIONAL CREATOR'}</span><h2>${esc(c.name)}</h2><p>${esc(c.subtitle)} · ${esc(c.channel)}</p><p class="network-intro">${esc(c.intro)}</p><div class="network-tagline">${esc(c.tagline)}</div></div><div class="network-statbox"><small>COMMUNITY LEVEL</small><strong>${level} <span>/ 5</span></strong><div class="creator-xp-meter"><i style="width:${xpPct}%"></i></div><small>${level===5?'MAXIMUM RECOGNITION':`${st.xp} / ${next} XP TO NEXT LEVEL`}</small><small>${st.runs} MODERATION RUNS</small></div></div>
- ${c.id==='destiny'?'<section class="irl-invite"><span class="eyebrow">WORLD 05 · OFF THE FEED / v0.8.8t</span><h3>DESTINY: MEET &amp; GREET</h3><p>A living convention with active gated access, a center-stage lineup, a dedicated debate invitation, multiple levels and an optional 2× event speed. All incidents are fictional.</p><button class="primary" data-cmd="irl-start">▶ ENTER IRL EVENT ↗</button></section>':''}
+ ${c.id==='destiny'?'<section class="irl-invite"><span class="eyebrow">WORLD 05 · OFF THE FEED / v0.8.8u</span><h3>DESTINY: MEET &amp; GREET</h3><p>A living convention with active gated access, a center-stage lineup, a dedicated debate invitation, multiple levels and an optional 2× event speed. All incidents are fictional.</p><button class="primary" data-cmd="irl-start">▶ ENTER IRL EVENT ↗</button></section>':''}
  <div class="network-section-head"><span class="eyebrow">CHAPTERS · CHOOSE AN OPERATION</span><h3>CHANNEL EVENTS</h3></div>
  <div class="network-event-grid">${events.map(ev=>{const rec=ev.record||{stars:0,best:0,attempts:0};const world=WORLD_DEFS[ev.world];return `<article class="network-event ${ev.locked?'locked':''}"><div class="network-event-top"><span>CHAPTER 0${ev.index+1} / ${esc(world.title)}</span><span>${ev.locked?'◈ LOCKED':'● READY'}</span></div><h4>${esc(ev.title)}</h4><p>${esc(ev.subtitle)}</p><div class="network-event-brief">${esc(ev.modifier)} · ${esc(ev.descriptor)}</div><span class="network-event-record">${'★'.repeat(rec.stars)}${'☆'.repeat(3-rec.stars)} · BEST ${fmt(rec.best)} · ${rec.attempts} RUNS</span><button class="network-event-play" data-cmd="creator-start" data-id="${ev.id}" ${ev.locked?'disabled':''}>${ev.locked?!engine.levelUnlocked(ev.world,ev.level)?'ADVANCE CAMPAIGN FIRST':`LEVEL UP CHANNEL & CLEAR CHAPTER 0${ev.index}`:'▶ LAUNCH BROADCAST ↗'}</button></article>`}).join('')}</div>
  <div class="network-section-head"><span class="eyebrow">PERMANENT · CHANNEL-SPECIFIC</span><h3>COMMUNITY INFRASTRUCTURE</h3></div>
@@ -158,7 +159,7 @@ function irlModeChooser(){const record=engine.progress.irlRecords?.destinyMeet||
  return `<section class="irl-mode-picker"><div class="eyebrow">CHOOSE THE CONVENTION SHIFT · PROGRESS SAVED PER LEVEL</div><div class="irl-mode-grid">${IRL_LEVELS.map((level,i)=>{const locked=!irlLevelUnlocked(record,i,!!engine.devAccess?.creators);const progress=record.levels?.[i];return `<button class="irl-mode-tile ${irl.session==='standard'&&irl.levelIndex===i?'selected':''}" data-cmd="irl-level" data-level="${i}" ${locked?'disabled':''}><b>LEVEL 0${i+1} · ${esc(level.title)}</b><span>${level.guests} GUESTS · ${level.seconds}s · ${progress?.stars?'★'.repeat(progress.stars):locked?'LOCKED':'READY'}</span></button>`;}).join('')}<button class="irl-mode-tile endless ${irl.session==='endless'?'selected':''}" data-cmd="irl-endless"><b>∞ ENDLESS CHAOS</b><span>ESCALATING WAVES · HIGH SCORE ${fmt(record.endless?.highScore||0)}</span></button></div><p>Currently selected: <b>${irl.session==='endless'?'Endless Survival':esc(irl.config.title)}</b>. The run starts after you open the convention.</p></section>`;
 }
 function irlPage(){const r=irl?.result||null;return `<div class="page irl-page">${header()}<main class="irl-main">
- <div class="irl-heading"><div><span class="eyebrow">OFF THE FEED · WORLD 05 · LIVING EVENT SIMULATOR / v0.8.8t</span><h1>DESTINY <em>MEET &amp; GREET.</em></h1><p>${irl.session==='endless'?'Endless survival · incoming waves · rising pressure':irl.config.guests+' fictional encounters · '+irl.config.title+' · stage queue'}</p></div><button class="secondary" data-cmd="irl-exit">← CREATOR NETWORK</button></div>
+ <div class="irl-heading"><div><span class="eyebrow">OFF THE FEED · WORLD 05 · LIVING EVENT SIMULATOR / v0.8.8u</span><h1>DESTINY <em>MEET &amp; GREET.</em></h1><p>${irl.session==='endless'?'Endless survival · incoming waves · rising pressure':irl.config.guests+' fictional encounters · '+irl.config.title+' · stage queue'}</p></div><button class="secondary" data-cmd="irl-exit">← CREATOR NETWORK</button></div>
  <div class="irl-speed-row"><label for="irl-speed">EVENT SPEED</label><select id="irl-speed" aria-label="Destiny convention event speed"><option value="1" ${irlSpeed===1?'selected':''}>1× Normal</option><option value="1.5" ${irlSpeed===1.5?'selected':''}>1.5× Fast</option><option value="2" ${irlSpeed===2?'selected':''}>2× Turbo</option></select><label for="irl-difficulty">DECISIONS</label><select id="irl-difficulty" aria-label="Decision assistance difficulty"><option value="expert" ${irlDifficulty==='expert'?'selected':''}>Expert · No hints</option><option value="relaxed" ${irlDifficulty==='relaxed'?'selected':''}>Relaxed · Color cues</option></select><span>Same pacing in both modes</span></div>
  <section class="irl-stage-frame"><div class="irl-telemetry irl-arcade-hud"><span>◈ SCORE <b id="irl-score">${fmt(irl.score)}</b></span><span>♥ VIBE <b id="irl-vibe">${irl.vibe}%</b></span><span>✦ COMBO <b id="irl-combo">${irl.combo}×</b></span><span>◷ TIME <b id="irl-time">${shortClock(irl.clock)}</b></span><span>GUESTS <b id="irl-count">${irl.finished.length+irl.lost}/20</b></span></div>
  <div class="irl-stage-top"><span class="live-dot"></span><span id="irl-phase">PHASE ${irl.phase} · ${['DOORS OPEN','SIGNING LINE','FINAL Q&A'][irl.phase-1]}</span><span>FAN-FICTION · LIVE CONVENTION CAM</span></div><div class="irl-canvas-wrap"><canvas id="irl-canvas" width="384" height="216" aria-label="Living pixel-art convention: Destiny on stage and an animated audience"></canvas><div id="irl-arcade-stamp" class="irl-arcade-stamp" hidden></div><div id="irl-world-speech" class="irl-world-speech" aria-live="polite" hidden><div class="irl-speech-label"><span>◉ LIVE GUEST</span><b id="irl-speech-time">--s</b></div><strong id="irl-speech-name"></strong><p id="irl-speech-words"></p><small id="irl-speech-cue"></small><div class="irl-speech-meter"><i id="irl-speech-fill"></i></div></div><div class="irl-world-prompt" id="irl-world-prompt">WATCH THE ENTRANCE · GUESTS ARRIVING</div></div><div id="irl-stage-caption" class="irl-stage-caption" aria-live="polite">${esc(irl.message)}</div><div id="irl-mobile-review" class="irl-mobile-review" aria-live="polite" hidden><div><strong id="irl-mobile-name"></strong><b id="irl-mobile-time"></b></div><p id="irl-mobile-words"></p><small id="irl-mobile-cue"></small></div></section>
@@ -168,7 +169,7 @@ function irlPage(){const r=irl?.result||null;return `<div class="page irl-page">
  </main>${footer()}</div>`.replace('Guide twenty guests through the convention.',irl.session==='endless'?'Survive endless waves of guests and protect the venue.':'Guide '+irl.config.guests+' guests through '+irl.config.title+'.').replace('One guest at a time, even when the venue is busy.','The highlighted guest stays prominent; Chaos Mode can show incoming prompts simultaneously.').replace('the four actions below','the five actions below').replace('Welcome</b> fans and peaceful critics.','Welcome</b> fans. <b>Invite to Debate</b> peaceful critics.').replace('1 · FAN / CRITIC','1 · FAN');}
 function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-canvas');if(!canvas)return;const ctx=setupGraphicsCanvas(canvas,graphics);if(!ctx)return;
  const useCamera=modularVenueReady(modularVenue);if(useCamera){ctx.save();applyModularVenueCamera(ctx);}
- const modern=drawModularVenue(ctx,modularVenue,irl,t,{host:irlPoseImages[0],poses:irlPoseImages,cast:irlImages.cast,extra:irlAdditionalSets,audienceFrame:liveAudienceFrame});
+ const modern=drawModularVenue(ctx,modularVenue,irl,t,{host:irlPoseImages[0],poses:irlPoseImages,cast:irlImages.cast,extra:irlAdditionalSets,audienceFrame:liveAudienceFrame,audienceFrontFrame:liveAudienceFrontFrame});
  if(!modern){ctx.fillStyle='#211a40';ctx.fillRect(0,0,384,216);ctx.fillStyle='#dfc7f4';ctx.textAlign='center';ctx.font='bold 8px monospace';ctx.fillText('LOADING VENUE',192,107);}
  drawStageQueueGuides(ctx,irl);
  if(graphics.showNav){ctx.fillStyle='#ff668340';for(const o of VENUE_OBSTACLES)ctx.fillRect(o.x,o.y,o.w,o.h);
@@ -201,8 +202,9 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
  // An active typewriter line owns the reaction layer for the whole room;
  // other actors' emotes must wait rather than sit on top of the bubble.
  const roomIsSpeaking=irl.crowd.some(person=>person.speechTime>0);
- for(const {person:g,role,w,h} of actors){
-  if(role==='mascot'){drawVenueMascot(ctx,modularVenue,irl,t);continue;}
+ const nearSideArrivals=[];
+ const paintActor=({person:g,role,w,h})=>{
+  if(role==='mascot'){drawVenueMascot(ctx,modularVenue,irl,t);return;}
   const cx=g.x+w/2,cy=g.y+h-3;
   const action=role==='crowd'?(g.walking?'walk':g.animation):role==='arrival'?(g.entryPhase==='ticket'?'point':g.walking?'walk':'idle'):role==='departure'?(g.stageVisit==='exchange'?g.exchangeAction:g.walking?'walk':'idle'):role==='guard'?(g.task?.phase==='engage'?'argue':g.task?.phase==='escort'?'point':g.walking?'walk':'idle'):role==='staff'?(g.task?.phase==='engage'?'point':g.monitoring&&!g.walking?'point':g.walking?'walk':'idle'):g.pending?(g.animation||'talk'):g.type==='redirect'?'heckle':g.type==='security'?'argue':g.type==='check'?'point':'idle';
   const toss=role==='departure'&&g.tossTime>0?-Math.sin((.65-g.tossTime)/.65*Math.PI)*12:0;
@@ -214,10 +216,21 @@ function irlPaint(t){if(engine.mode!=='irl'||!irl)return;const canvas=$('#irl-ca
    sprite(g.kind??(role==='guard'?3:7),g.x+(role==='guard'?-2:stageSpeaker?2.5:0),g.y-(role==='guard'?5:0)+toss-jump,stageSpeaker?29:w,stageSpeaker?37:h,action,motion);
    // A dispatched employee's temporary rectangular status marker used to
    // leak over the stage display / challenger during debate transitions.
+ };
+ for(const actor of actors){
+  if(isNearSideGateArrival(actor.person,actor.role,actor.h)){nearSideArrivals.push(actor);continue;}
+  paintActor(actor);
  }
  // The venue camera samples only the world, not highlights, emotes or comic
  // chatter overlays. Record first, then render the player's AR information.
- if(modern){drawTicketClerk(ctx,modularVenue,irl);drawBakedForegroundOccluders(ctx,modularVenue,irl);captureLiveAudienceFrame(ctx,liveAudienceFrame,irl);}
+ if(modern){drawTicketClerk(ctx,modularVenue,irl);drawBakedForegroundOccluders(ctx,modularVenue,irl);}
+ // A ticket holder waiting outside is closer to the camera than the rail.
+ // After their feet cross y=200, the same rail correctly occludes them.
+ for(const actor of nearSideArrivals)paintActor(actor);
+ if(modern){
+  captureLiveAudienceFrame(ctx,liveAudienceFrame,irl);
+  captureLiveAudienceFrontFrame(liveAudienceFrontFrame,irl,{cast:irlImages.cast,poses:irlPoseImages,walk:irlWalkAtlas,extra:irlAdditionalSets,walk4:irlWalk4Sets,back4:irlBack4Sets,stage:irlStagePoseSets,reactions:irlReactionSets,originalWalk:irlOriginalWalk4Sets,originalBack:irlOriginalBack4Sets,newCast:irlNewCast,cosplay:irlCosplayCast},t);
+ }
  for(const g of irl.crowd){
   if(g.debateWatching&&g.debateSpeechTime>0&&debateBubbles<3){if(drawDebateShout(ctx,g,bubbleLayout))debateBubbles++;}
   else if(!g.debateWatching&&g.speechTime>0&&ambientBubbles===0){

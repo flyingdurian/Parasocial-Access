@@ -58,15 +58,15 @@ test('live stage screen cuts to actual solo fighter portraits and close crowd',(
  const ctx=context(),crowd=[{kind:2,debateWatching:true},{kind:3,debateWatching:true},{kind:4,debateWatching:true}];
  const event={crowd,departures:[{debater:true,stageVisit:'exchange',kind:2,exchangeClock:7}]};
  const labels=[];
- for(const t of [0,1550,3100,4650,6200]){
+ for(let i=0;i<30;i++){
   const c=context();
-  drawModularTV(c,event,t,{host:portrait,cast:portrait,poses:[null,null,portrait]});
+  drawModularTV(c,event,i*2700,{host:portrait,cast:portrait,poses:[null,null,portrait]});
   labels.push(...c.calls.filter(x=>x[0]==='text').map(x=>String(x[1])));
   assert(c.calls.some(x=>x[0]==='image'),'camera actually draws a zoomed character');
  }
- for(const name of ['DESTINY CLOSE-UP','CHALLENGER CLOSE-UP','BLOODSPORTS LIVE','AUDIENCE CLOSE-UP'])assert(labels.includes(name),name);
+ for(const name of ['DESTINY CLOSE-UP','CHALLENGER CLOSE-UP','BLOODSPORTS LIVE','AUDIENCE LIVE','STAGE-FRONT CAM'])assert(labels.includes(name),name);
  const p=context();drawModularTV(p,{departures:[{debater:true,stageVisit:'climbStairs',kind:2}],crowd},999,{host:portrait,cast:portrait});
- assert(p.calls.some(x=>x[0]==='text'&&String(x[1]).includes('DEBATE IS ABOUT TO BEGIN')),'prelude LCD announces upcoming round');
+ assert(p.calls.some(x=>x[0]==='text'&&String(x[1]).includes('DEBATE STARTING SOON')),'prelude LCD announces upcoming round without covering actors');
  assert(!labels.some(v=>/COPIUM|fact-check|Let him cook/.test(v)),'lore remains on physical audience speech only');
 });
 

@@ -1,9 +1,19 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8t polish: proportionate clerk, rebuilt painted gate movement, grounded mascot hearts, cleared phase-3 TV/challenger strips, wave surge and six four-direction cosplayers. v0.8.8s is the preceding owner preview.
-**Working branch:** `feature/v088t-venue-wave-cosplayers` (forked from local v0.8.8s patch source).
+**Current candidate:** v0.8.8u depth/camera owner-polish preview, based on accepted v0.8.8t gate door design. Six cosplayer sheets from v0.8.8t remain unchanged.
+**Working branch:** `feature/v088u-entrance-camera-polish` (based on v0.8.8t `d5fa46e`).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8t targeted/current Node regression sweep **79/79 passing** (`venue_v088t/s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Desktop/iPhone visual acceptance still required before production promotion.
+**Verification:** v0.8.8u targeted/current Node regression sweep **83/83 passing** (`venue_v088u/t/s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Desktop/iPhone visual acceptance still required before production promotion.
+
+## v0.8.8u — front-depth, clerk silhouette, stage TV director (owner review)
+
+- **Approved doors unchanged:** Original painted rails retain the v0.8.8t opening/closing positions, clipping and animation. The separate small *stationary* metal infill segments now draw on the background plane before walkers, instead of covering characters in the last foreground pass. Painted scanner-post fronts still mask normal interior walkers; ticketed arrivals whose feet are outside the y200 threshold are deferred until after the gate overlay so they appear correctly on the nearer side before crossing.
+- **Foreground counter:** Thin foreground cutout masks for the actual source-painted desk monitor, pens, papers, scanner, sanitizer and plant redraw those physical objects at original plate coordinates (including monitor top above y181). People walk behind desk amenities instead of on top of them.
+- **Clerk fidelity:** Preserve the original full-resolution walking atlas but display at **19×35** rather than the distorted 22×31 shape. The source is tall and narrow; this is a proportion/aspect correction at equivalent human height, not a new character or extra sprite layer.
+- **Stage-facing actors:** The challenger and fan guests explicitly face Destiny (west) while on-stage exchanging debate lines, signing or taking photos. Broadcast challenger camera portraits mirror towards the host.
+- **Live TV:** Replace fixed 1.55-second shot cycle with per-rival deterministic variation changing every ~2.7 seconds, mixing host/rival/two-shots with **stage-front faces-of-crowd** live camera, left/right stage-front sweeps, and the existing wide live floor crop. The new stage-front feed reprojects actual current spectators using their front sprite states without decision rings or speech HUD. Prelude LCD heading is smaller to keep stage heads clear. Photo/autograph end cards persist 4.6 seconds versus 1.9, remaining on the *existing painted TV*.
+- **QA:** New `tests/venue_v088u.test.mjs` checks near/far gate layering, background-only fixed infill, clerk proportions, topmost desk fixtures, stage-facing fan interactions, persistence and live broadcast changes. Previous fixed-angle camera/clerk-size tests were updated. **83/83 focused current tests passed.** No Rival Invasions assets or source merged into this branch.
+- **Rival Invasions integration:** Do NOT merge the co-architect's branch into this candidate before accepting v0.8.8u. After acceptance, branch `feature/v089-rival-invasions` from the accepted base, inspect the architect's exact branch/commit and cherry-pick only the isolated rival-art, cast-registry and battle-system commits. Adapt conflicting shared renderer/venue files manually behind feature flags and run combined tests. Do not force-merge or reset either worktree.
 
 ## v0.8.8t — entrance, wave urgency and six cosplay cast (owner review)
 

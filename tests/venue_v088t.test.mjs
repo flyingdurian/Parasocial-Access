@@ -47,7 +47,7 @@ test('mascot hearts are world-anchored after mirrored drawing and never roam ont
 test('clerk stays regular-sized and scanner leaves fill vertical door height using baked art',()=>{
  const c=canvas(),clerk={naturalWidth:1774,naturalHeight:887,complete:true};
  drawTicketClerk(c,{clerk,clerkWalk:clerk},{elapsed:8,ticketClerk:{x:179,y:153,walking:true,direction:'south',lastScanAt:-99}});
- assert(c.calls.some(call=>call[0]==='image'&&call.at(-2)===22&&call.at(-1)===31));
+ assert(c.calls.some(call=>call[0]==='image'&&call.at(-2)===19&&call.at(-1)===35));
  const gateCanvas=canvas(),plate={naturalWidth:1672,naturalHeight:941};
  const closed={elapsed:4,gateControllers:{left:{openedAt:-10,openUntil:-10}}};
  drawPaintedGate(gateCanvas,plate,closed,'left',true);

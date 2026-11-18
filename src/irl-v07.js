@@ -476,14 +476,14 @@ export class IRLEvent {
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,24))g.stageVisit='climbStairs';
    }else if(g.stageVisit==='climbStairs'){
     if(moveStageActor(g,...(g.debater?VENUE_STAGE.debate:g.fanKind==='photo'?VENUE_STAGE.photoGuest:VENUE_STAGE.autographGuest),dt,23)){
-     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):g.fanKind==='photo'?5.4:5.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.38;g.exchangeAction=g.debater?'argue':g.fanKind==='autograph'?'point':'cheer';g.walking=false;g.facing=g.debater?-1:1;
+     g.stageVisit='exchange';g.exchangeClock=g.debater?debateExchangeDuration(g,this.levelIndex):g.fanKind==='photo'?5.4:5.1;g.exchangeDuration=g.exchangeClock;g.hypeBeat=0;g.hypeClock=.38;g.exchangeAction=g.debater?'argue':g.fanKind==='autograph'?'point':'cheer';g.walking=false;g.facing=-1;g.direction='west';
      if(g.debater){g.clashIndex=-1;g.clashPower=1;g.clashPulse=0;}
      this.hostMood=g.debater?'argue':'talk';this.hostUntil=this.elapsed+g.exchangeClock;
      this.effects.push({x:217,y:78,text:g.debater?'LIVE DEBATE!':g.fanKind==='autograph'?'✦ AUTOGRAPH!':'♥ PHOTO OP!',color:'#ffeaa5',ttl:1.5});
      this.effects.push({x:200,y:93,text:loreStageLine(g,0),color:'#ffedb4',ttl:1.7});
     }
    }else if(g.stageVisit==='exchange'){
-    g.walking=false;g.facing=g.debater?-1:1;g.direction='west';g.exchangeClock-=dt;
+    g.walking=false;g.facing=-1;g.direction='west';g.exchangeClock-=dt;
     if(g.debater){
       const elapsed=g.exchangeDuration-g.exchangeClock;
       const clashIndex=Math.floor(elapsed/.69);
@@ -540,7 +540,7 @@ export class IRLEvent {
      this.effects.push({x:202,y:93,text:loreStageLine(g,1),color:'#fff5c4',ttl:1.35});
      if(g.debater){const verdict=judgeStageDebate(this,g);g.debateOutcome=verdict;this.debateHistory.push({...verdict,guest:g.name});this.tvEvent={type:'debate',won:verdict.won,topicTitle:g.debateTopic.title,score:verdict.score,ttl:3.4,maxTtl:3.4};
       this.cameraFlashes.push({x:272,y:58,ttl:.27});
-     }else this.tvEvent={type:g.fanKind==='autograph'?'autograph':'photo',guestKind:g.kind,ttl:1.9,maxTtl:1.9};
+     }else this.tvEvent={type:g.fanKind==='autograph'?'autograph':'photo',guestKind:g.kind,ttl:4.6,maxTtl:4.6};
     }
    }else if(g.stageVisit==='leaveStage'){
     if(moveStageActor(g,...VENUE_STAGE.stairs,dt,25))g.stageVisit='leaveStairs';

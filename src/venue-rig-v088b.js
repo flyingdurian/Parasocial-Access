@@ -1,5 +1,6 @@
 /* v0.8.8h unified plate, interactive TV, tickets, gate glass and dust motes. */
 import {MODULAR_PROPS,MODULAR_GATES,MODULAR_TV_PROJECTION,MODULAR_BLOCKERS} from './venue-geometry-v088b.js';
+import {drawVenueCharacter} from './sprite-animation.js';
 
 const FILES=Object.freeze({plate:'Neon Convention Hall Claw Machine.png',clerk:'irl-ticket-clerk-v088h.webp',clerkWalk:'irl-ticket-clerk-walk-v088s.webp',mascot:'Adorable blue mascot clutching a red heart.png'});
 export function loadModularVenueAssets(){
@@ -43,6 +44,17 @@ export function drawPaintedGate(ctx,plate,event,side,foreground=false){
   // First erase the entire baked closed rail from the carpet. We reconstruct
   // only the *original* painted leaf below; no second gate texture is added.
   ctx.drawImage(plate,lane.left*sx,(railY-12)*sy,span*sx,railH*sy,lane.left,railY,span,railH);
+  // Fixed gap infill is BEHIND the entrance posts and arriving visitors.
+  // It is a back-plane barrier, never a foreground door or a third leaf.
+  const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
+  for(const [a,b] of segments){
+   const fenceTop=railY-3,fenceH=10;
+   ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,fenceTop,b-a,fenceH);
+   ctx.fillStyle='#9db8c9';ctx.fillRect(a,fenceTop,b-a,1.3);
+   ctx.fillStyle='#55677b';ctx.fillRect(a,fenceTop+fenceH-2,b-a,1.3);
+   for(let bar=a+3;bar<b;bar+=3.1){ctx.fillStyle='#8da9bb';ctx.fillRect(bar,fenceTop+1,1,fenceH-3);}
+   ctx.fillStyle='#364b68';ctx.fillRect(a,fenceTop,1.5,fenceH);
+  }
  }
  const visible=Math.max(0,span*.5*(1-open));
  if(foreground&&visible>.1)for(const [x,w] of [[lane.left,visible],[lane.right-visible,visible]]){
@@ -59,22 +71,13 @@ export function drawPaintedGate(ctx,plate,event,side,foreground=false){
   // Each leaf has its own clipping scope and retracts from its own post.
   ctx.restore();ctx.save();
  }
- if(foreground){
-  // Fixed fence infill belongs ONLY in gaps between planter, scanner and desk.
-  // It does not move, cover, or replace the two original painted gate rails.
-  const segments=side==='left'?[[70,85],[138,149]]:[[237,254],[311,316]];
-  for(const [a,b] of segments){
-   // Bridge only the narrow gaps at the SAME waist-high silhouette as the
-   // painted rail; tall 24px grilles read as a second set of gate doors.
-   const fenceTop=railY-3,fenceH=10;
-   ctx.fillStyle='rgba(20,37,66,.76)';ctx.fillRect(a,fenceTop,b-a,fenceH);
-   ctx.fillStyle='#9db8c9';ctx.fillRect(a,fenceTop,b-a,1.3);
-   ctx.fillStyle='#55677b';ctx.fillRect(a,fenceTop+fenceH-2,b-a,1.3);
-   for(let bar=a+3;bar<b;bar+=3.1){ctx.fillStyle='#8da9bb';ctx.fillRect(bar,fenceTop+1,1,fenceH-3);}
-   ctx.fillStyle='#364b68';ctx.fillRect(a,fenceTop,1.5,fenceH);
-  }
- }
  ctx.restore();
+}
+// Before they cross the threshold, ticketed arrivals appear on the near side
+// of the painted rail. Once their feet pass it, the rails occlude them.
+export function isNearSideGateArrival(person,role,height=38){
+ return (role==='arrival'||role==='crowd')&&!!person?.entryPhase&&
+  ['enter','ticket','inside'].includes(person.entryPhase)&&person.y+height>=200;
 }
 // A single, non-roaming staff member behind the desk, deliberately rendered
 // under the baked foreground counter mask applied after all walking actors.
@@ -98,8 +101,10 @@ export function drawTicketClerk(ctx,assets,event){
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   // Benchmark staff 30×38 and crowd 27×34. Clerk is on the same physical
   // scale, not a 43-unit giant in front of the counter.
-  ctx.drawImage(atlas,frame*cellW+sourceX,(rear?cellH:0)+16,sourceWidth,cellH-29,worker.x+dx+3.5,worker.y+bob+5,22,31);
- }else ctx.drawImage(assets.clerk,worker.x+dx+3.5,worker.y+bob+5,22,31);
+  // Keep the atlas's slender proportions: 22x31 stretched this source nearly
+  // twice as wide as its painted silhouette and made the clerk look squat.
+  ctx.drawImage(atlas,frame*cellW+sourceX,(rear?cellH:0)+16,sourceWidth,cellH-29,worker.x+dx+5,worker.y+bob+1,19,35);
+ }else ctx.drawImage(assets.clerk,worker.x+dx+5,worker.y+bob+1,19,35);
  if(scanned){
   const strength=Math.max(0,1-(t-worker.lastScanAt)/.6);
   ctx.globalAlpha=strength*.80;ctx.fillStyle='#b8fff2';
@@ -255,6 +260,12 @@ function liveFanPortrait(ctx,streams,kind,x,y,height=31,maxWidth=22){
  const safeKind=Number.isInteger(kind)&&kind>=1&&kind<12?kind:2;
  return livePortrait(ctx,streams.cast,x,y,height,safeKind%4,Math.floor(safeKind/4),4,3,maxWidth);
 }
+function liveRivalFacingDestiny(ctx,streams,kind,x,y,height=31,maxWidth=22){
+ // Rival is framed from Destiny's side of the stage, looking towards him.
+ ctx.save();ctx.translate(x*2,0);ctx.scale(-1,1);
+ const painted=liveFanPortrait(ctx,streams,kind,x,y,height,maxWidth);
+ ctx.restore();return painted;
+}
 function drawBoothActivity(ctx,event,assets){
  // Tiny contextual receipts that read as rewards; no unlabeled circles or notes.
  const anchors={merch:[57,86],claw:[181,104],snacks:[132,88],photo:[353,103]};
@@ -355,45 +366,52 @@ export function drawModularTV(ctx,event,t,streams={}){
  ctx.textBaseline='alphabetic';ctx.textAlign='center';
  if(debate){
   const audience=(event.crowd||[]).filter(p=>p.debateWatching);
-  // Camera director: genuinely different crops/zooms, not the same two-shot
-  // with a changing label. Solo Destiny, solo critic, split-screen, crowd.
-  const shot=Math.floor(t/1550)%5,crowdCam=shot===3&&audience.length>0;
+  // A seeded broadcast director changes angles every ~2.7 real seconds.
+  // It avoids the old mechanically repeating solo/solo/split/crowd loop.
+  const slot=Math.floor(t/2700),seed=debate.serial||debate.id||1;
+  let hash=Math.imul(slot+1,1664525)^Math.imul(seed,1013904223);
+  hash^=hash>>>16;
+  const shot=(hash>>>0)%7;
+  const crowdCam=shot>=3&&audience.length>0;
   ctx.fillStyle='rgba(7,10,35,.88)';ctx.fillRect(2,5,96,48);
   ctx.fillStyle='#ffc98f';ctx.font='bold 5.2px ui-monospace,monospace';
-  const label=crowdCam?'AUDIENCE CLOSE-UP':shot===0||shot===4?'DESTINY CLOSE-UP':shot===1?'CHALLENGER CLOSE-UP':'BLOODSPORTS LIVE';
+  const label=crowdCam?shot===3?'AUDIENCE LIVE':'STAGE-FRONT CAM':shot===0?'DESTINY CLOSE-UP':shot===1?'CHALLENGER CLOSE-UP':'BLOODSPORTS LIVE';
   ctx.fillText(label,50,15,87);
   ctx.fillStyle='#ff637b';ctx.fillRect(7,10,2.6,2);
   ctx.save();ctx.beginPath();ctx.rect(3,16,94,32);ctx.clip();
   if(crowdCam){
-   if(streams.audienceFrame?.width){
-    // Frame from the *previous live canvas render*, filmed at the pit.
-    // No model-portrait cutaways masquerading as a real audience camera.
-    ctx.drawImage(streams.audienceFrame,3,16,94,32);
+   const front=shot!==3&&streams.audienceFrontFrame?.width?streams.audienceFrontFrame:streams.audienceFrame;
+   if(front?.width){
+    // The stage-front view redraws the SAME live spectators from the opposite
+    // physical camera angle, with their faces visible and no HUD overlays.
+    const sx=shot===5?0:shot===6?front.width*.37:0;
+    const sw=shot===5||shot===6?front.width*.63:front.width;
+    ctx.drawImage(front,sx,0,sw,front.height,3,16,94,32);
     ctx.strokeStyle='#d4b8fa';ctx.lineWidth=.7;ctx.strokeRect(3.3,16.3,93.4,31.4);
    }else{
     const chosen=audience[Math.floor(t/1550)%audience.length];
     liveFanPortrait(ctx,streams,chosen.kind,50,15,40,38);
    }
-  }else if(shot===0||shot===4){
+  }else if(shot===0){
    const cell=[6,5,6,4][Math.floor(t/300)%4];
    livePortrait(ctx,streams.host,50+Math.sin(t/360)*2,11,49,cell%4,Math.floor(cell/4),4,2,44);
   }else if(shot===1){
-   liveFanPortrait(ctx,streams,debate.kind,50+Math.sin(t/340)*2,11,49,44);
+   liveRivalFacingDestiny(ctx,streams,debate.kind,50+Math.sin(t/340)*2,11,49,44);
   }else{
    const cell=[6,5,6][Math.floor(t/270)%3];
    livePortrait(ctx,streams.host,28,15,36,cell%4,Math.floor(cell/4),4,2,29);
-   liveFanPortrait(ctx,streams,debate.kind,71,15,36,29);
+   liveRivalFacingDestiny(ctx,streams,debate.kind,71,15,36,29);
   }
   ctx.restore();
   ctx.fillStyle='#f0f4ff';ctx.font='bold 5.2px ui-monospace,monospace';
-  ctx.fillText(crowdCam?'CROWD IS LOSING IT':shot===0||shot===4?'FINAL BOSS':shot===1?'THE CHALLENGER':'FACE TO FACE',50,51,83);
+  ctx.fillText(crowdCam?'CROWD IS LOSING IT':shot===0?'FINAL BOSS':shot===1?'THE CHALLENGER':'FACE TO FACE',50,51,83);
   ctx.fillStyle='#f4f7ff';ctx.font='bold 6px ui-monospace,monospace';
   ctx.fillText(String(Math.max(0,Math.ceil(debate.exchangeClock)))+'s',91,15,13);
  }else if(prelude){
   const pulse=.5+.5*Math.sin(t/190);
   ctx.fillStyle='rgba(10,13,34,.85)';ctx.fillRect(4,9,92,43);
-  ctx.fillStyle='#ffb86f';ctx.font='bold 6px ui-monospace,monospace';
-  ctx.fillText('DEBATE IS ABOUT TO BEGIN...',50,21,86);
+  ctx.fillStyle='#ffb86f';ctx.font='bold 5px ui-monospace,monospace';
+  ctx.fillText('DEBATE STARTING SOON',50,19,70);
   ctx.fillStyle='rgba(125,185,255,'+(.22+.36*pulse)+')';ctx.fillRect(11,25,78,1);
   ctx.save();ctx.beginPath();ctx.rect(7,28,86,18);ctx.clip();
   livePortrait(ctx,streams.host,29,24,25,5%4,Math.floor(5/4));
@@ -467,6 +485,31 @@ export function captureLiveAudienceFrame(ctx,frame,event){
  capture.drawImage(ctx.canvas,195*scaleX,81*scaleY,142*scaleX,63*scaleY,0,0,176,78);
  return true;
 }
+export function captureLiveAudienceFrontFrame(frame,event,streams,t){
+ const watchers=(event?.crowd||[]).filter(person=>person.debateWatching&&person.debateArrived);
+ if(!frame||!watchers.length)return false;
+ if(frame.width!==176)frame.width=176;
+ if(frame.height!==78)frame.height=78;
+ const ctx=frame.getContext('2d');if(!ctx)return false;
+ ctx.save();ctx.imageSmoothingEnabled=false;
+ const floor=ctx.createLinearGradient(0,0,0,78);
+ floor.addColorStop(0,'#33255b');floor.addColorStop(1,'#71449c');
+ ctx.fillStyle=floor;ctx.fillRect(0,0,176,78);
+ ctx.fillStyle='rgba(211,130,248,.15)';
+ for(let i=0;i<6;i++)ctx.fillRect(0,8+i*13,176,1);
+ // The crowd is simulated, never a static sprite montage. Reproject the
+ // spectators' LIVE positions as viewed from the stage, using front sprites.
+ for(const person of [...watchers].sort((a,b)=>b.y-a.y)){
+  const depth=Math.max(0,Math.min(1,(184-person.y)/84));
+  const height=25+depth*12,width=height*.72;
+  const x=(person.x-185)*176/160-width/2+4;
+  const y=12+depth*59-height;
+  const motion={...person,direction:'south',facing:1,debateWatching:false};
+  const state=person.walking?'walk':person.animation||'cheer';
+  drawVenueCharacter(ctx,streams.cast,streams.poses?.[person.kind],person.kind,state,t,x,y,width,height,streams.walk,streams.extra,streams.walk4,motion,streams.back4,streams.stage,streams.reactions,streams.originalWalk,streams.originalBack,streams.newCast,streams.cosplay);
+ }
+ ctx.restore();return true;
+}
 export function drawModularVenue(ctx,assets,event,t,streams={}){
   if(!modularVenueReady(assets))return false;
   ctx.save();
@@ -493,6 +536,18 @@ export function drawBakedForegroundOccluders(ctx,assets,event){
     ctx.save();ctx.beginPath();ctx.rect(mask.x,mask.y,mask.w,mask.h);ctx.clip();
     draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});
     ctx.restore();
+  }
+  // The raised desk amenities sit ABOVE the countertop mask. In the painted
+  // plate the monitor starts at y173, so the old y181 mask let pedestrians
+  // walk visibly across its screen, clipboards, sanitizer and pen cup.
+  const deskTopProps=[
+   [152.5,176,10,10],[164,176,15,10],[180.5,172.5,18,14.5],
+   [200.5,175.5,7,11],[208.5,178,7.5,9],
+   [216.5,174,7.5,12],[224,175.5,8.5,11]
+  ];
+  for(const [x,y,w,h] of deskTopProps){
+   ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+   draw(ctx,assets.plate,{x:0,y:0,w:384,h:216});ctx.restore();
   }
   // Only the original painted gate rails and fixed small side-gap infill are
   // foreground fixtures; never paint a second gate over the baked entrance.
