@@ -10,6 +10,74 @@ const SPECIAL=Object.freeze({
  3:{idle:0,walk:1,talk:3,laugh:7,heckle:5,point:4,cheer:7,argue:5,impatient:0,think:5,mic:3}
 });
 export const VENUE_STRIDE=2.9;
+// Art-audit note (v0.8.8v): several generated atlas cells contain opaque
+// fragments of their NEIGHBOUR'S pose. In particular, set-C's rear rows
+// contain the previous row's feet above the next character's head. Trimming
+// the whole top band would also cut real hair, so erase only disconnected
+// alpha islands in the affected cells, preserving the authored artwork.
+const cleanedAtlases=new WeakMap();
+export function findAtlasBleedIslands(data,width,height,columns,rows,profile){
+ const cw=Math.floor(width/columns),ch=Math.floor(height/rows),removed=[];
+ for(let row=0;row<rows;row++)for(let col=0;col<columns;col++){
+  const seen=new Uint8Array(cw*ch),queue=new Int32Array(cw*ch);
+  const alphaAt=(x,y)=>data[((row*ch+y)*width+col*cw+x)*4+3];
+  for(let seed=0;seed<seen.length;seed++){
+   const startX=seed%cw,startY=Math.floor(seed/cw);
+   if(seen[seed]||alphaAt(startX,startY)<145)continue;
+   let head=0,tail=1,minX=startX,maxX=startX,minY=startY,maxY=startY;
+   seen[seed]=1;queue[0]=seed;
+   while(head<tail){
+    const p=queue[head++],x=p%cw,y=Math.floor(p/cw);
+    minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+     if(!dx&&!dy)continue;
+     const nx=x+dx,ny=y+dy;
+     if(nx<0||nx>=cw||ny<0||ny>=ch)continue;
+     const np=ny*cw+nx;
+     if(!seen[np]&&alphaAt(nx,ny)>=145){seen[np]=1;queue[tail++]=np;}
+    }
+   }
+   const topFoot=profile==='set-c-rear'&&row>0&&minY<=1&&maxY<=37&&tail>=145&&tail<5000;
+   const sideBleed=profile==='set-b-walk'&&col>=2&&col<=4&&minX>=239&&maxX>=253&&tail>=18&&tail<1200;
+   const signBleed=profile==='original-stage-a'&&col===3&&minX>=236&&maxX>=253&&tail>=150&&tail<1600;
+   if(topFoot||sideBleed||signBleed){
+    const pixels=Array.from(queue.subarray(0,tail));
+    removed.push({row,col,area:tail,minX,minY,maxX,maxY,pixels});
+   }
+  }
+ }
+ return removed;
+}
+function sanitizedAtlas(sheet,profile){
+ if(!profile||typeof document==='undefined'||!sheet?.naturalWidth)return sheet;
+ let entry=cleanedAtlases.get(sheet);
+ if(entry?.profile===profile)return entry.canvas;
+ const canvas=document.createElement('canvas');
+ canvas.width=sheet.naturalWidth;canvas.height=sheet.naturalHeight;
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});
+ if(!ctx)return sheet;
+ ctx.drawImage(sheet,0,0);
+ const image=ctx.getImageData(0,0,canvas.width,canvas.height),rgba=image.data;
+ const islands=findAtlasBleedIslands(rgba,canvas.width,canvas.height,6,4,profile);
+ const cw=canvas.width/6,ch=canvas.height/4;
+ for(const island of islands){
+  // Erase selected opaque pixels and only their low-alpha antialias fringe.
+  // A rectangular crop would slice the NEXT sprite's real head as well.
+  for(const p of island.pixels){
+   const x=island.col*cw+p%cw,y=island.row*ch+Math.floor(p/cw);
+   rgba[(y*canvas.width+x)*4+3]=0;
+   for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+    const nx=x+ox,ny=y+oy;
+    if(nx<island.col*cw||nx>=(island.col+1)*cw||ny<island.row*ch||ny>=(island.row+1)*ch)continue;
+    const a=(ny*canvas.width+nx)*4+3;
+    if(rgba[a]<145)rgba[a]=0;
+   }
+  }
+ }
+ ctx.putImageData(image,0,0);
+ cleanedAtlases.set(sheet,{profile,canvas});
+ return canvas;
+}
 export function poseFrame(state,time=0,kind=0,motion=null){
  if(state==='walk'&&(kind===1||kind===3))return Math.floor((motion?.stepDistance??time/60)/VENUE_STRIDE)%2?2:1;
  const base=SPECIAL[kind]?.[state]??POSE_INDEX[state]??0;
@@ -102,7 +170,8 @@ export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w
    const col=(kind-12)%6,rows=sheet===reaction||sheet===walk4Atlases?.[sheetIndex]||sheet===back4Atlases?.[sheetIndex]?4:2;
    const row=spectatingBack&&sheet===back4Atlases?.[sheetIndex]?backReactionRow:sheet===reaction?state==='talk'||state==='mic'?0:state==='cheer'||state==='laugh'?1:state==='point'?2:3:state==='walk'?(rows===4?walkCycleFrame(motion?.stepDistance??time/18):Math.floor((motion?.stepDistance??time/60)/VENUE_STRIDE)%2):0;
    const cw=sheet.naturalWidth/6,ch=sheet.naturalHeight/rows;
-   paint(sheet,col*cw,row*ch,cw,ch);
+   const profile=sheetIndex===2&&sheet===back4Atlases?.[2]?'set-c-rear':sheetIndex===1&&sheet===walk4Atlases?.[1]?'set-b-walk':null;
+   paint(sanitizedAtlas(sheet,profile),col*cw,row*ch,cw,ch);
    return true;
   }
   kind=2; // temporary visible fallback during image loading, never broken art.
@@ -133,7 +202,7 @@ export function drawVenueCharacter(ctx,baseAtlas,poseAtlas,kind,state,time,x,y,w
   if(sheet?.complete&&sheet.naturalWidth>0){
    const row=state==='talk'||state==='mic'?1:state==='cheer'||state==='laugh'?2:state==='point'||state==='argue'||state==='heckle'?3:0;
    const cw=sheet.naturalWidth/6,ch=sheet.naturalHeight/4;
-   paint(sheet,(kind%6)*cw,row*ch,cw,ch);
+   paint(sanitizedAtlas(sheet,kind<6?'original-stage-a':null),(kind%6)*cw,row*ch,cw,ch);
    return true;
   }
  }

@@ -1,9 +1,16 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
-**Current candidate:** v0.8.8u depth/camera owner-polish preview, based on accepted v0.8.8t gate door design. Six cosplayer sheets from v0.8.8t remain unchanged.
-**Working branch:** `feature/v088u-entrance-camera-polish` (based on v0.8.8t `d5fa46e`).
+**Current candidate:** v0.8.8v debate-cam and sprite-bleed correction preview, based on v0.8.8u `926562e`. The owner's accepted painted gate door design and existing cosplayer sheets remain unchanged.
+**Working branch:** `feature/v088v-sprite-tv-polish` (parent: v0.8.8u `926562e`; remote parent `6429aa1`).
 **Production release:** Unchanged; owner visual approval required before promotion.  
-**Verification:** v0.8.8u targeted/current Node regression sweep **83/83 passing** (`venue_v088u/t/s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Desktop/iPhone visual acceptance still required before production promotion.
+**Verification:** v0.8.8v targeted/current Node regression sweep **87/87 passing** (`venue_v088v/u/t/s/r/q/p/o/n/m/l/k` + `venue_modular_v088b`). Full historic suite is **not** certified green (superseded v082–v087 stage/queue assumptions). Desktop/iPhone visual acceptance still required before production promotion.
+
+## v0.8.8v — stage-front broadcast and sprite cell contamination repair (owner review)
+
+- **Readable stage-front live camera:** Stop compressing the entire full-body spectator semicircle into a 94×32-pixel screen. A 376×128 offscreen frame now shows the SAME currently watching guests from a simulated camera on the stage, using their frontal reaction frames as large waist-up close-ups. The camera drifts slowly left/right over the 2.7-second broadcast shot. Other camera angles, wide floor camera, host/rival shots, and randomized directing remain intact. No decision/HUD overlays are filmed.
+- **Prelude LCD:** The `DEBATE STARTING SOON` heading is now only a shallow 8-pixel top strip; rival and host broadcast portraits begin at y15 inside a 33-pixel-high clip rather than starting at y24 inside an 18-pixel-high clip. The previous crop was literally chopping off their top heads.
+- **Confirmed source-frame defects:** Auditing transparent character atlases found 18 anomalous top-edge alpha islands in `irl-cast-set-c-back4.webp` (previous row's boots leaking above the new heads), 11 right-edge fragments in `irl-cast-set-b-walk4.webp` (next column leaking), plus extra original-stage-A guard-column sign artifacts. `src/sprite-animation.js` now isolates the affected opaque disconnected frame fragments at atlas load and removes only those pixels in a cached offscreen copy. The immutable source WebPs and proper costumes, held props, hair and frame timing stay intact; no whole-row cropping and no new cast sheet.
+- **Reproducible QA:** `scripts/audit_sprite_cells.py` reports orphaned alpha islands per sprite frame without modifying art; `tests/venue_v088v.test.mjs` asserts removal-target detection on synthetic cases, higher-resolution live B-roll, and complete smaller LCD prelude. **87/87 current focused tests pass.** No Rival Invasions work has been integrated; retain separation until owner accepts the v0.8.8 venue baseline.
 
 ## v0.8.8u — front-depth, clerk silhouette, stage TV director (owner review)
 

@@ -409,13 +409,15 @@ export function drawModularTV(ctx,event,t,streams={}){
   ctx.fillText(String(Math.max(0,Math.ceil(debate.exchangeClock)))+'s',91,15,13);
  }else if(prelude){
   const pulse=.5+.5*Math.sin(t/190);
-  ctx.fillStyle='rgba(10,13,34,.85)';ctx.fillRect(4,9,92,43);
-  ctx.fillStyle='#ffb86f';ctx.font='bold 5px ui-monospace,monospace';
-  ctx.fillText('DEBATE STARTING SOON',50,19,70);
-  ctx.fillStyle='rgba(125,185,255,'+(.22+.36*pulse)+')';ctx.fillRect(11,25,78,1);
-  ctx.save();ctx.beginPath();ctx.rect(7,28,86,18);ctx.clip();
-  livePortrait(ctx,streams.host,29,24,25,5%4,Math.floor(5/4));
-  liveFanPortrait(ctx,streams,prelude.kind,72,24,25);
+  ctx.fillStyle='rgba(10,13,34,.85)';ctx.fillRect(4,7,92,45);
+  // Header is only 8 LCD pixels high. The previous 28px portrait clip cut
+  // BOTH contenders' heads off; the camera now reserves 34px for full bodies.
+  ctx.fillStyle='#ffb86f';ctx.font='bold 4.5px ui-monospace,monospace';
+  ctx.fillText('DEBATE STARTING SOON',50,12.5,70);
+  ctx.fillStyle='rgba(125,185,255,'+(.22+.36*pulse)+')';ctx.fillRect(11,14,78,.6);
+  ctx.save();ctx.beginPath();ctx.rect(7,15,86,33);ctx.clip();
+  livePortrait(ctx,streams.host,29,15,33,5%4,Math.floor(5/4),4,2,27);
+  liveFanPortrait(ctx,streams,prelude.kind,72,15,33,27);
   ctx.restore();
   ctx.fillStyle='#f4da9e';ctx.font='bold 5px ui-monospace,monospace';
   ctx.fillText('THE CROWD IS GATHERING',50,51,87);
@@ -488,25 +490,44 @@ export function captureLiveAudienceFrame(ctx,frame,event){
 export function captureLiveAudienceFrontFrame(frame,event,streams,t){
  const watchers=(event?.crowd||[]).filter(person=>person.debateWatching&&person.debateArrived);
  if(!frame||!watchers.length)return false;
- if(frame.width!==176)frame.width=176;
- if(frame.height!==78)frame.height=78;
+ // Capture at 4x the physical LCD resolution. A full-room crop shrunk 40
+ // tiny walking sprites into a strip of colored pixels on the stage screen.
+ // This is a stage-mounted camera showing actual faces in the front rows.
+ if(frame.width!==376)frame.width=376;
+ if(frame.height!==128)frame.height=128;
  const ctx=frame.getContext('2d');if(!ctx)return false;
- ctx.save();ctx.imageSmoothingEnabled=false;
- const floor=ctx.createLinearGradient(0,0,0,78);
- floor.addColorStop(0,'#33255b');floor.addColorStop(1,'#71449c');
- ctx.fillStyle=floor;ctx.fillRect(0,0,176,78);
- ctx.fillStyle='rgba(211,130,248,.15)';
- for(let i=0;i<6;i++)ctx.fillRect(0,8+i*13,176,1);
- // The crowd is simulated, never a static sprite montage. Reproject the
- // spectators' LIVE positions as viewed from the stage, using front sprites.
- for(const person of [...watchers].sort((a,b)=>b.y-a.y)){
-  const depth=Math.max(0,Math.min(1,(184-person.y)/84));
-  const height=25+depth*12,width=height*.72;
-  const x=(person.x-185)*176/160-width/2+4;
-  const y=12+depth*59-height;
-  const motion={...person,direction:'south',facing:1,debateWatching:false};
-  const state=person.walking?'walk':person.animation||'cheer';
-  drawVenueCharacter(ctx,streams.cast,streams.poses?.[person.kind],person.kind,state,t,x,y,width,height,streams.walk,streams.extra,streams.walk4,motion,streams.back4,streams.stage,streams.reactions,streams.originalWalk,streams.originalBack,streams.newCast,streams.cosplay);
+ ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ const floor=ctx.createLinearGradient(0,0,0,128);
+ floor.addColorStop(0,'#1d153b');floor.addColorStop(.57,'#49346d');floor.addColorStop(1,'#644489');
+ ctx.fillStyle=floor;ctx.fillRect(0,0,376,128);
+ ctx.fillStyle='rgba(235,177,255,.13)';
+ for(let i=0;i<6;i++)ctx.fillRect(0,10+i*19,376,1);
+ // In-camera B-roll, NOT a map of the crowd pit. Real live spectators are
+ // selected in their physical left-to-right order and framed waist-up.
+ // The first row is large enough that expressions remain identifiable even
+ // when the venue's ~100-pixel TV scales this capture down.
+ const lineup=[...watchers].sort((a,b)=>a.x-b.x||a.y-b.y);
+ const phase=t/2700,segment=Math.floor(phase),sweep=phase-segment;
+ const first=(segment*2)%lineup.length;
+ const renderPerson=(person,x,y,w,h)=>{
+  const motion={...person,direction:'south',facing:1,debateWatching:false,debateArrived:false};
+  // A stage-facing camera shows faces even while the same NPC is walking in
+  // the pit; sideways/rear atlas frames must never slip into this live shot.
+  const state=['talk','cheer','laugh','point','argue','heckle'].includes(person.animation)?person.animation:'cheer';
+  drawVenueCharacter(ctx,streams.cast,streams.poses?.[person.kind],person.kind,state,t,x,y,w,h,streams.walk,streams.extra,streams.walk4,motion,streams.back4,streams.stage,streams.reactions,streams.originalWalk,streams.originalBack,streams.newCast,streams.cosplay);
+ };
+ for(let i=0;i<6;i++){
+  const guest=lineup[(first+i+lineup.length)%lineup.length];
+  const drift=sweep*30;
+  renderPerson(guest,-38+i*82-drift,2+(i%2)*6,75,100);
+ }
+ ctx.fillStyle='rgba(29,16,56,.36)';ctx.fillRect(0,73,376,55);
+ for(let i=0;i<5;i++){
+  const guest=lineup[(first+i+6)%lineup.length];
+  // Slight depth variation prevents the talking heads from becoming a flat
+  // slideshow while maintaining the original, animated cast fidelity.
+  const x=-42+i*106-sweep*34,y=24+(i%2)*7;
+  renderPerson(guest,x,y,114,154);
  }
  ctx.restore();return true;
 }
