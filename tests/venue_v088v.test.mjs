@@ -41,8 +41,8 @@ test('stage-front broadcast renders current animated fans as large frontal close
  assert(captureLiveAudienceFrontFrame(frame,{crowd},{cast:image,cosplay:{react:image}},6900));
  assert.equal(frame.width,376);
  assert.equal(frame.height,128);
- assert(calls.length>=10);
- assert(calls.some(args=>args.at(-1)===154),'foreground fans must have readable close-up proportions');
+ assert.equal(calls.length,3,'the actual small TV must never cram more than three spectator sprites into a shot');
+ assert(calls.every(args=>args.at(-1)===171),'each spectator must be framed large enough to read the expression');
 });
 
 test('debate prelude reserves a shallow banner and draws complete portraits below it',()=>{

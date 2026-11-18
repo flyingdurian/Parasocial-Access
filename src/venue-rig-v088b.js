@@ -502,10 +502,9 @@ export function captureLiveAudienceFrontFrame(frame,event,streams,t){
  ctx.fillStyle=floor;ctx.fillRect(0,0,376,128);
  ctx.fillStyle='rgba(235,177,255,.13)';
  for(let i=0;i<6;i++)ctx.fillRect(0,10+i*19,376,1);
- // In-camera B-roll, NOT a map of the crowd pit. Real live spectators are
- // selected in their physical left-to-right order and framed waist-up.
- // The first row is large enough that expressions remain identifiable even
- // when the venue's ~100-pixel TV scales this capture down.
+ // Broadcast editor's close-up: only THREE faces across the whole LCD.
+ // More than that still turned into a pixel blob at real on-stage TV size.
+ // These are the actual animated spectators, not a static montage.
  const lineup=[...watchers].sort((a,b)=>a.x-b.x||a.y-b.y);
  const phase=t/2700,segment=Math.floor(phase),sweep=phase-segment;
  const first=(segment*2)%lineup.length;
@@ -516,18 +515,12 @@ export function captureLiveAudienceFrontFrame(frame,event,streams,t){
   const state=['talk','cheer','laugh','point','argue','heckle'].includes(person.animation)?person.animation:'cheer';
   drawVenueCharacter(ctx,streams.cast,streams.poses?.[person.kind],person.kind,state,t,x,y,w,h,streams.walk,streams.extra,streams.walk4,motion,streams.back4,streams.stage,streams.reactions,streams.originalWalk,streams.originalBack,streams.newCast,streams.cosplay);
  };
- for(let i=0;i<6;i++){
-  const guest=lineup[(first+i+lineup.length)%lineup.length];
-  const drift=sweep*30;
-  renderPerson(guest,-38+i*82-drift,2+(i%2)*6,75,100);
- }
- ctx.fillStyle='rgba(29,16,56,.36)';ctx.fillRect(0,73,376,55);
- for(let i=0;i<5;i++){
-  const guest=lineup[(first+i+6)%lineup.length];
-  // Slight depth variation prevents the talking heads from becoming a flat
-  // slideshow while maintaining the original, animated cast fidelity.
-  const x=-42+i*106-sweep*34,y=24+(i%2)*7;
-  renderPerson(guest,x,y,114,154);
+ for(let i=0;i<3;i++){
+  const guest=lineup[(first+i)%lineup.length];
+  const x=1+i*125-sweep*13,y=3+(i%2)*3;
+  // Broad shoulder-and-head framing with no overlapping background sprites;
+  // the TV downsample leaves each face roughly 15 LCD pixels tall.
+  renderPerson(guest,x,y,122,171);
  }
  ctx.restore();return true;
 }
