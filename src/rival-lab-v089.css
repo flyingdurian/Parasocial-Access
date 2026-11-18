@@ -1,0 +1,41 @@
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0d0b1c;color:#f7f3ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 55% 3%,#28234f 0%,#0d0b1c 62%);min-height:100vh}
+.app{max-width:1050px;margin:0 auto;padding:clamp(12px,3vw,30px) clamp(12px,3vw,26px) 45px}
+.mast{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.eyebrow{font-size:.68rem;letter-spacing:.20em;font-weight:800;color:#df91fc;margin:0 0 7px}
+h1{font-weight:1000;letter-spacing:-.045em;text-transform:uppercase;font-size:clamp(1.5rem,4vw,2.7rem);line-height:1;margin:0}h1 span{font-weight:400;color:#e7d0ff}
+.lab-tag{font-size:.72rem;border:1px solid #6b4a88;background:#352044;border-radius:999px;padding:9px 12px;color:#f0c4f1;white-space:nowrap}
+.toolbar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:15px 0}
+.toolbar label{display:grid;gap:6px;flex:1 1 180px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#b9aad7;font-weight:700}
+select,button{font:inherit;color:inherit}select{background:#211a36;border:1px solid #51426e;border-radius:10px;padding:11px 12px;min-height:44px;max-width:100%;width:100%;outline-color:#ce90f6}
+button{touch-action:manipulation;cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #ffd58b;outline-offset:2px}
+.primary{background:linear-gradient(135deg,#fe7d9c,#ba52db);border:0;border-radius:10px;font-weight:900;min-height:44px;padding:12px 16px;flex:1 1 200px;box-shadow:0 4px 22px #e95cb255}
+.arena-frame{position:relative;border:3px solid #51347e;box-shadow:0 0 55px #772ca033,0 12px 28px #000a;overflow:hidden;border-radius:17px;background:#271749;aspect-ratio:16/9}
+canvas{display:block;width:100%;height:100%;image-rendering:auto}
+.hidden{display:none!important}
+.vs-overlay,.result-overlay{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;flex-direction:column;text-align:center;background:linear-gradient(120deg,#123d6fdb 0 46%,#150d26db 49% 51%,#8c1d4ddb 54% 100%);padding:12px}
+.vs-overlay{animation:vs-intro .83s cubic-bezier(.15,.83,.18,1) both;overflow:hidden}
+.vs-top{font-weight:900;letter-spacing:.28em;font-size:clamp(.65rem,2vw,1.1rem);color:#f9dc8a;text-shadow:0 2px #611649}
+.vs-fighters{display:flex;align-items:center;justify-content:space-around;gap:10px;width:100%;margin:8px 0;font-size:clamp(.9rem,2.9vw,2rem);font-weight:1000;text-shadow:2px 3px 0 #18102b}
+.vs-fighters span{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.05}
+.vs-fighters strong{font-size:clamp(3.2rem,12vw,7.7rem);font-style:italic;letter-spacing:-.13em;transform:skew(-10deg);color:#fff2d5;text-shadow:4px 4px 0 #f34883,-4px -3px 0 #50b5ff,0 0 26px #fff8}
+.vs-bottom{font-size:.78rem;letter-spacing:.15em;font-weight:800;color:#ead4ff}
+@keyframes vs-intro{0%{transform:scale(1.18);filter:brightness(2);opacity:0}45%{transform:scale(1.03);opacity:1}100%{transform:scale(1);filter:brightness(1);opacity:1}}
+.result-overlay{background:#0d0c28e9}.result-overlay h2{font-size:clamp(2.3rem,9vw,6rem);font-style:italic;margin:0;text-shadow:3px 4px #bb4c9a}.result-overlay p:not(.eyebrow){max-width:420px;color:#d4c5ed}
+.result-overlay button{border:1px solid #a18cdb;background:#513a84;border-radius:11px;padding:12px 24px;font-weight:800}
+.battle-hud{display:flex;gap:15px;align-items:center;margin:13px 0 11px}
+.hp-group{flex:1;min-width:0}.hp-line{display:flex;justify-content:space-between;gap:6px;font-size:.76rem;font-weight:850;letter-spacing:.04em;margin-bottom:5px}.hp-line b{color:#c7badd;font-variant-numeric:tabular-nums;font-weight:600}
+.hp-track{height:12px;background:#221a36;border:1px solid #53436f;border-radius:999px;overflow:hidden}.hp-track span{display:block;height:100%;width:100%;transition:width .2s}.hp-blue{background:linear-gradient(90deg,#1db7ff,#9ceaff)}.hp-pink{background:linear-gradient(90deg,#ff496e,#ffbb9c)}
+.round-num{font-size:.72rem;font-weight:900;color:#ffe1a1;white-space:nowrap;letter-spacing:.04em;text-align:center;min-width:68px}
+.qte-panel{border:1px solid #403158;background:#18142af2;border-radius:15px;padding:14px}
+.cue-bar{display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:clamp(.92rem,3vw,1.3rem);font-weight:900;letter-spacing:.02em}.cue-bar strong{font-variant-numeric:tabular-nums;color:#ffe8a0}
+.timer-track{height:5px;background:#342444;border-radius:100px;overflow:hidden;margin:10px 0}.timer-track div{height:100%;width:100%;background:linear-gradient(90deg,#f7b45b,#ff558a);transition:width .04s linear}
+.cue-hint{font-size:.79rem;min-height:24px;color:#bdafd8;margin:8px 0 12px}
+.command-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.command-buttons button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:76px;padding:9px 4px;background:linear-gradient(#342448,#251d37);border:1px solid #704c87;border-radius:11px;font-size:clamp(.71rem,1.8vw,.88rem);font-weight:850;text-align:center}
+.command-buttons button:not(:disabled):active{transform:scale(.97);background:#7850a5}.command-buttons button:disabled{opacity:.38;cursor:not-allowed}.command-buttons button[data-command=special]{border-color:#df9254;color:#ffdb8b}
+kbd{font-size:.7rem;letter-spacing:.09em;color:#d9b4ff;border:1px solid #816196;background:#1b1026;padding:3px 7px;border-radius:5px}
+.replay{font-size:.73rem;color:#d5c5e6;text-align:center;min-height:1.2em;margin:12px 0 0}
+footer{font-size:.7rem;color:#817895;text-align:center;line-height:1.6;max-width:750px;margin:20px auto 0}
+@media(max-width:640px){.mast{align-items:flex-start}.lab-tag{font-size:.58rem}.toolbar label{flex-basis:125px}.toolbar .primary{flex-basis:100%}.battle-hud{gap:6px}.round-num{min-width:50px;font-size:.61rem}.hp-line{font-size:.62rem}.command-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.command-buttons button{min-height:62px;gap:4px}.qte-panel{padding:11px}.vs-fighters strong{font-size:clamp(2.5rem,12vw,4.2rem)}}
+@media(prefers-reduced-motion:reduce){.vs-overlay{animation:none!important}.hp-track span,.timer-track div{transition:none!important}}

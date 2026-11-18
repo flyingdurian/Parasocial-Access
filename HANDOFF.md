@@ -1,5 +1,23 @@
 # FeedFall: Rush Hour — Active Engineering Handoff
 
+## v0.8.9 Rival Invasions lab — separate, unmerged handoff
+
+The independent branch `feature/v089-rival-invasion-lab` is fast-forwarded to the
+accepted v0.8.8v source (`6afc2c2`) and adds **only** the isolated battle lab:
+`RIVAL_INVASIONS_V089.md`, six original transparent PNG 4×4 rival atlases under
+`assets/rivals/v089/`, one battle-stage concept image, a deterministic battle
+engine, standalone `rival-lab.html` browser prototype, and v0.8.9 lab tests.
+
+**Not integrated into the venue, not merged, not production deployed.** No
+v0.8.8v gameplay, gate, stage camera, sound or save-code changes were made.
+The lead developer should begin with `RIVAL_INVASIONS_V089.md` for the precise
+roster, relationship boundaries (friends compete hard; Hasan is scorched-earth),
+mechanics, venue freeze/return contract, assets, and pre-merge acceptance gates.
+Run the standalone lab via `python3 -m http.server` and `/rival-lab.html`.
+Current combined focused Node regression: **99/99 pass**. Browser rendering is
+unverified here because Chromium cannot open its process socket; the lead
+developer must complete desktop and iPhone visual QA before integration.
+
 **Current candidate:** v0.8.8v debate-cam and sprite-bleed correction preview, based on v0.8.8u `926562e`. The owner's accepted painted gate door design and existing cosplayer sheets remain unchanged.
 **Working branch:** `feature/v088v-sprite-tv-polish` (parent: v0.8.8u `926562e`; remote parent `6429aa1`).
 **Production release:** Unchanged; owner visual approval required before promotion.  

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#110d25">
+  <title>FeedFall v0.8.9 — Rival Invasion Lab</title>
+  <link rel="stylesheet" href="./src/rival-lab-v089.css">
+</head>
+<body>
+  <main class="app">
+    <header class="mast">
+      <div><p class="eyebrow">FEEDFALL · ISOLATED GAMEPLAY LAB</p><h1>BLOODSPORTS <span>Debate Arena</span></h1></div>
+      <span class="lab-tag">v0.8.9 · NOT IN LIVE HALL</span>
+    </header>
+
+    <section class="toolbar" aria-label="Prototype options">
+      <label>Challenger <select id="rival-choice"></select></label>
+      <label>Battle mode
+        <select id="mode-choice"><option value="relaxed">Relaxed — visible counters</option><option value="expert">Expert — read the cue</option></select>
+      </label>
+      <button id="start-button" class="primary">Launch Rival Invasion</button>
+    </section>
+
+    <section class="arena-frame" aria-label="Dedicated debate-arena perspective">
+      <canvas id="battle-canvas" width="768" height="432">A debate stage with two visible contestants.</canvas>
+      <div id="vs-overlay" class="vs-overlay hidden" aria-live="assertive">
+        <div class="vs-top">RIVAL INVASION</div>
+        <div class="vs-fighters"><span>DESTINY</span><strong>VS</strong><span id="vs-opponent">OPPONENT</span></div>
+        <div class="vs-bottom">THE STAGE IS YOURS</div>
+      </div>
+      <div id="result-overlay" class="result-overlay hidden" aria-live="assertive">
+        <p class="eyebrow">DEBATE COMPLETE</p>
+        <h2 id="result-title">VICTORY</h2>
+        <p id="result-detail"></p>
+        <button id="again-button">Return to Lab</button>
+      </div>
+    </section>
+
+    <section class="battle-hud" aria-label="Battle state">
+      <div class="hp-group"><div class="hp-line"><span>DESTINY</span><b id="destiny-number">100 / 100</b></div><div class="hp-track"><span id="destiny-hp" class="hp-blue"></span></div></div>
+      <div class="round-num" id="round-number">READY</div>
+      <div class="hp-group"><div class="hp-line"><span id="rival-name">RIVAL</span><b id="rival-number">—</b></div><div class="hp-track"><span id="rival-hp" class="hp-pink"></span></div></div>
+    </section>
+
+    <section class="qte-panel" aria-label="Player controls">
+      <div class="cue-bar"><span id="cue-label">Choose a rival to begin</span><strong id="cue-timer">18.0s</strong></div>
+      <div class="timer-track"><div id="timer-fill"></div></div>
+      <p id="cue-hint" class="cue-hint">Destiny is controlled by you. Match the cue and its timing; this is not a dialogue-choice quiz.</p>
+      <div class="command-buttons">
+        <button data-command="define_terms" disabled><kbd>1</kbd><span>Define Terms</span></button>
+        <button data-command="show_receipts" disabled><kbd>2</kbd><span>Show Receipts</span></button>
+        <button data-command="read_room" disabled><kbd>3</kbd><span>Read the Room</span></button>
+        <button data-command="special" disabled><kbd>SPACE</kbd><span id="special-label">Finishing Argument · 0/60</span></button>
+      </div>
+      <p class="replay" id="combat-log" aria-live="polite">The audience is waiting.</p>
+    </section>
+
+    <footer>Separate playable mechanics prototype only. The v0.8.8v hall, event timers, saves and production deployment are unchanged. Rival personalities and outcomes are fictional satire.</footer>
+  </main>
+  <script type="module" src="./src/rival-lab-v089.js"></script>
+</body>
+</html>
